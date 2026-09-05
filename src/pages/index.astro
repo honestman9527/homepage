@@ -1,7 +1,21 @@
 ---
-import "../styles/global.css";
+import { client } from "@astrojs/react/client.js";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Header } from "@/components/Header";
+import { Hero } from "@/components/Hero";
+import { Work } from "@/components/Work";
+import { About } from "@/components/About";
+import { Writing } from "@/components/Writing";
+import { Footer } from "@/components/Footer";
 ---
 
-<h1 class="text-3xl font-bold underline text-blue-500">
-  Hello world!
-</h1>
+<BaseLayout>
+  <Header client:load />
+  <main>
+    <Hero client:load />
+    <Work client:visible />
+    <About client:visible />
+    <Writing client:visible />
+  </main>
+  <Footer client:visible />
+</BaseLayout>

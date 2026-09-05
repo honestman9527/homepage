@@ -1,12 +1,15 @@
 ## Development
 
+- pnpm12
+- Astro7、React19、TailwindCss4
+
 When starting the dev server, use background mode:
 
 ```
-astro dev --background
+pn dev --background
 ```
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+Manage the background server with `pn dev stop`, `pn dev status`, and `pn dev logs`.
 
 ## Documentation
 

@@ -1,0 +1,40 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Dream — Homepage",
+  description = "Personal homepage of Dream. Projects, writing, and experiments.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      document.documentElement.classList.toggle(
+        "dark",
+        localStorage.getItem("theme") === "dark" ||
+          (!localStorage.getItem("theme") &&
+            matchMedia("(prefers-color-scheme: dark)").matches)
+      );
+    </script>
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+    <div class="noise-overlay" aria-hidden="true"></div>
+  </body>
+</html>
