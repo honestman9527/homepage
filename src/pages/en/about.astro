@@ -3,8 +3,10 @@ import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/Avatar.astro";
 import Badge from "@/components/Badge.astro";
 import { useTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
 
 const t = useTranslations("en");
+const site = await getSiteConfig();
 
 const skills = [
   "TypeScript",
@@ -21,7 +23,7 @@ const skills = [
 ---
 
 <SidebarLayout
-  title={`${t("about.title")} — Dream`}
+  title={`${t("about.title")} — ${site.name}`}
   description={t("about.subtitle")}
   currentPath="/en/about"
 >
@@ -36,7 +38,7 @@ const skills = [
     </div>
 
     <div class="grid items-start gap-10 md:grid-cols-[auto_1fr]">
-      <Avatar fallback="DR" class="size-24 text-2xl" />
+      <Avatar fallback={site.initials} class="size-24 text-2xl" />
 
       <div class="flex max-w-2xl flex-col gap-4 text-lg text-pretty">
         <p>{t("about.bio1")}</p>

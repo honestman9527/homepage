@@ -2,6 +2,7 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/layout/AppShell";
 import { getLangFromUrl, translatePath, useTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
 
 interface Props {
   title?: string;
@@ -17,7 +18,14 @@ const {
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const pageTitle = title ?? t("site.title");
+const site = await getSiteConfig();
+
+const siteTitleSuffix = {
+  zh: "主页",
+  en: "Homepage",
+} as const;
+
+const pageTitle = title ?? `${site.name} — ${siteTitleSuffix[lang]}`;
 const pageDescription = description ?? t("site.description");
 
 const nav = (["home", "projects", "blog", "about"] as const).map((key) => ({
@@ -40,6 +48,9 @@ const localizedPath =
     currentLang={lang}
     nav={nav}
     elsewhereLabel={t("sidebar.elsewhere")}
+    brandName={site.name}
+    brandDomain={site.domain}
+    socialLinks={site.social}
   >
     <slot />
   </AppShell>

@@ -1,6 +1,22 @@
 import { defineCollection, z } from "astro:content";
 import { file, glob } from "astro/loaders";
 
+const site = defineCollection({
+  loader: file("src/data/site.yaml"),
+  schema: z.object({
+    name: z.string(),
+    domain: z.string(),
+    initials: z.string(),
+    email: z.string(),
+    social: z.array(
+      z.object({
+        label: z.string(),
+        url: z.string(),
+      }),
+    ),
+  }),
+});
+
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
   schema: z.object({
@@ -26,4 +42,4 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { blog, projects };
+export const collections = { site, blog, projects };

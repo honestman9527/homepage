@@ -3,9 +3,11 @@ import { getCollection } from "astro:content";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Badge from "@/components/Badge.astro";
 import { useTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
 import { ArrowUpRightIcon, CalendarBlankIcon } from "@phosphor-icons/react";
 
 const t = useTranslations("en");
+const site = await getSiteConfig();
 
 const posts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
@@ -20,7 +22,7 @@ const formatDate = (date: Date) =>
 ---
 
 <SidebarLayout
-  title={`${t("blog.title")} — Dream`}
+  title={`${t("blog.title")} — ${site.name}`}
   description={t("blog.subtitle")}
   currentPath="/en/blog"
 >

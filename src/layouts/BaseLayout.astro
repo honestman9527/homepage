@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { getSiteConfig } from "@/lib/site-config";
 
 interface Props {
   title?: string;
@@ -8,10 +9,17 @@ interface Props {
 }
 
 const {
-  title = "Dream — Homepage",
-  description = "Personal homepage of Dream. Projects, writing, and experiments.",
+  title,
+  description,
   lang = "zh",
 } = Astro.props;
+
+const site = await getSiteConfig();
+const fallbackTitle = `${site.name} — Homepage`;
+const fallbackDescription = `Personal homepage of ${site.name}. Projects, writing, and experiments.`;
+
+const effectiveTitle = title ?? fallbackTitle;
+const effectiveDescription = description ?? fallbackDescription;
 ---
 
 <!doctype html>
@@ -19,10 +27,10 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description} />
+    <meta name="description" content={effectiveDescription} />
     <meta name="generator" content={Astro.generator} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:title" content={effectiveTitle} />
+    <meta property="og:description" content={effectiveDescription} />
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
@@ -33,7 +41,7 @@ const {
             matchMedia("(prefers-color-scheme: dark)").matches)
       );
     </script>
-    <title>{title}</title>
+    <title>{effectiveTitle}</title>
   </head>
   <body>
     <slot />

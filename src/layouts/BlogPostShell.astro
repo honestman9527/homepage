@@ -4,6 +4,7 @@ import type { CollectionEntry } from "astro:content";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Badge from "@/components/Badge.astro";
 import { CalendarBlankIcon } from "@phosphor-icons/react";
+import { getSiteConfig } from "@/lib/site-config";
 
 interface Props {
   post: CollectionEntry<"blog">;
@@ -12,6 +13,8 @@ interface Props {
 
 const { post, lang } = Astro.props;
 const { Content } = await render(post);
+const site = await getSiteConfig();
+const siteName = site.name;
 
 const locale = lang === "zh" ? "zh-CN" : "en-US";
 const formatDate = (date: Date) =>
@@ -25,7 +28,7 @@ const blogPath = lang === "zh" ? "/blog" : "/en/blog";
 ---
 
 <SidebarLayout
-  title={`${post.data.title} — Dream`}
+  title={`${post.data.title} — ${siteName}`}
   description={post.data.description}
   currentPath={blogPath}
 >

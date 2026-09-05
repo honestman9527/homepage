@@ -1,11 +1,9 @@
 import {
   ArchiveBoxIcon,
   ArticleIcon,
-  GithubLogoIcon,
   HouseIcon,
-  LinkedinLogoIcon,
-  XLogoIcon,
 } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 
 import {
   Sidebar,
@@ -22,29 +20,40 @@ import {
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+interface SocialLink {
+  label: string;
+  url: string;
+}
+
 interface AppSidebarProps {
   currentPath: string;
   nav: { label: string; href: string }[];
   elsewhereLabel: string;
+  brandName: string;
+  brandDomain: string;
+  socialLinks: SocialLink[];
 }
 
-const navIcons = [HouseIcon, ArchiveBoxIcon, ArticleIcon, ArticleIcon];
+const navIcons: Icon[] = [HouseIcon, ArchiveBoxIcon, ArticleIcon, ArticleIcon];
 
-const socialLinks = [
-  { label: "GitHub", href: "https://github.com", icon: GithubLogoIcon },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: LinkedinLogoIcon },
-  { label: "X", href: "https://x.com", icon: XLogoIcon },
-];
+const socialIconPool = [ArticleIcon, ArchiveBoxIcon, HouseIcon];
 
 export function AppSidebar({
   currentPath,
   nav,
   elsewhereLabel,
+  brandName,
+  brandDomain,
+  socialLinks,
 }: AppSidebarProps) {
   const navItems = nav.map((item, index) => ({
     ...item,
     icon: navIcons[index] ?? ArticleIcon,
   }));
+
+  const brandInitial = brandName.charAt(0).toUpperCase();
+  const domainHead = brandDomain.split(".")[0];
+  const domainTail = brandDomain.slice(domainHead.length);
 
   return (
     <Sidebar collapsible="icon">
@@ -54,10 +63,11 @@ export function AppSidebar({
           className="flex h-10 items-center gap-2 rounded-md px-2 font-display text-lg font-semibold tracking-tight group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:px-0"
         >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">
-            D
+            {brandInitial}
           </span>
           <span className="truncate group-data-[collapsible=icon]:hidden">
-            <span className="text-electric">dream</span>.dev
+            <span className="text-electric">{domainHead}</span>
+            {domainTail}
           </span>
         </a>
       </SidebarHeader>
@@ -86,19 +96,22 @@ export function AppSidebar({
           <SidebarGroupLabel>{elsewhereLabel}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {socialLinks.map((social) => (
-                <SidebarMenuItem key={social.label}>
-                  <SidebarMenuButton
-                    tooltip={social.label}
-                    render={
-                      <a href={social.href} target="_blank" rel="noreferrer" />
-                    }
-                  >
-                    <social.icon />
-                    <span>{social.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {socialLinks.map((social, index) => {
+                const SocialIcon = socialIconPool[index] ?? ArticleIcon;
+                return (
+                  <SidebarMenuItem key={social.url}>
+                    <SidebarMenuButton
+                      tooltip={social.label}
+                      render={
+                        <a href={social.url} target="_blank" rel="noreferrer" />
+                      }
+                    >
+                      <SocialIcon />
+                      <span>{social.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

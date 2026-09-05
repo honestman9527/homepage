@@ -1,0 +1,15 @@
+# Site-wide configuration. Everything here is safe to edit — pages read
+# from this file at build time. The file loader turns the top-level
+# `site` key into a single entry whose data matches the collection schema.
+site:
+  name: Honestman
+  domain: honestman.me
+  initials: HM
+  email: hello@honestman.me
+  social:
+    - label: GitHub
+      url: https://github.com/honestman9527
+    - label: LinkedIn
+      url: https://linkedin.com
+    - label: X
+      url: https://x.com

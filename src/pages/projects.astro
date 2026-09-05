@@ -3,10 +3,12 @@ import { getCollection } from "astro:content";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Badge from "@/components/Badge.astro";
 import { getLangFromUrl, useTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const site = await getSiteConfig();
 
 const projects = (await getCollection("projects")).sort(
   (a, b) => b.data.year - a.data.year,
@@ -14,7 +16,7 @@ const projects = (await getCollection("projects")).sort(
 ---
 
 <SidebarLayout
-  title={`${t("projects.title")} — Dream`}
+  title={`${t("projects.title")} — ${site.name}`}
   description={t("projects.subtitle")}
   currentPath={lang === "zh" ? "/projects" : "/en/projects"}
 >

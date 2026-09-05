@@ -17,8 +17,8 @@ export const languagePrefixes: Record<Language, string> = {
 
 export const ui = {
   zh: {
-    "site.title": "Dream — 主页",
-    "site.description": "Dream 的个人主页。项目、写作与实验。",
+    "site.title": "主页",
+    "site.description": "个人主页。项目、写作与实验。",
     "nav.home": "首页",
     "nav.projects": "项目",
     "nav.blog": "博客",
@@ -27,7 +27,6 @@ export const ui = {
     "home.available": "接受新项目委托",
     "home.bio": "开发者，构建界面、工具与偶尔的实验。",
     "home.location": "互联网 · 远程",
-    "contact.email": "hello@example.com",
     "blog.title": "博客",
     "blog.subtitle": "笔记与文章",
     "blog.viewAll": "查看全部",
@@ -43,8 +42,8 @@ export const ui = {
     "about.bio2": "第二段可以写你现在的关注点、坐标，或正在学的东西。",
   },
   en: {
-    "site.title": "Dream — Homepage",
-    "site.description": "Personal homepage of Dream. Projects, writing, and experiments.",
+    "site.title": "Homepage",
+    "site.description": "Personal homepage. Projects, writing, and experiments.",
     "nav.home": "Home",
     "nav.projects": "Projects",
     "nav.blog": "Blog",
@@ -53,7 +52,6 @@ export const ui = {
     "home.available": "Available for new projects",
     "home.bio": "A developer crafting interfaces, tools, and the occasional experiment.",
     "home.location": "The internet · Remote",
-    "contact.email": "hello@example.com",
     "blog.title": "Blog",
     "blog.subtitle": "Notes & posts",
     "blog.viewAll": "View all",

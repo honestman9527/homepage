@@ -1,5 +1,6 @@
 ---
 import { GithubLogoIcon, LinkedinLogoIcon, XLogoIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react";
+import { getSiteConfig } from "@/lib/site-config";
 
 interface Props {
   email: string;
@@ -7,23 +8,30 @@ interface Props {
 
 const { email } = Astro.props;
 
-const socialLinks = [
-  { label: "GitHub", href: "https://github.com", icon: GithubLogoIcon },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: LinkedinLogoIcon },
-  { label: "X", href: "https://x.com", icon: XLogoIcon },
-];
+const site = await getSiteConfig();
+const social = site.social;
+
+const socialIcons: Record<string, typeof GithubLogoIcon> = {
+  GitHub: GithubLogoIcon,
+  LinkedIn: LinkedinLogoIcon,
+  X: XLogoIcon,
+};
 ---
 
 <div class="flex items-center gap-1">
-  {socialLinks.map((social) => (
+  {social.map((socialLink) => (
     <a
-      href={social.href}
+      href={socialLink.url}
       target="_blank"
       rel="noreferrer"
-      aria-label={social.label}
+      aria-label={socialLink.label}
       class="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-lg transition-colors"
     >
-      <social.icon size={16} />
+      {socialIcons[socialLink.label] ? (
+        <socialIcons[socialLink.label] size={16} />
+      ) : (
+        <span class="text-xs font-medium">{socialLink.label.slice(0, 2)}</span>
+      )}
     </a>
   ))}
   <a
