@@ -1,0 +1,24 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { AppShell } from "@/components/layout/AppShell";
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentPath?: string;
+  pageTitle?: string;
+}
+
+const {
+  title = "Dream — Homepage",
+  description = "Personal homepage of Dream. Projects, writing, and experiments.",
+  currentPath = "/",
+  pageTitle,
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <AppShell client:load currentPath={currentPath} pageTitle={pageTitle}>
+    <slot />
+  </AppShell>
+</BaseLayout>

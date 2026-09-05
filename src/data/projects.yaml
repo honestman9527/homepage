@@ -1,0 +1,37 @@
+- id: project-one
+  title: Project One
+  description: >-
+    Placeholder for your flagship project. One or two sentences about what it
+    does, who it is for, and what makes it interesting.
+  tags: [Astro, React, Tailwind CSS]
+  href: https://github.com/example/project-one
+  demoHref: https://example.com
+  year: 2026
+  featured: true
+
+- id: project-two
+  title: Project Two
+  description: >-
+    Placeholder description for the second project — a short problem/solution
+    blurb works well here.
+  tags: [TypeScript, Node.js]
+  href: https://github.com/example/project-two
+  year: 2025
+
+- id: project-three
+  title: Project Three
+  description: >-
+    Placeholder description for the third project. Keep it to one or two
+    sentences for scannability.
+  tags: [Rust, WASM]
+  href: https://github.com/example/project-three
+  year: 2025
+
+- id: project-four
+  title: Project Four
+  description: >-
+    Placeholder description for the fourth project — link out to the repo or
+    live demo later.
+  tags: [Python, ML]
+  href: https://github.com/example/project-four
+  year: 2024

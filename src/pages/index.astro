@@ -1,21 +1,73 @@
 ---
 import { client } from "@astrojs/react/client.js";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import { Header } from "@/components/Header";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import Badge from "@/components/Badge.astro";
 import { Hero } from "@/components/Hero";
-import { Work } from "@/components/Work";
-import { About } from "@/components/About";
-import { Writing } from "@/components/Writing";
 import { Footer } from "@/components/Footer";
+import { ArrowUpRightIcon, CalendarBlankIcon } from "@phosphor-icons/react";
+
+const blogPosts = (await import("astro:content")).getCollection("blog");
+const posts = (await blogPosts)
+  .filter((post) => !post.data.draft)
+  .sort(
+    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+  )
+  .slice(0, 3);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 ---
 
-<BaseLayout>
-  <Header client:load />
-  <main>
-    <Hero client:load />
-    <Work client:visible />
-    <About client:visible />
-    <Writing client:visible />
-  </main>
+<SidebarLayout currentPath="/">
+  <Hero client:load />
+
+  <section class="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+    <div class="mb-10 flex items-end justify-between gap-4">
+      <div class="flex flex-col gap-2">
+        <p class="text-electric font-mono text-sm tracking-widest uppercase">
+          Latest writing
+        </p>
+        <h2 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          From the blog
+        </h2>
+      </div>
+      <a
+        href="/blog"
+        class="text-muted-foreground hover:text-foreground flex shrink-0 items-center gap-1 text-sm transition-colors"
+      >
+        View all <ArrowUpRightIcon size={14} />
+      </a>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      {posts.map((post) => (
+        <a
+          href={`/blog/${post.id}`}
+          class="group bg-card ring-foreground/10 hover:shadow-electric/5 flex flex-col gap-1 rounded-xl p-4 ring-1 transition-shadow hover:shadow-lg"
+        >
+          <div class="flex items-center justify-between gap-4">
+            <h3 class="group-hover:text-electric font-heading text-base font-medium transition-colors">
+              {post.data.title}
+            </h3>
+            <span class="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
+              <CalendarBlankIcon size={12} />
+              {formatDate(post.data.pubDate)}
+            </span>
+          </div>
+          <p class="text-muted-foreground text-sm">{post.data.description}</p>
+          <div class="mt-1 flex flex-wrap gap-1.5">
+            {post.data.tags.map((tag) => (
+              <Badge variant="outline">{tag}</Badge>
+            ))}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
   <Footer client:visible />
-</BaseLayout>
+</SidebarLayout>

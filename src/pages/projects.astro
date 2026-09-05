@@ -1,0 +1,67 @@
+---
+import { getCollection } from "astro:content";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import Badge from "@/components/Badge.astro";
+import { ArrowUpRightIcon, CalendarBlankIcon } from "@phosphor-icons/react";
+
+const projects = (await getCollection("projects")).sort(
+  (a, b) => b.data.year - a.data.year,
+);
+---
+
+<SidebarLayout
+  title="Projects — Dream"
+  description="Selected projects and experiments."
+  currentPath="/projects"
+>
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <div class="mb-10 flex flex-col gap-2">
+      <p class="text-electric font-mono text-sm tracking-widest uppercase">
+        Selected work
+      </p>
+      <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+        Things I&apos;ve built
+      </h1>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      {projects.map((project) => (
+        <a
+          href={project.data.href}
+          target="_blank"
+          rel="noreferrer"
+          class:list={[
+            "group bg-card ring-foreground/10 hover:shadow-electric/5 flex flex-col rounded-xl p-5 ring-1 transition-shadow hover:shadow-lg",
+            project.data.featured && "sm:col-span-2",
+          ]}
+        >
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="group-hover:text-electric font-heading flex items-center gap-2 text-lg font-medium transition-colors">
+              {project.data.title}
+              <ArrowUpRightIcon
+                size={16}
+                class="opacity-0 transition-opacity group-hover:opacity-100"
+              />
+            </h2>
+            <span class="text-muted-foreground shrink-0 font-mono text-xs">
+              {project.data.year}
+            </span>
+          </div>
+          <p class="text-muted-foreground mt-1 text-pretty">
+            {project.data.description}
+          </p>
+          <div class="mt-4 flex flex-wrap items-center gap-1.5">
+            {project.data.tags.map((tag) => (
+              <Badge variant="outline">{tag}</Badge>
+            ))}
+            {project.data.demoHref && (
+              <span class="text-electric ml-auto flex items-center gap-1 text-xs font-medium">
+                Live demo <ArrowUpRightIcon size={12} />
+              </span>
+            )}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+</SidebarLayout>

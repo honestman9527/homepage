@@ -1,0 +1,62 @@
+---
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import Avatar from "@/components/Avatar.astro";
+import Badge from "@/components/Badge.astro";
+
+const skills = [
+  "TypeScript",
+  "React",
+  "Astro",
+  "Tailwind CSS",
+  "Node.js",
+  "Rust",
+  "Python",
+  "PostgreSQL",
+  "Docker",
+  "GraphQL",
+];
+---
+
+<SidebarLayout
+  title="About — Dream"
+  description="A short introduction."
+  currentPath="/about"
+>
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <div class="mb-10 flex flex-col gap-2">
+      <p class="text-electric font-mono text-sm tracking-widest uppercase">
+        About
+      </p>
+      <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+        A short introduction
+      </h1>
+    </div>
+
+    <div class="grid items-start gap-10 md:grid-cols-[auto_1fr]">
+      <Avatar fallback="DR" class="size-24 text-2xl" />
+
+      <div class="flex max-w-2xl flex-col gap-4 text-lg text-pretty">
+        <p>
+          Placeholder paragraph — introduce yourself here. Two or three
+          sentences about who you are, what you care about, and the kind of
+          problems you enjoy solving.
+        </p>
+        <p class="text-muted-foreground">
+          A second placeholder paragraph works well for your current focus,
+          location, or what you&apos;re learning right now.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-14">
+      <p class="text-muted-foreground mb-3 font-mono text-xs tracking-widest uppercase">
+        Toolbox
+      </p>
+      <div class="flex flex-wrap gap-1.5">
+        {skills.map((skill) => (
+          <Badge variant="secondary" class="px-3 py-1">{skill}</Badge>
+        ))}
+      </div>
+    </div>
+  </section>
+</SidebarLayout>

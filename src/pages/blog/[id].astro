@@ -1,0 +1,59 @@
+---
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import Badge from "@/components/Badge.astro";
+import { CalendarBlankIcon } from "@phosphor-icons/react";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { id: post.id },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+---
+
+<SidebarLayout
+  title={`${post.data.title} — Dream`}
+  description={post.data.description}
+  currentPath="/blog"
+>
+  <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <header class="flex flex-col gap-3">
+      <div class="text-electric flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase">
+        <CalendarBlankIcon size={12} />
+        {formatDate(post.data.pubDate)}
+      </div>
+      <h1 class="font-display text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+        {post.data.title}
+      </h1>
+      <p class="text-muted-foreground text-lg text-pretty">
+        {post.data.description}
+      </p>
+      <div class="mt-1 flex flex-wrap gap-1.5">
+        {post.data.tags.map((tag) => (
+          <Badge variant="outline">{tag}</Badge>
+        ))}
+      </div>
+    </header>
+
+    <div class="prose-blog mt-10">
+      <Content />
+    </div>
+  </article>
+</SidebarLayout>

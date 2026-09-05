@@ -1,0 +1,17 @@
+---
+interface Props {
+  fallback: string;
+  class?: string;
+}
+
+const { fallback, class: className } = Astro.props;
+---
+
+<span
+  class:list={[
+    "bg-muted ring-foreground/10 relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-display font-semibold ring-1",
+    className,
+  ]}
+>
+  {fallback}
+</span>
