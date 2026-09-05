@@ -1,24 +1,46 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/layout/AppShell";
+import { getLangFromUrl, translatePath, useTranslations } from "@/i18n/utils";
 
 interface Props {
   title?: string;
   description?: string;
   currentPath?: string;
-  pageTitle?: string;
 }
 
 const {
-  title = "Dream — Homepage",
-  description = "Personal homepage of Dream. Projects, writing, and experiments.",
+  title,
+  description,
   currentPath = "/",
-  pageTitle,
 } = Astro.props;
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const pageTitle = title ?? t("site.title");
+const pageDescription = description ?? t("site.description");
+
+const nav = (["home", "projects", "blog", "about"] as const).map((key) => ({
+  label: t(`nav.${key}` as const),
+  href: translatePath(lang, key === "home" ? "/" : `/${key}`),
+}));
+
+const localizedPath =
+  currentPath === "/" || currentPath === "/en/"
+    ? lang === "zh"
+      ? "/"
+      : "/en/"
+    : currentPath;
 ---
 
-<BaseLayout title={title} description={description}>
-  <AppShell client:load currentPath={currentPath} pageTitle={pageTitle}>
+<BaseLayout title={pageTitle} description={pageDescription} lang={lang}>
+  <AppShell
+    client:load
+    currentPath={localizedPath}
+    currentLang={lang}
+    nav={nav}
+    elsewhereLabel={t("sidebar.elsewhere")}
+  >
     <slot />
   </AppShell>
 </BaseLayout>

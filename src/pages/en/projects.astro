@@ -2,11 +2,10 @@
 import { getCollection } from "astro:content";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Badge from "@/components/Badge.astro";
-import { getLangFromUrl, useTranslations } from "@/i18n/utils";
+import { useTranslations } from "@/i18n/utils";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 
-const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
+const t = useTranslations("en");
 
 const projects = (await getCollection("projects")).sort(
   (a, b) => b.data.year - a.data.year,
@@ -16,7 +15,7 @@ const projects = (await getCollection("projects")).sort(
 <SidebarLayout
   title={`${t("projects.title")} — Dream`}
   description={t("projects.subtitle")}
-  currentPath={lang === "zh" ? "/projects" : "/en/projects"}
+  currentPath="/en/projects"
 >
   <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
     <div class="mb-10 flex flex-col gap-2">

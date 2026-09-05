@@ -1,0 +1,36 @@
+---
+import { GithubLogoIcon, LinkedinLogoIcon, XLogoIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react";
+
+interface Props {
+  email: string;
+}
+
+const { email } = Astro.props;
+
+const socialLinks = [
+  { label: "GitHub", href: "https://github.com", icon: GithubLogoIcon },
+  { label: "LinkedIn", href: "https://linkedin.com", icon: LinkedinLogoIcon },
+  { label: "X", href: "https://x.com", icon: XLogoIcon },
+];
+---
+
+<div class="flex items-center gap-1">
+  {socialLinks.map((social) => (
+    <a
+      href={social.href}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={social.label}
+      class="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-lg transition-colors"
+    >
+      <social.icon size={16} />
+    </a>
+  ))}
+  <a
+    href={`mailto:${email}`}
+    aria-label="Email"
+    class="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-lg transition-colors"
+  >
+    <EnvelopeSimpleIcon size={16} />
+  </a>
+</div>

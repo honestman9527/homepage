@@ -4,28 +4,42 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import type { Language } from "@/i18n/ui";
 
 interface AppShellProps {
   currentPath: string;
-  pageTitle: string;
+  currentLang: Language;
+  nav: { label: string; href: string }[];
+  elsewhereLabel: string;
   children: React.ReactNode;
 }
 
-function toPageLabel(currentPath: string) {
-  if (currentPath === "/") return "Home";
-  const segment = currentPath.split("/")[1] ?? "";
-  return segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : "Home";
-}
+export function AppShell({
+  currentPath,
+  currentLang,
+  nav,
+  elsewhereLabel,
+  children,
+}: AppShellProps) {
+  const pageTitle =
+    nav.find((item) => item.href === currentPath)?.label ?? nav[0]?.label ?? "";
 
-export function AppShell({ currentPath, pageTitle, children }: AppShellProps) {
   return (
     <SidebarProvider>
-      <AppSidebar currentPath={currentPath} />
+      <AppSidebar
+        currentPath={currentPath}
+        nav={nav}
+        elsewhereLabel={elsewhereLabel}
+      />
       <SidebarInset>
         <header className="bg-background/70 sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-3 backdrop-blur-md">
           <SidebarTrigger />
           <span className="font-display text-sm font-semibold tracking-tight">
-            {pageTitle ?? toPageLabel(currentPath)}
+            {pageTitle}
+          </span>
+          <span className="ml-auto">
+            <LanguageToggle currentPath={currentPath} currentLang={currentLang} />
           </span>
         </header>
         <main className="flex-1">{children}</main>

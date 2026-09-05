@@ -2,19 +2,17 @@
 import { getCollection } from "astro:content";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Badge from "@/components/Badge.astro";
-import { getLangFromUrl, useTranslations } from "@/i18n/utils";
+import { useTranslations } from "@/i18n/utils";
 import { ArrowUpRightIcon, CalendarBlankIcon } from "@phosphor-icons/react";
 
-const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
+const t = useTranslations("en");
 
 const posts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
   .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 
-const locale = lang === "zh" ? "zh-CN" : "en-US";
 const formatDate = (date: Date) =>
-  date.toLocaleDateString(locale, {
+  date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -24,7 +22,7 @@ const formatDate = (date: Date) =>
 <SidebarLayout
   title={`${t("blog.title")} — Dream`}
   description={t("blog.subtitle")}
-  currentPath={lang === "zh" ? "/blog" : "/en/blog"}
+  currentPath="/en/blog"
 >
   <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
     <div class="mb-10 flex flex-col gap-2">
@@ -39,7 +37,7 @@ const formatDate = (date: Date) =>
     <div class="flex flex-col gap-3">
       {posts.map((post) => (
         <a
-          href={lang === "zh" ? `/blog/${post.id}` : `/en/blog/${post.id}`}
+          href={`/en/blog/${post.id}`}
           class="group bg-card ring-foreground/10 hover:shadow-electric/5 flex flex-col gap-1 rounded-xl p-5 ring-1 transition-shadow hover:shadow-lg"
         >
           <div class="flex items-center justify-between gap-4">

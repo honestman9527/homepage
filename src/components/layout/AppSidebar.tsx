@@ -1,4 +1,11 @@
-import { ArchiveBoxIcon, ArticleIcon, GithubLogoIcon, HouseIcon, LinkedinLogoIcon, XLogoIcon } from "@phosphor-icons/react";
+import {
+  ArchiveBoxIcon,
+  ArticleIcon,
+  GithubLogoIcon,
+  HouseIcon,
+  LinkedinLogoIcon,
+  XLogoIcon,
+} from "@phosphor-icons/react";
 
 import {
   Sidebar,
@@ -17,14 +24,11 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface AppSidebarProps {
   currentPath: string;
+  nav: { label: string; href: string }[];
+  elsewhereLabel: string;
 }
 
-const navItems = [
-  { label: "Home", href: "/", icon: HouseIcon },
-  { label: "Projects", href: "/projects", icon: ArchiveBoxIcon },
-  { label: "Blog", href: "/blog", icon: ArticleIcon },
-  { label: "About", href: "/about", icon: ArticleIcon },
-];
+const navIcons = [HouseIcon, ArchiveBoxIcon, ArticleIcon, ArticleIcon];
 
 const socialLinks = [
   { label: "GitHub", href: "https://github.com", icon: GithubLogoIcon },
@@ -32,12 +36,21 @@ const socialLinks = [
   { label: "X", href: "https://x.com", icon: XLogoIcon },
 ];
 
-export function AppSidebar({ currentPath }: AppSidebarProps) {
+export function AppSidebar({
+  currentPath,
+  nav,
+  elsewhereLabel,
+}: AppSidebarProps) {
+  const navItems = nav.map((item, index) => ({
+    ...item,
+    icon: navIcons[index] ?? ArticleIcon,
+  }));
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <a
-          href="/"
+          href={navItems[0]?.href ?? "/"}
           className="flex h-10 items-center gap-2 rounded-md px-2 font-display text-lg font-semibold tracking-tight group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:px-0"
         >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">
@@ -70,7 +83,7 @@ export function AppSidebar({ currentPath }: AppSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup className="mt-auto">
-          <SidebarGroupLabel>Elsewhere</SidebarGroupLabel>
+          <SidebarGroupLabel>{elsewhereLabel}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {socialLinks.map((social) => (

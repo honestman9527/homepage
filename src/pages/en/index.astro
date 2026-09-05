@@ -3,14 +3,13 @@ import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/Avatar.astro";
 import Badge from "@/components/Badge.astro";
 import SocialLinks from "@/components/SocialLinks.astro";
-import { getLangFromUrl, useTranslations } from "@/i18n/utils";
+import { useTranslations } from "@/i18n/utils";
 import { MapPinIcon } from "@phosphor-icons/react";
 
-const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
+const t = useTranslations("en");
 ---
 
-<SidebarLayout currentPath="/">
+<SidebarLayout currentPath="/en/">
   <section class="flex min-h-[calc(100svh-3rem)] flex-col items-center justify-center px-4 py-16 sm:px-6">
     <div class="bg-grid mask-fade-y pointer-events-none absolute inset-0" aria-hidden="true"></div>
 
