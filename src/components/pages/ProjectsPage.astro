@@ -1,0 +1,33 @@
+---
+import type { Language } from "@/i18n/ui";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import { getProjectItems } from "@/lib/content";
+import { pageSlice } from "@/lib/content/model";
+import { getSiteConfig } from "@/lib/site-config";
+import { getTranslations } from "@/i18n/utils";
+import { resolveCover } from "@/lib/content/cover";
+import { ProjectCard } from "@/components/content/ProjectCard";
+import Cover from "@/components/content/Cover.astro";
+import ListingFooter from "@/components/content/ListingFooter.astro";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+interface Props { lang: Language; currentPage?: number; }
+const { lang, currentPage = 1 } = Astro.props;
+const site = await getSiteConfig();
+const t = getTranslations(lang);
+const { items, totalPages } = pageSlice(await getProjectItems(lang), site.listing.projects.pageSize, currentPage);
+const suffix = currentPage > 1 ? ` · ${t("pagination.page", { page: currentPage })}` : "";
+---
+<SidebarLayout activeNavId="projects" title={`${t("projects.title")}${suffix} — ${site.name}`} description={t("projects.subtitle")}>
+  <section class="listing-page">
+    <header class="page-heading"><p>{t("projects.title")}</p><h1>{t("projects.subtitle")}</h1></header>
+    {items.length ? <div class="card-grid">{items.map((project, index) => {
+      const cover = resolveCover(project.data.cover, site.listing.projects.defaultCover, site.covers.default);
+      return <ProjectCard title={project.title} description={project.description} href={project.data.href} demoHref={project.data.demoHref}
+        contentLang={project.contentLang} year={project.data.year} tags={project.data.tags} featured={project.data.featured}
+        originalLabel={project.originalLabel} featuredLabel={t("projects.featured")} visitLabel={t("projects.visit")} demoLabel={t("projects.liveDemo")} hasCover={cover.type !== "none"}>
+        <Cover slot="cover" cover={cover} contentKey={project.id} options={site.covers.topographic} aspectRatio={site.covers.aspectRatio} eager={index === 0} />
+      </ProjectCard>;
+    })}</div> : <Empty><EmptyHeader><EmptyTitle>{t("empty.projects.title")}</EmptyTitle><EmptyDescription>{t("empty.projects.description")}</EmptyDescription></EmptyHeader></Empty>}
+    <ListingFooter currentPage={currentPage} totalPages={totalPages} lang={lang} kind="projects" />
+  </section>
+</SidebarLayout>

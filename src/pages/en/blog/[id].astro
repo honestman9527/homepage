@@ -1,22 +1,10 @@
 ---
-import { getCollection, render } from "astro:content";
-import type { CollectionEntry } from "astro:content";
+import type { InferGetStaticPropsType } from "astro";
 import BlogPostShell from "@/layouts/BlogPostShell.astro";
-
-export async function getStaticPaths() {
-  const posts = await getCollection("blog", ({ data }) => !data.draft);
-  return posts.map((post) => ({
-    params: { id: post.id },
-    props: { post, lang: "en" as const },
-  }));
-}
-
-interface Props {
-  post: CollectionEntry<"blog">;
-  lang: "zh" | "en";
-}
-
-const { post, lang } = Astro.props;
+import { getBlogPaths } from "@/lib/content";
+export async function getStaticPaths() { return getBlogPaths("en"); }
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const props = Astro.props;
+if (props.kind === "redirect") return Astro.redirect(props.destination, 307);
 ---
-
-<BlogPostShell post={post} lang={lang} />
+{props.kind === "article" && <BlogPostShell {...props} />}

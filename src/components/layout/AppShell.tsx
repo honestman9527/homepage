@@ -1,65 +1,79 @@
+import { useEffect, useState, type ReactNode } from "react";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/AppSidebar";
+import { AppSidebar } from "./AppSidebar";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import type { Language } from "@/i18n/ui";
+import type { ThemeLabels } from "@/components/ThemeToggle";
+import type { LanguageLink } from "@/lib/content";
+import type { NavId } from "@/i18n/ui";
+import type { NavItem, SidebarLabels, SocialLink } from "./types";
 
-interface SocialLink {
-  label: string;
-  url: string;
-}
-
-interface AppShellProps {
-  currentPath: string;
-  currentLang: Language;
-  nav: { label: string; href: string }[];
-  elsewhereLabel: string;
+interface Props {
+  activeNavId: NavId;
+  pageTitle: string;
+  nav: NavItem[];
+  languageLink: LanguageLink;
+  labels: SidebarLabels;
+  themeLabels: ThemeLabels;
   brandName: string;
   brandDomain: string;
   socialLinks: SocialLink[];
-  children: React.ReactNode;
+  year: number;
+  children: ReactNode;
 }
-
 export function AppShell({
-  currentPath,
-  currentLang,
+  activeNavId,
+  pageTitle,
   nav,
-  elsewhereLabel,
+  languageLink,
+  labels,
+  themeLabels,
   brandName,
   brandDomain,
   socialLinks,
+  year,
   children,
-}: AppShellProps) {
-  const pageTitle =
-    nav.find((item) => item.href === currentPath)?.label ?? nav[0]?.label ?? "";
-
+}: Props) {
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    try {
+      const value = document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith("sidebar_state="))
+        ?.split("=")[1];
+      if (value === "true" || value === "false") setOpen(value === "true");
+    } catch {
+      /* Cookie access may be unavailable. */
+    }
+  }, []);
   return (
-    <SidebarProvider>
+    <SidebarProvider open={open} onOpenChange={setOpen}>
       <AppSidebar
-        currentPath={currentPath}
-        nav={nav}
-        elsewhereLabel={elsewhereLabel}
-        brandName={brandName}
-        brandDomain={brandDomain}
-        socialLinks={socialLinks}
+        {...{
+          activeNavId,
+          nav,
+          labels,
+          themeLabels,
+          brandName,
+          brandDomain,
+          socialLinks,
+          year,
+        }}
       />
-      <SidebarInset>
-        <header className="bg-background/70 sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-3 backdrop-blur-md">
-          <SidebarTrigger />
-          <span className="font-display text-sm font-semibold tracking-tight">
+      <SidebarInset id="main-content" tabIndex={-1}>
+        <header className="site-header">
+          <SidebarTrigger label={labels.toggle} />
+          <span className="font-display min-w-0 truncate text-sm font-semibold">
             {pageTitle}
           </span>
-          <span className="ml-auto">
-            <LanguageToggle
-              currentPath={currentPath}
-              currentLang={currentLang}
-            />
+          <span className="ml-auto shrink-0">
+            <LanguageToggle link={languageLink} />
           </span>
         </header>
-        <main className="flex-1">{children}</main>
+        <div className="flex-1 min-w-0">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

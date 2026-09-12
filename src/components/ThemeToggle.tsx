@@ -1,37 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MoonIcon, SunIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { readTheme, type Theme } from "@/lib/theme";
 
-type Theme = "light" | "dark";
-
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+export interface ThemeLabels {
+  toggle: string;
+  light: string;
+  dark: string;
 }
-
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-
+export function ThemeToggle({ labels }: { labels: ThemeLabels }) {
+  const [theme, setTheme] = useState<Theme | null>(null);
+  const preference = useRef<Theme | null>(null);
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    window.localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const isDark = theme === "dark";
-
+    const apply = (next: Theme) => {
+      document.documentElement.classList.toggle("dark", next === "dark");
+      setTheme(next);
+    };
+    const initial = readTheme();
+    preference.current = initial.preference;
+    apply(initial.theme);
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onSystem = () => {
+      if (preference.current === null) apply(media.matches ? "dark" : "light");
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "theme" && event.key !== null) return;
+      const current = readTheme();
+      preference.current = current.preference;
+      apply(current.theme);
+    };
+    media.addEventListener("change", onSystem);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      media.removeEventListener("change", onSystem);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+  function toggle() {
+    const next = (theme ?? readTheme().theme) === "dark" ? "light" : "dark";
+    preference.current = next;
+    try {
+      window.localStorage.setItem("theme", next);
+    } catch {
+      /* Keep an in-memory preference. */
+    }
+    document.documentElement.classList.toggle("dark", next === "dark");
+    setTheme(next);
+  }
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={
+        theme === null
+          ? labels.toggle
+          : theme === "dark"
+            ? labels.light
+            : labels.dark
+      }
+      onClick={toggle}
     >
-      {isDark ? <SunIcon /> : <MoonIcon />}
+      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </Button>
   );
 }

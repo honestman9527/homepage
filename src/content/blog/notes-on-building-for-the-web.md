@@ -1,4 +1,7 @@
 ---
+lang: en
+isOriginal: true
+translationKey: notes-on-building-for-the-web
 title: "Notes on building for the web in 2026"
 description: "A placeholder essay about tooling, frameworks, and what actually matters when shipping side projects."
 pubDate: 2026-07-12

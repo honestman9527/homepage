@@ -1,0 +1,33 @@
+---
+import type { Language } from "@/i18n/ui";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import { getBlogItems } from "@/lib/content";
+import { pageSlice } from "@/lib/content/model";
+import { getSiteConfig } from "@/lib/site-config";
+import { formatDate, getTranslations } from "@/i18n/utils";
+import { resolveCover } from "@/lib/content/cover";
+import { BlogCard } from "@/components/content/BlogCard";
+import Cover from "@/components/content/Cover.astro";
+import ListingFooter from "@/components/content/ListingFooter.astro";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+interface Props { lang: Language; currentPage?: number; }
+const { lang, currentPage = 1 } = Astro.props;
+const site = await getSiteConfig();
+const t = getTranslations(lang);
+const { items, totalPages } = pageSlice(await getBlogItems(lang), site.listing.blog.pageSize, currentPage);
+const suffix = currentPage > 1 ? ` · ${t("pagination.page", { page: currentPage })}` : "";
+---
+<SidebarLayout activeNavId="blog" title={`${t("blog.title")}${suffix} — ${site.name}`} description={t("blog.subtitle")}>
+  <section class="listing-page">
+    <header class="page-heading"><p>{t("blog.title")}</p><h1>{t("blog.subtitle")}</h1></header>
+    {items.length ? <div class="card-grid">{items.map(({ post, original, href, key, originalLabel }, index) => {
+      const cover = resolveCover(post.data.cover, original.data.cover, site.listing.blog.defaultCover, site.covers.default);
+      return <BlogCard title={post.data.title} description={post.data.description} href={href} contentLang={post.data.lang}
+        date={formatDate(original.data.pubDate, lang)} dateTime={original.data.pubDate.toISOString()} tags={post.data.tags}
+        originalLabel={originalLabel} readLabel={t("blog.readPost")} hasCover={cover.type !== "none"}>
+        <Cover slot="cover" cover={cover} contentKey={key} options={site.covers.topographic} aspectRatio={site.covers.aspectRatio} href={href} label={post.data.title} eager={index === 0} />
+      </BlogCard>;
+    })}</div> : <Empty><EmptyHeader><EmptyTitle>{t("empty.blog.title")}</EmptyTitle><EmptyDescription>{t("empty.blog.description")}</EmptyDescription></EmptyHeader></Empty>}
+    <ListingFooter currentPage={currentPage} totalPages={totalPages} lang={lang} kind="blog" />
+  </section>
+</SidebarLayout>

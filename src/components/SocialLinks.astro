@@ -1,45 +1,11 @@
 ---
-import { GithubLogoIcon, LinkedinLogoIcon, XLogoIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react";
-import { getSiteConfig } from "@/lib/site-config";
-
-interface Props {
-  email: string;
-}
-
-const { email } = Astro.props;
-
-const site = await getSiteConfig();
-const social = site.social;
-
-const socialIcons: Record<string, typeof GithubLogoIcon> = {
-  GitHub: GithubLogoIcon,
-  LinkedIn: LinkedinLogoIcon,
-  X: XLogoIcon,
-};
+import { GithubLogoIcon, LinkedinLogoIcon, XLogoIcon, EnvelopeSimpleIcon, GlobeIcon } from "@phosphor-icons/react";
+import type { SocialLink } from "@/components/layout/types";
+interface Props { email: string; social: SocialLink[]; emailLabel: string; }
+const { email, social, emailLabel } = Astro.props;
+const icons = { github: GithubLogoIcon, linkedin: LinkedinLogoIcon, x: XLogoIcon, website: GlobeIcon };
 ---
-
 <div class="flex items-center gap-1">
-  {social.map((socialLink) => {
-    const SocialIcon = socialIcons[socialLink.label];
-    return (
-      <a
-        href={socialLink.url}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={socialLink.label}
-        class="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-lg transition-colors"
-      >
-        {SocialIcon ? <SocialIcon size={16} /> : (
-          <span class="text-xs font-medium">{socialLink.label.slice(0, 2)}</span>
-        )}
-      </a>
-    );
-  })}
-  <a
-    href={`mailto:${email}`}
-    aria-label="Email"
-    class="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-lg transition-colors"
-  >
-    <EnvelopeSimpleIcon size={16} />
-  </a>
+  {social.map((link) => { const Icon = icons[link.type]; return <a href={link.url} target="_blank" rel="noreferrer" aria-label={link.label} class="social-link"><Icon size={18} /></a>; })}
+  <a href={`mailto:${email}`} aria-label={emailLabel} class="social-link"><EnvelopeSimpleIcon size={18} /></a>
 </div>

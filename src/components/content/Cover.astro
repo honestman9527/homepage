@@ -1,0 +1,31 @@
+---
+import { Image } from "astro:assets";
+import { contourPaths } from "@/lib/content/cover";
+import type { Cover, TopographicOptions } from "@/lib/config/schema";
+interface Props {
+  cover: Cover; contentKey: string; options: TopographicOptions;
+  aspectRatio: "16:9" | "4:3" | "1:1"; href?: string; label?: string; eager?: boolean;
+}
+const { cover, contentKey, options, aspectRatio, href, label, eager = false } = Astro.props;
+const pattern = cover.type === "topographic" ? { ...options, ...cover } : options;
+const paths = cover.type === "none" ? [] : contourPaths(contentKey, pattern);
+const Tag = href ? "a" : "div";
+---
+{cover.type !== "none" && <Tag href={href} aria-label={href ? label : undefined} class="cover" data-palette={pattern.palette} style={{ aspectRatio: aspectRatio.replace(":", "/") }}>
+  <svg class="cover-contours" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="currentColor" stroke-width={pattern.strokeWidth}>
+      {paths.map((d, index) => <path d={d} opacity={index % 4 === 0 ? 0.8 : 0.35} />)}
+    </g>
+  </svg>
+  {cover.type === "image" && (typeof cover.src === "string"
+    ? <img data-cover-image src={cover.src} alt={cover.alt} class="cover-image" loading={eager ? "eager" : "lazy"} decoding="async" />
+    : <Image src={cover.src} alt={cover.alt} class="cover-image" widths={[400, 640, 960]} sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw" loading={eager ? "eager" : "lazy"} />)}
+</Tag>}
+<script>
+  // One small native enhancement for failed remote images; cards stay static.
+  for (const image of document.querySelectorAll<HTMLImageElement>("img[data-cover-image]")) {
+    const fallback = () => { image.hidden = true; };
+    image.addEventListener("error", fallback, { once: true });
+    if (image.complete && image.naturalWidth === 0) fallback();
+  }
+</script>

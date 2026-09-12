@@ -1,57 +1,31 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/layout/AppShell";
-import { getLangFromUrl, translatePath, useTranslations } from "@/i18n/utils";
+import { getLangFromUrl, getTranslations, otherLanguage } from "@/i18n/utils";
+import { localePath } from "@/i18n/routes";
 import { getSiteConfig } from "@/lib/site-config";
-
+import type { Language, NavId } from "@/i18n/ui";
+import type { LanguageLink } from "@/lib/content";
 interface Props {
-  title?: string;
-  description?: string;
-  currentPath?: string;
+  title?: string; description?: string; activeNavId: NavId;
+  languageLink?: LanguageLink; alternates?: { lang: Language; href: string }[];
+  article?: { published: Date; updated?: Date };
 }
-
-const {
-  title,
-  description,
-  currentPath = "/",
-} = Astro.props;
-
+const { title, description, activeNavId, article } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
-const t = useTranslations(lang);
+const t = getTranslations(lang);
 const site = await getSiteConfig();
-
-const siteTitleSuffix = {
-  zh: "主页",
-  en: "Homepage",
-} as const;
-
-const pageTitle = title ?? `${site.name} — ${siteTitleSuffix[lang]}`;
-const pageDescription = description ?? t("site.description");
-
-const nav = (["home", "projects", "blog", "about"] as const).map((key) => ({
-  label: t(`nav.${key}` as const),
-  href: translatePath(lang, key === "home" ? "/" : `/${key}`),
-}));
-
-const localizedPath =
-  currentPath === "/" || currentPath === "/en/"
-    ? lang === "zh"
-      ? "/"
-      : "/en/"
-    : currentPath;
+const other = otherLanguage(lang);
+const path = Astro.url.pathname.replace(/^\/en(?=\/|$)/, "");
+const languageLink = Astro.props.languageLink ?? { lang: other, href: localePath(other, path), label: other === "en" ? "English" : "中文" };
+const alternates = Astro.props.alternates ?? (["zh", "en"] as const).map((language) => ({ lang: language, href: localePath(language, path) }));
+const nav = (["home", "projects", "blog", "about"] as const).map((id) => ({ id, label: t(`nav.${id}`), href: localePath(lang, id === "home" ? "" : id) }));
 ---
-
-<BaseLayout title={pageTitle} description={pageDescription} lang={lang}>
-  <AppShell
-    client:load
-    currentPath={localizedPath}
-    currentLang={lang}
-    nav={nav}
-    elsewhereLabel={t("sidebar.elsewhere")}
-    brandName={site.name}
-    brandDomain={site.domain}
-    socialLinks={site.social}
-  >
+<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} lang={lang} skipLabel={t("common.skip")} alternates={alternates} article={article}>
+  <AppShell client:load activeNavId={activeNavId} pageTitle={t(`nav.${activeNavId}`)} nav={nav} languageLink={languageLink}
+    labels={{ elsewhere: t("sidebar.elsewhere"), toggle: t("sidebar.toggle"), title: t("sidebar.title"), description: t("sidebar.description"), close: t("sidebar.close") }}
+    themeLabels={{ toggle: t("theme.toggle"), light: t("theme.light"), dark: t("theme.dark") }}
+    brandName={site.name} brandDomain={Astro.site!.hostname} socialLinks={site.social} year={new Date().getUTCFullYear()}>
     <slot />
   </AppShell>
 </BaseLayout>

@@ -1,29 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { languagePrefixes, languages } from "@/i18n/ui";
-import type { Language } from "@/i18n/ui";
+import type { LanguageLink } from "@/lib/content";
 
-interface LanguageToggleProps {
-  currentPath: string;
-  currentLang: Language;
-}
-
-export function LanguageToggle({
-  currentPath,
-  currentLang,
-}: LanguageToggleProps) {
-  const otherLang = (
-    Object.keys(languages) as Language[]
-  ).find((lang) => lang !== currentLang)!;
-
-  const pathWithoutPrefix = currentPath.replace(
-    new RegExp(`^${languagePrefixes.en}(?=\\/|$)`),
-    "",
-  );
-  const targetHref = `${languagePrefixes[otherLang]}${pathWithoutPrefix}` || "/";
-
-  return (
-    <Button variant="ghost" size="sm" render={<a href={targetHref} />}>
-      {otherLang === "en" ? "EN" : "中"}
+export function LanguageToggle({ link }: { link: LanguageLink }) {
+  return link.href ? (
+    <Button
+      variant="ghost"
+      size="sm"
+      nativeButton={false}
+      render={<a href={link.href} hrefLang={link.lang} lang={link.lang} />}
+    >
+      {link.label}
     </Button>
+  ) : (
+    <span className="text-muted-foreground text-xs" aria-disabled="true">
+      {link.label}
+    </span>
   );
 }

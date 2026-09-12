@@ -1,50 +1,37 @@
 ---
 import "../styles/global.css";
-import { getSiteConfig } from "@/lib/site-config";
-
+import { readTheme } from "@/lib/theme";
+import type { Language } from "@/i18n/ui";
 interface Props {
-  title?: string;
-  description?: string;
-  lang?: string;
+  title: string; description: string; lang: Language; skipLabel: string;
+  alternates?: { lang: Language; href: string }[];
+  article?: { published: Date; updated?: Date };
 }
-
-const {
-  title,
-  description,
-  lang = "zh",
-} = Astro.props;
-
-const site = await getSiteConfig();
-const fallbackTitle = `${site.name} — Homepage`;
-const fallbackDescription = `Personal homepage of ${site.name}. Projects, writing, and experiments.`;
-
-const effectiveTitle = title ?? fallbackTitle;
-const effectiveDescription = description ?? fallbackDescription;
+const { title, description, lang, skipLabel, alternates = [], article } = Astro.props;
+const canonical = new URL(Astro.url.pathname.replace(/\/+$/, "") || "/", Astro.site);
+const themeScript = `document.documentElement.classList.toggle("dark", (${readTheme.toString()})().theme === "dark");`;
 ---
-
 <!doctype html>
 <html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={effectiveDescription} />
+    <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
-    <meta property="og:title" content={effectiveTitle} />
-    <meta property="og:description" content={effectiveDescription} />
-    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={article ? "article" : "website"} />
+    <meta property="og:url" content={canonical} />
+    {article && <meta property="article:published_time" content={article.published.toISOString()} />}
+    {article?.updated && <meta property="article:modified_time" content={article.updated.toISOString()} />}
+    <link rel="canonical" href={canonical} />
+    {alternates.map((alternate) => <link rel="alternate" hreflang={alternate.lang} href={new URL(alternate.href, Astro.site)} />)}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <script is:inline>
-      document.documentElement.classList.toggle(
-        "dark",
-        localStorage.getItem("theme") === "dark" ||
-          (!localStorage.getItem("theme") &&
-            matchMedia("(prefers-color-scheme: dark)").matches)
-      );
-    </script>
-    <title>{effectiveTitle}</title>
+    <script is:inline set:html={themeScript} />
+    <title>{title}</title>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">{skipLabel}</a>
     <slot />
-    <div class="noise-overlay" aria-hidden="true"></div>
   </body>
 </html>

@@ -1,15 +1,45 @@
-# Site-wide configuration. Everything here is safe to edit — pages read
-# from this file at build time. The file loader turns the top-level
-# `site` key into a single entry whose data matches the collection schema.
+# Build-time settings. Relative image paths are resolved from this YAML file.
 site:
   name: Honestman
-  domain: honestman.me
   initials: HM
   email: hello@honestman.me
   social:
-    - label: GitHub
+    - type: github
+      label: GitHub
       url: https://github.com/honestman9527
-    - label: LinkedIn
+    - type: linkedin
+      label: LinkedIn
       url: https://linkedin.com
-    - label: X
+    - type: x
+      label: X
       url: https://x.com
+  profile:
+    zh:
+      availability: 接受新项目委托
+      bio: 开发者，构建界面、工具与偶尔的实验。
+      location: 互联网 · 远程
+      about:
+        - 这里写介绍——一两句话说明你是谁、在意什么、喜欢解决什么样的问题。
+        - 第二段可以写你现在的关注点、坐标，或正在学的东西。
+    en:
+      availability: Available for new projects
+      bio: A developer crafting interfaces, tools, and the occasional experiment.
+      location: The internet · Remote
+      about:
+        - Introduce yourself here — who you are, what you care about, and the kind of problems you enjoy solving.
+        - A second paragraph works well for your current focus, location, or what you’re learning right now.
+  skills: [TypeScript, React, Astro, Tailwind CSS, Node.js, Rust, Python, PostgreSQL, Docker, GraphQL]
+  listing:
+    blog:
+      pageSize: 6
+    projects:
+      pageSize: 6
+  covers:
+    aspectRatio: '16:9'
+    default:
+      type: topographic
+    topographic:
+      seed: honestman
+      density: 12
+      strokeWidth: 1
+      palette: blue

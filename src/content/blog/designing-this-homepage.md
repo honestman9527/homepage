@@ -1,4 +1,7 @@
 ---
+lang: en
+isOriginal: true
+translationKey: designing-this-homepage
 title: "Designing this homepage, take one"
 description: "Placeholder post about the making of this site — the stack, the layout, and what I want it to become."
 pubDate: 2026-08-24

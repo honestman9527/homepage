@@ -1,0 +1,8 @@
+---
+import type { GetStaticPaths, Page as AstroPage } from "astro";
+import Page from "@/components/pages/ProjectsPage.astro";
+import { getListingPaths } from "@/lib/content";
+export const getStaticPaths = (async ({ paginate }) => getListingPaths(paginate, "en", "projects")) satisfies GetStaticPaths;
+interface Props { page: AstroPage<unknown>; }
+---
+<Page lang="en" currentPage={Astro.props.page.currentPage} />

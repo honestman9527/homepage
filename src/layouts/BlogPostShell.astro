@@ -1,58 +1,33 @@
 ---
-import { getCollection, render } from "astro:content";
-import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import type { BlogEntry } from "@/lib/content/model";
+import type { LanguageLink } from "@/lib/content";
+import type { Language } from "@/i18n/ui";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
-import Badge from "@/components/Badge.astro";
-import { CalendarBlankIcon } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
+import Cover from "@/components/content/Cover.astro";
+import { resolveCover } from "@/lib/content/cover";
 import { getSiteConfig } from "@/lib/site-config";
-
-interface Props {
-  post: CollectionEntry<"blog">;
-  lang: "zh" | "en";
-}
-
-const { post, lang } = Astro.props;
+import { formatDate, getTranslations } from "@/i18n/utils";
+interface Props { post: BlogEntry; original: BlogEntry; lang: Language; languageLink: LanguageLink; alternates: { lang: Language; href: string }[]; }
+const { post, original, lang, languageLink, alternates } = Astro.props;
 const { Content } = await render(post);
 const site = await getSiteConfig();
-const siteName = site.name;
-
-const locale = lang === "zh" ? "zh-CN" : "en-US";
-const formatDate = (date: Date) =>
-  date.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-const blogPath = lang === "zh" ? "/blog" : "/en/blog";
+const t = getTranslations(lang);
+const cover = resolveCover(post.data.cover, original.data.cover, site.listing.blog.defaultCover, site.covers.default);
 ---
-
-<SidebarLayout
-  title={`${post.data.title} — ${siteName}`}
-  description={post.data.description}
-  currentPath={blogPath}
->
-  <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-    <header class="flex flex-col gap-3">
-      <div class="text-electric flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase">
-        <CalendarBlankIcon size={12} />
-        {formatDate(post.data.pubDate)}
+<SidebarLayout activeNavId="blog" title={`${post.data.title} — ${site.name}`} description={post.data.description} languageLink={languageLink} alternates={alternates} article={{ published: original.data.pubDate, updated: post.data.updatedDate }}>
+  <article class="post-page" lang={post.data.lang}>
+    <header class="flex flex-col gap-4">
+      <div class="text-muted-foreground flex flex-wrap gap-3 font-mono text-xs">
+        <time datetime={original.data.pubDate.toISOString()}>{formatDate(original.data.pubDate, lang)}</time>
+        {post.data.updatedDate && <span>{t("common.updated")} <time datetime={post.data.updatedDate.toISOString()}>{formatDate(post.data.updatedDate, lang)}</time></span>}
       </div>
-      <h1 class="font-display text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-        {post.data.title}
-      </h1>
-      <p class="text-muted-foreground text-lg text-pretty">
-        {post.data.description}
-      </p>
-      <div class="mt-1 flex flex-wrap gap-1.5">
-        {post.data.tags.map((tag) => (
-          <Badge variant="outline">{tag}</Badge>
-        ))}
-      </div>
+      <h1 class="font-display text-3xl font-bold tracking-tight text-balance sm:text-4xl">{post.data.title}</h1>
+      <p class="text-muted-foreground text-lg text-pretty">{post.data.description}</p>
+      <div class="flex flex-wrap gap-1.5">{post.data.tags.map((tag) => <Badge variant="outline">{tag}</Badge>)}</div>
     </header>
-
-    <div class="prose-blog mt-10">
-      <Content />
-    </div>
+    <div class="post-cover"><Cover cover={cover} contentKey={post.data.translationKey} options={site.covers.topographic} aspectRatio={site.covers.aspectRatio} eager /></div>
+    <div class="prose-blog mt-10"><Content /></div>
   </article>
 </SidebarLayout>
