@@ -3,10 +3,6 @@ import {
   ArticleIcon,
   HouseIcon,
   UserCircleIcon,
-  GithubLogoIcon,
-  LinkedinLogoIcon,
-  XLogoIcon,
-  GlobeIcon,
 } from "@phosphor-icons/react";
 import {
   Sidebar,
@@ -14,7 +10,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -23,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ThemeToggle, type ThemeLabels } from "@/components/ThemeToggle";
 import type { NavId } from "@/i18n/ui";
-import type { NavItem, SidebarLabels, SocialLink } from "./types";
+import type { NavItem, SidebarLabels } from "./types";
 
 interface Props {
   activeNavId: NavId;
@@ -31,7 +26,6 @@ interface Props {
   labels: SidebarLabels;
   brandName: string;
   brandDomain: string;
-  socialLinks: SocialLink[];
   themeLabels: ThemeLabels;
   year: number;
 }
@@ -41,19 +35,12 @@ const navIcons = {
   blog: ArticleIcon,
   about: UserCircleIcon,
 };
-const socialIcons = {
-  github: GithubLogoIcon,
-  linkedin: LinkedinLogoIcon,
-  x: XLogoIcon,
-  website: GlobeIcon,
-};
 export function AppSidebar({
   activeNavId,
   nav,
   labels,
   brandName,
   brandDomain,
-  socialLinks,
   themeLabels,
   year,
 }: Props) {
@@ -100,29 +87,6 @@ export function AppSidebar({
                     >
                       <Icon />
                       <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupLabel>{labels.elsewhere}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {socialLinks.map((social) => {
-                const Icon = socialIcons[social.type];
-                return (
-                  <SidebarMenuItem key={social.url}>
-                    <SidebarMenuButton
-                      tooltip={social.label}
-                      render={
-                        <a href={social.url} target="_blank" rel="noreferrer" />
-                      }
-                    >
-                      <Icon />
-                      <span>{social.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

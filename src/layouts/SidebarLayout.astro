@@ -23,9 +23,9 @@ const nav = (["home", "projects", "blog", "about"] as const).map((id) => ({ id, 
 ---
 <BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} lang={lang} skipLabel={t("common.skip")} alternates={alternates} article={article}>
   <AppShell client:load activeNavId={activeNavId} pageTitle={t(`nav.${activeNavId}`)} nav={nav} languageLink={languageLink}
-    labels={{ elsewhere: t("sidebar.elsewhere"), toggle: t("sidebar.toggle"), title: t("sidebar.title"), description: t("sidebar.description"), close: t("sidebar.close") }}
+    labels={{ toggle: t("sidebar.toggle"), title: t("sidebar.title"), description: t("sidebar.description"), close: t("sidebar.close") }}
     themeLabels={{ toggle: t("theme.toggle"), light: t("theme.light"), dark: t("theme.dark") }}
-    brandName={site.name} brandDomain={Astro.site!.hostname} socialLinks={site.social} year={new Date().getUTCFullYear()}>
+    brandName={site.name} brandDomain={Astro.site!.hostname} year={new Date().getUTCFullYear()}>
     <slot />
   </AppShell>
 </BaseLayout>

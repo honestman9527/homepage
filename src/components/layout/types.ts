@@ -7,7 +7,6 @@ export interface NavItem {
 }
 export type SocialLink = SiteConfig["social"][number];
 export interface SidebarLabels {
-  elsewhere: string;
   toggle: string;
   title: string;
   description: string;

@@ -14,7 +14,7 @@ const site = await getSiteConfig();
   <section class="listing-page">
     <header class="page-heading"><p>{t("about.title")}</p><h1>{t("about.subtitle")}</h1></header>
     <div class="grid items-start gap-10 md:grid-cols-[auto_1fr]">
-      <Avatar fallback={site.initials} class="size-24 text-2xl" />
+      <Avatar fallback={site.initials} src={site.avatar} alt={site.name} class="size-24 text-2xl" />
       <div class="flex max-w-2xl flex-col gap-4 text-lg text-pretty">{site.profile[lang].about.map((paragraph) => <p>{paragraph}</p>)}</div>
     </div>
     <div class="mt-14"><h2 class="text-muted-foreground mb-3 font-mono text-xs tracking-widest uppercase">{t("about.toolbox")}</h2>

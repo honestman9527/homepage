@@ -58,7 +58,7 @@ src/data + src/content/blog
 
 ### 社交与个人资料
 
-`site.social` 的 `type` 为 `github`、`linkedin`、`x` 或 `website`，决定图标；`label` 是显示名称，改变排序或名称不会改变图标含义。`profile.zh`、`profile.en` 各包含 `bio`、`location`、`availability` 与 `about` 段落数组。
+`site.avatar` 是可选的头像 URI，支持 HTTP(S) 地址；未配置或加载失败时显示 `initials`。头像会在首页和关于页复用。`site.social` 的 `type` 为 `github`、`linkedin`、`x` 或 `website`，决定图标；`label` 是显示名称，改变排序或名称不会改变图标含义。`profile.zh`、`profile.en` 各包含 `bio`、`location`、`availability` 与 `about` 段落数组。
 
 ### 分页
 

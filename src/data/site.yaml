@@ -2,6 +2,7 @@
 site:
   name: Honestman
   initials: HM
+  avatar: https://github.com/honestman9527.png
   email: hello@honestman.me
   social:
     - type: github

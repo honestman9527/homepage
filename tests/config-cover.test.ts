@@ -121,15 +121,23 @@ describe("strict content schemas", () => {
     const site = {
       name: "Name",
       initials: "N",
+      avatar: "https://example.com/avatar.png",
       email: "me@example.com",
       social: [],
       profile: { zh: profile, en: profile },
       skills: [],
     };
     expect(siteSchema(image).parse(site).listing.blog.pageSize).toBe(6);
+    expect(siteSchema(image).parse(site).avatar).toBe(
+      "https://example.com/avatar.png",
+    );
     expect(siteSchema(image).safeParse({ ...site, email: "bad" }).success).toBe(
       false,
     );
+    expect(
+      siteSchema(image).safeParse({ ...site, avatar: "javascript:alert(1)" })
+        .success,
+    ).toBe(false);
     expect(
       siteSchema(image).safeParse({
         ...site,

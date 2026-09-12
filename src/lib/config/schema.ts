@@ -68,6 +68,7 @@ export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
     .object({
       name: text,
       initials: text,
+      avatar: url.optional(),
       email: z.email(),
       social: z.array(
         z

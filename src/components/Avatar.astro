@@ -1,10 +1,12 @@
 ---
 interface Props {
   fallback: string;
+  src?: string;
+  alt?: string;
   class?: string;
 }
 
-const { fallback, class: className } = Astro.props;
+const { fallback, src, alt = "", class: className } = Astro.props;
 ---
 
 <span
@@ -13,5 +15,15 @@ const { fallback, class: className } = Astro.props;
     className,
   ]}
 >
+  {src && (
+    <img
+      src={src}
+      alt={alt}
+      class="absolute inset-0 size-full object-cover"
+      loading="eager"
+      decoding="async"
+      onerror="this.remove()"
+    />
+  )}
   {fallback}
 </span>

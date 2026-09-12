@@ -9,7 +9,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import type { ThemeLabels } from "@/components/ThemeToggle";
 import type { LanguageLink } from "@/lib/content";
 import type { NavId } from "@/i18n/ui";
-import type { NavItem, SidebarLabels, SocialLink } from "./types";
+import type { NavItem, SidebarLabels } from "./types";
 
 interface Props {
   activeNavId: NavId;
@@ -20,7 +20,6 @@ interface Props {
   themeLabels: ThemeLabels;
   brandName: string;
   brandDomain: string;
-  socialLinks: SocialLink[];
   year: number;
   children: ReactNode;
 }
@@ -33,7 +32,6 @@ export function AppShell({
   themeLabels,
   brandName,
   brandDomain,
-  socialLinks,
   year,
   children,
 }: Props) {
@@ -59,7 +57,6 @@ export function AppShell({
           themeLabels,
           brandName,
           brandDomain,
-          socialLinks,
           year,
         }}
       />
