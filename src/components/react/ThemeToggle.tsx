@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MoonIcon, SunIcon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/react/ui/button";
 import { readTheme, type Theme } from "@/lib/theme";
 
 export interface ThemeLabels {

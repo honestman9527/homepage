@@ -3,10 +3,10 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/components/react/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { LanguageToggle } from "@/components/LanguageToggle";
-import type { ThemeLabels } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/react/LanguageToggle";
+import type { ThemeLabels } from "@/components/react/ThemeToggle";
 import type { LanguageLink } from "@/lib/content";
 import type { NavId } from "@/i18n/ui";
 import type { NavItem, SidebarLabels } from "./types";

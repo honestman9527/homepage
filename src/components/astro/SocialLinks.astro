@@ -1,6 +1,7 @@
 ---
 import { GithubLogoIcon, LinkedinLogoIcon, XLogoIcon, EnvelopeSimpleIcon, GlobeIcon } from "@phosphor-icons/react";
-import type { SocialLink } from "@/components/layout/types";
+import type { SiteConfig } from "@/lib/site-config";
+type SocialLink = SiteConfig["social"][number];
 interface Props { email: string; social: SocialLink[]; emailLabel: string; }
 const { email, social, emailLabel } = Astro.props;
 const icons = { github: GithubLogoIcon, linkedin: LinkedinLogoIcon, x: XLogoIcon, website: GlobeIcon };

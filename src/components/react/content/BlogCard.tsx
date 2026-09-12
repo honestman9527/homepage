@@ -6,8 +6,8 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/react/ui/card";
+import { Badge } from "@/components/react/ui/badge";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import type { Language } from "@/i18n/ui";
 interface Props {

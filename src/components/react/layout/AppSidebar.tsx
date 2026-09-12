@@ -15,8 +15,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar";
-import { ThemeToggle, type ThemeLabels } from "@/components/ThemeToggle";
+} from "@/components/react/ui/sidebar";
+import { ThemeToggle, type ThemeLabels } from "@/components/react/ThemeToggle";
 import type { NavId } from "@/i18n/ui";
 import type { NavItem, SidebarLabels } from "./types";
 

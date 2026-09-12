@@ -6,10 +6,10 @@ import { pageSlice } from "@/lib/content/model";
 import { getSiteConfig } from "@/lib/site-config";
 import { getTranslations } from "@/i18n/utils";
 import { resolveCover } from "@/lib/content/cover";
-import { ProjectCard } from "@/components/content/ProjectCard";
-import Cover from "@/components/content/Cover.astro";
-import ListingFooter from "@/components/content/ListingFooter.astro";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { ProjectCard } from "@/components/react/content/ProjectCard";
+import Cover from "@/components/astro/content/Cover.astro";
+import ListingFooter from "@/components/astro/content/ListingFooter.astro";
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/react/ui/empty";
 interface Props { lang: Language; currentPage?: number; }
 const { lang, currentPage = 1 } = Astro.props;
 const site = await getSiteConfig();

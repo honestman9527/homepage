@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/react/ui/button";
 import type { LanguageLink } from "@/lib/content";
 
 export function LanguageToggle({ link }: { link: LanguageLink }) {

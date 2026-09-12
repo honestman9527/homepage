@@ -28,15 +28,14 @@ src/data + src/content/blog
   → lib/config/schema：构建期校验
   → lib/content：译文关联、草稿过滤、排序、分页
   → pages：薄路由入口
-  → components/pages：共享 Astro 页面
-      → components/content：静态 Card、Cover、分页
+  → components/astro：页面、静态内容、封面与布局插槽
+      → components/react：交互外壳、领域 Card 与 shadcn UI
       → layouts：元信息与静态内容插槽
-          → React AppShell：侧栏、移动菜单、主题
 ```
 
-- `components/ui` 保留 shadcn 源码；业务组件通过组合复用它，不复制 Badge、Card 样式。
-- 页面在构建期读取数据。Card、封面和分页只接收 props，不访问 Content Collections。
-- 只有 `AppShell` 使用 `client:load`，负责共享侧栏上下文。传入的 Astro 正文仍是静态 HTML。
+- `components/astro` 与 `components/react` 分开；Astro 目录不依赖 React 布局类型，React 目录内的 `ui` 保留 shadcn 源码。
+- 页面在构建期读取数据。Card、封面和分页只接收 props，不访问 Content Collections；React Card 未添加 `client:*` 时仍由 Astro 静态输出。
+- 只有 React `AppShell` 使用 `client:load`，负责共享侧栏上下文。传入的 Astro 正文仍是静态 HTML。
 - 图片失败处理使用一个小型原生脚本，不增加 React island。分页通过普通链接工作。
 - React 使用 Base UI 的 `render` API；锚点 Button 设置 `nativeButton={false}`。
 - `activeNavId` 控制导航选中状态，语言切换目标由 Astro 提供，不从选中项猜测实际地址。
