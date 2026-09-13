@@ -7,6 +7,7 @@ const url = z
   .url()
   .refine((value) => /^https?:\/\//.test(value), "Use an HTTP(S) URL");
 export const pageSizeSchema = z.number().int().min(1).max(48).default(6);
+const commentPageSizeSchema = z.number().int().min(1).max(50).default(10);
 const topographicFields = {
   seed: text,
   density: z.number().int().min(4).max(32),
@@ -51,6 +52,28 @@ export function coverSchema(image: () => z.ZodType<ImageMetadata>) {
 }
 export type Cover = z.infer<ReturnType<typeof coverSchema>>;
 
+export const commentsSchema = z
+  .discriminatedUnion("provider", [
+    z.object({ provider: z.literal("none") }).strict(),
+    z
+      .object({
+        provider: z.literal("waline"),
+        serverURL: url,
+        pageSize: commentPageSizeSchema,
+        login: z.enum(["enable", "disable", "force"]).default("enable"),
+      })
+      .strict(),
+    z
+      .object({
+        provider: z.literal("twikoo"),
+        envId: text,
+        region: z.enum(["ap-shanghai", "ap-guangzhou"]).optional(),
+      })
+      .strict(),
+  ])
+  .default({ provider: "none" });
+export type CommentsConfig = z.infer<typeof commentsSchema>;
+
 export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
   const cover = coverSchema(image);
   const listing = z
@@ -79,6 +102,7 @@ export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
           })
           .strict(),
       ),
+      comments: commentsSchema,
       profile: z.object({ zh: profile, en: profile }).strict(),
       skills: z.array(text),
       listing: z
@@ -131,6 +155,8 @@ export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
           "Use a stable lowercase hyphenated slug",
         ),
       isOriginal: z.boolean(),
+      toc: z.boolean().default(true),
+      comments: z.boolean().default(true),
       cover: coverSchema(image).optional(),
     })
     .strict();

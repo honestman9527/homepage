@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   groupBlog,
+  getAdjacentItems,
+  estimateReadingMinutes,
   selectBlog,
   selectProjects,
   pageSlice,
@@ -14,6 +16,7 @@ import {
   getTranslations,
   normalizePath,
 } from "../src/i18n/utils";
+import { commentPath } from "../src/lib/comments/path";
 function post(
   key: string,
   lang: "zh" | "en" = "en",
@@ -33,6 +36,8 @@ function post(
       description: key,
       pubDate: new Date(date),
       tags: [],
+      toc: true,
+      comments: true,
     },
   };
 }
@@ -149,6 +154,56 @@ describe("pagination", () => {
     ]);
     expect(pageNumbers(3, 5)).toEqual([1, 2, 3, 4, 5]);
     expect(pageNumbers(1, 1)).toEqual([1]);
+  });
+});
+
+describe("article reading model", () => {
+  it("returns newer and older entries from the shared stable order", () => {
+    const selected = selectBlog(
+      groupBlog([
+        post("older", "en", true, false, "2026-01-01"),
+        post("middle", "en", true, false, "2026-02-01"),
+        post("middle", "zh", false, false, "2026-02-02"),
+        post("newer", "en", true, false, "2026-03-01"),
+      ]),
+      "zh",
+    );
+    expect(selected.map(({ key }) => key)).toEqual(["newer", "middle", "older"]);
+    expect(getAdjacentItems(selected, "middle")).toMatchObject({
+      newer: { key: "newer", post: { data: { lang: "en" } } },
+      older: { key: "older", post: { data: { lang: "en" } } },
+    });
+    expect(getAdjacentItems(selected, "newer").newer).toBeUndefined();
+    expect(getAdjacentItems(selected, "older").older).toBeUndefined();
+    expect(getAdjacentItems([{ key: "only" }], "only")).toEqual({
+      newer: undefined,
+      older: undefined,
+    });
+    expect(() => getAdjacentItems(selected, "missing")).toThrow(
+      "Missing current item",
+    );
+  });
+
+  it("estimates Chinese, English and mixed reading time without fenced code", () => {
+    expect(estimateReadingMinutes("")).toBe(1);
+    expect(estimateReadingMinutes("字".repeat(300))).toBe(1);
+    expect(estimateReadingMinutes("字".repeat(301))).toBe(2);
+    expect(estimateReadingMinutes("word ".repeat(200))).toBe(1);
+    expect(
+      estimateReadingMinutes(
+        Array.from({ length: 201 }, (_, index) => `word${index}`).join(" "),
+      ),
+    ).toBe(2);
+    expect(
+      estimateReadingMinutes(`字${"word ".repeat(100)}\n\n~~~ts\n${"code ".repeat(500)}\n~~~~`),
+    ).toBe(1);
+    expect(
+      estimateReadingMinutes(`Intro\n\n\`\`\`ts\n${"code ".repeat(500)}\n\`\`\``),
+    ).toBe(1);
+  });
+
+  it("uses one stable comment identifier for every translation", () => {
+    expect(commentPath("same-article")).toBe("/blog/same-article");
   });
 });
 

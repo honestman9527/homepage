@@ -10,6 +10,11 @@ export interface BlogGroup {
   variants: BlogEntry[];
 }
 
+export interface AdjacentItems<T> {
+  older?: T;
+  newer?: T;
+}
+
 export function groupBlog(posts: BlogEntry[]): BlogGroup[] {
   const groups = new Map<string, BlogEntry[]>();
   for (const post of posts) {
@@ -61,6 +66,46 @@ export function selectProjects(projects: ProjectEntry[], lang: Language) {
         );
       return { ...project, contentLang, ...translation };
     });
+}
+
+export function getAdjacentItems<T extends { key: string }>(
+  items: T[],
+  currentKey: string,
+): AdjacentItems<T> {
+  const index = items.findIndex((item) => item.key === currentKey);
+  if (index === -1) throw new Error(`Missing current item: ${currentKey}`);
+  return {
+    newer: index > 0 ? items[index - 1] : undefined,
+    older: index < items.length - 1 ? items[index + 1] : undefined,
+  };
+}
+
+export function estimateReadingMinutes(markdown: string): number {
+  let fence: { character: string; length: number } | undefined;
+  const withoutFencedCode = markdown
+    .split(/\r?\n/)
+    .filter((line) => {
+      const trimmed = line.trimStart();
+      const marker = trimmed.match(/^(`{3,}|~{3,})/)?.[1];
+      if (!fence && marker) {
+        fence = { character: marker[0], length: marker.length };
+        return false;
+      }
+      if (!fence) return true;
+      if (
+        marker?.[0] === fence.character &&
+        marker.length >= fence.length &&
+        trimmed.trimEnd() === marker
+      )
+        fence = undefined;
+      return false;
+    })
+    .join("\n");
+  const hanCharacters = withoutFencedCode.match(/\p{Script=Han}/gu)?.length ?? 0;
+  const withoutHan = withoutFencedCode.replace(/\p{Script=Han}/gu, " ");
+  const words =
+    withoutHan.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
+  return Math.max(1, Math.ceil(hanCharacters / 300 + words / 200));
 }
 export function pageSlice<T>(items: T[], pageSize: number, currentPage = 1) {
   pageSizeSchema.parse(pageSize);

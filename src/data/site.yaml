@@ -4,6 +4,11 @@ site:
   initials: HM
   avatar: https://raw.7s.nz/file/icon/sblHaFiM.webp
   email: hello@honestman.me
+  comments:
+    provider: waline
+    serverURL: https://waline.honestman.me
+    pageSize: 10
+    login: enable # enable / disable / force
   social:
     - type: github
       label: GitHub

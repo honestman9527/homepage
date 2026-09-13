@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
   blogSchema,
+  commentsSchema,
   coverSchema,
   projectSchema,
   siteSchema,
@@ -9,6 +10,7 @@ import {
   type Cover,
 } from "../src/lib/config/schema";
 import { resolveCover, contourPaths } from "../src/lib/content/cover";
+import { resolveCommentsConfig } from "../src/lib/comments/config";
 // Asset loading is tested by the Astro fixture build; these tests isolate config semantics.
 const image = () => z.never();
 const options = topographicSchema.parse({});
@@ -82,7 +84,10 @@ describe("strict content schemas", () => {
     pubDate: "2026-01-01",
   };
   it("rejects misspelled cover fields, empty content and invalid dates", () => {
-    expect(blogSchema(image).parse(blog).pubDate).toBeInstanceOf(Date);
+    const parsed = blogSchema(image).parse(blog);
+    expect(parsed.pubDate).toBeInstanceOf(Date);
+    expect(parsed.toc).toBe(true);
+    expect(parsed.comments).toBe(true);
     for (const value of [
       { ...blog, corver: {} },
       { ...blog, title: " " },
@@ -127,8 +132,10 @@ describe("strict content schemas", () => {
       profile: { zh: profile, en: profile },
       skills: [],
     };
-    expect(siteSchema(image).parse(site).listing.blog.pageSize).toBe(6);
-    expect(siteSchema(image).parse(site).avatar).toBe(
+    const parsed = siteSchema(image).parse(site);
+    expect(parsed.listing.blog.pageSize).toBe(6);
+    expect(parsed.comments).toEqual({ provider: "none" });
+    expect(parsed.avatar).toBe(
       "https://example.com/avatar.png",
     );
     expect(siteSchema(image).safeParse({ ...site, email: "bad" }).success).toBe(
@@ -144,5 +151,72 @@ describe("strict content schemas", () => {
         listing: { blog: { pageSize: 0 } },
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("comments configuration", () => {
+  it("accepts disabled, Waline and Twikoo configurations with defaults", () => {
+    expect(commentsSchema.parse(undefined)).toEqual({ provider: "none" });
+    expect(
+      commentsSchema.parse({
+        provider: "waline",
+        serverURL: "https://comments.example.com",
+      }),
+    ).toEqual({
+      provider: "waline",
+      serverURL: "https://comments.example.com",
+      pageSize: 10,
+      login: "enable",
+    });
+    expect(
+      commentsSchema.parse({
+        provider: "twikoo",
+        envId: "https://comments.example.com",
+        region: "ap-shanghai",
+      }),
+    ).toEqual({
+      provider: "twikoo",
+      envId: "https://comments.example.com",
+      region: "ap-shanghai",
+    });
+    expect(
+      commentsSchema.parse({ provider: "twikoo", envId: "cloud-env-id" }),
+    ).toEqual({ provider: "twikoo", envId: "cloud-env-id" });
+  });
+
+  it.each([
+    { provider: "waline" },
+    { provider: "waline", serverURL: "javascript:alert(1)" },
+    {
+      provider: "waline",
+      serverURL: "https://comments.example.com",
+      pageSize: 0,
+    },
+    {
+      provider: "waline",
+      serverURL: "https://comments.example.com",
+      pageSize: 51,
+    },
+    {
+      provider: "waline",
+      serverURL: "https://comments.example.com",
+      login: "sometimes",
+    },
+    { provider: "twikoo", envId: " " },
+    { provider: "twikoo", envId: "cloud-env-id", region: "ap-beijing" },
+    { provider: "none", serverURL: "https://comments.example.com" },
+    { provider: "unknown" },
+  ])("rejects invalid or unknown settings: $provider", (value) => {
+    expect(commentsSchema.safeParse(value).success).toBe(false);
+  });
+
+  it("lets the per-article switch override an enabled provider", () => {
+    const config = commentsSchema.parse({
+      provider: "waline",
+      serverURL: "https://comments.example.com",
+    });
+    expect(resolveCommentsConfig(config, false)).toBeUndefined();
+    expect(resolveCommentsConfig({ provider: "none" }, true)).toBeUndefined();
+    expect(resolveCommentsConfig(config, true)).toBe(config);
   });
 });

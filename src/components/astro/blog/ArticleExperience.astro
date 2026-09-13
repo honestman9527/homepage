@@ -1,0 +1,66 @@
+<div class="article-progress" data-article-progress aria-hidden="true">
+  <span></span>
+</div>
+
+<script>
+  const readingRegion = document.querySelector<HTMLElement>("[data-reading-region]");
+  const progress = document.querySelector<HTMLElement>("[data-article-progress]");
+  const tocLinks = [
+    ...document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]"),
+  ];
+  const headings = [
+    ...document.querySelectorAll<HTMLElement>(
+      "[data-article-content] :is(h2[id], h3[id])",
+    ),
+  ];
+
+  if (readingRegion && progress) {
+    let frame = 0;
+    const header = document.querySelector<HTMLElement>(".site-header");
+
+    const update = () => {
+      frame = 0;
+      const headerHeight = header?.offsetHeight ?? 48;
+      const start = readingRegion.getBoundingClientRect().top + window.scrollY;
+      const availableHeight = Math.max(window.innerHeight - headerHeight, 1);
+      const distance = Math.max(readingRegion.offsetHeight - availableHeight, 1);
+      const value = Math.min(
+        1,
+        Math.max(0, (window.scrollY + headerHeight - start) / distance),
+      );
+      progress.style.setProperty("--article-progress", String(value));
+
+      if (headings.length) {
+        const threshold = headerHeight + 32;
+        let active = headings[0];
+        for (const heading of headings) {
+          if (heading.getBoundingClientRect().top > threshold) break;
+          active = heading;
+        }
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2)
+          active = headings.at(-1) ?? active;
+        for (const link of tocLinks) {
+          const isCurrent = link.dataset.tocLink === active.id;
+          link.toggleAttribute("data-current", isCurrent);
+          if (isCurrent) link.setAttribute("aria-current", "location");
+          else link.removeAttribute("aria-current");
+        }
+      }
+    };
+
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    if ("ResizeObserver" in window) new ResizeObserver(schedule).observe(readingRegion);
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(schedule, {
+        rootMargin: "-80px 0px -65% 0px",
+      });
+      headings.forEach((heading) => observer.observe(heading));
+    }
+    update();
+  }
+</script>

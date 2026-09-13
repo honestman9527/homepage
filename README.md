@@ -35,8 +35,9 @@ src/data + src/content/blog
 
 - `components/astro` 与 `components/react` 分开；Astro 目录不依赖 React 布局类型，React 目录内的 `ui` 保留 shadcn 源码。
 - 页面在构建期读取数据。Card、封面和分页只接收 props，不访问 Content Collections；React Card 未添加 `client:*` 时仍由 Astro 静态输出。
-- 只有 React `AppShell` 使用 `client:load`，负责共享侧栏上下文。传入的 Astro 正文仍是静态 HTML。
+- 只有 React `AppShell` 使用 `client:load`，负责共享侧栏上下文。传入的 Astro 正文、TOC 与相邻文章仍是静态 HTML。
 - 图片失败处理使用一个小型原生脚本，不增加 React island。分页通过普通链接工作。
+- 阅读进度与 TOC 高亮使用原生脚本；评论仅在启用 provider 时动态导入对应客户端，不形成新的 React 水合根。
 - React 使用 Base UI 的 `render` API；锚点 Button 设置 `nativeButton={false}`。
 - `activeNavId` 控制导航选中状态，语言切换目标由 Astro 提供，不从选中项猜测实际地址。
 
@@ -146,6 +147,68 @@ draft: false
 
 当前三篇文章保持英文占位正文，中文列表展示“英文原文”。没有自动生成或发布中文译文。
 
+## 博客详情与 Markdown
+
+文章 frontmatter 的 `toc` 与 `comments` 默认均为 `true`，可以按篇关闭：
+
+```yaml
+---
+toc: false
+comments: false
+---
+```
+
+详情页从 Astro `render()` 的标题数据生成 `h2`／`h3` 大纲。桌面端显示右侧粘性目录，移动端显示原生折叠目录；目录链接在禁用 JavaScript 时仍能通过 hash 跳转。阅读时长忽略 fenced code，按每分钟 300 个汉字和 200 个其他语言单词估算。
+
+Markdown 保持 `.md`，由 Astro 7 Sätteri 处理器渲染，支持 GFM 表格、任务列表、删除线与脚注。代码块使用 Expressive Code，明暗配色跟随站点 `html.dark`。文件名、终端框、行标记和单块行号可以通过 fence meta 配置：
+
+````md
+```ts title="src/example.ts" showLineNumbers {2} ins={3} del={4}
+const ready = false;
+const answer = 42;
+console.log(answer);
+console.log("removed");
+```
+
+```bash title="Terminal"
+pnpm build
+```
+````
+
+`showLineNumbers` 默认关闭；复制按钮默认开启。代码块的复制提示根据文章 `lang` 自动选择中文或英文。长代码保持横向滚动。
+
+## 评论配置
+
+评论默认显式关闭：
+
+```yaml
+comments:
+  provider: none
+```
+
+启用 Waline 时，在 `site.yaml` 的 `site` 条目下配置公开客户端地址：
+
+```yaml
+comments:
+  provider: waline
+  serverURL: https://comments.example.com
+  pageSize: 10
+  login: enable # enable / disable / force
+```
+
+启用 Twikoo 时使用服务地址或腾讯云环境 ID；腾讯云地域仅接受 `ap-shanghai`、`ap-guangzhou`：
+
+```yaml
+comments:
+  provider: twikoo
+  envId: https://comments.example.com
+  # region: ap-shanghai
+```
+
+Waline 的 `pageSize` 为 1–50。未知字段、无效 HTTP(S) 地址、空 Twikoo 环境 ID 和非法地域会在构建期报错。文章 `comments: false` 的优先级高于站点 provider；关闭时不会输出评论容器或加载脚本。
+
+评论区接近视口约 600px 时才导入对应客户端，加载失败后显示重试入口。中英文译文统一使用 `/blog/{translationKey}` 作为评论路径，因此共享同一讨论；评论界面语言跟随当前文章。仓库只保存公开的客户端地址，评论服务端、数据库、审核策略与密钥需要在 Waline 或 Twikoo 部署端管理。
+
 ## 双语项目
 
 ```yaml
@@ -175,4 +238,6 @@ draft: false
 4. 检查条目图片、默认图片、等高线、`none`、错误远程 URL；用本地不存在的路径确认构建报错。
 5. 检查窄屏长标题、1／2／3 列布局、明暗主题及减少动态效果偏好。
 6. 键盘操作跳过导航、移动菜单与 Escape；检查主题首次加载、系统主题变化、存储不可用，以及折叠侧栏后跨页面。
-7. 关闭 JavaScript 后，通过卡片链接和分页继续阅读文章。
+7. 检查详情页桌面粘性 TOC、移动折叠大纲、hash 跳转、当前章节、阅读进度和相邻文章；关闭 JavaScript 后继续通过目录、卡片和分页阅读。
+8. 检查长中文标题、表格横向滚动、任务列表、脚注、图片、引用、行内代码、文件名、终端框、复制按钮、行标记和可选行号。
+9. 分别配置 Waline 与 Twikoo，检查延迟加载、明暗主题、译文共享评论、错误重试与单篇关闭。

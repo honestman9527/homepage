@@ -4,7 +4,12 @@ import type { Language } from "../../i18n/ui";
 import { blogPath } from "../../i18n/routes";
 import { getTranslations, otherLanguage } from "../../i18n/utils";
 import { getSiteConfig } from "../site-config";
-import { groupBlog, selectBlog, selectProjects } from "./model";
+import {
+  getAdjacentItems,
+  groupBlog,
+  selectBlog,
+  selectProjects,
+} from "./model";
 
 export async function getBlogItems(lang: Language) {
   const t = getTranslations(lang);
@@ -34,9 +39,39 @@ export interface LanguageLink {
   label: string;
   lang: Language;
 }
+export interface ArticleNavigationItem {
+  href: string;
+  title: string;
+  lang: Language;
+  originalLabel?: string;
+}
+export interface ArticleNavigation {
+  older?: ArticleNavigationItem;
+  newer?: ArticleNavigationItem;
+}
 export async function getBlogPaths(lang: Language) {
   const t = getTranslations(lang);
-  return selectBlog(groupBlog(await getCollection("blog")), lang).map(
+  const selected = selectBlog(groupBlog(await getCollection("blog")), lang);
+  const navigationItems = selected.map((item) => ({
+    ...item,
+    href: blogPath(item.post.data.lang, item.key),
+    originalLabel:
+      item.post.data.lang !== lang
+        ? t(`original.${item.post.data.lang}`)
+        : undefined,
+  }));
+  const toNavigationItem = (
+    item: (typeof navigationItems)[number] | undefined,
+  ): ArticleNavigationItem | undefined =>
+    item
+      ? {
+          href: item.href,
+          title: item.post.data.title,
+          lang: item.post.data.lang,
+          originalLabel: item.originalLabel,
+        }
+      : undefined;
+  return selected.map(
     (item) => {
       if (item.post.data.lang !== lang)
         return {
@@ -50,6 +85,7 @@ export async function getBlogPaths(lang: Language) {
       const translation = item.variants.find(
         (entry) => entry.data.lang === other && !entry.data.draft,
       );
+      const adjacent = getAdjacentItems(navigationItems, item.key);
       return {
         params: { id: item.key },
         props: {
@@ -72,6 +108,10 @@ export async function getBlogPaths(lang: Language) {
               lang: entry.data.lang,
               href: blogPath(entry.data.lang, item.key),
             })),
+          navigation: {
+            older: toNavigationItem(adjacent.older),
+            newer: toNavigationItem(adjacent.newer),
+          } satisfies ArticleNavigation,
         },
       };
     },

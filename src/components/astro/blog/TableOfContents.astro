@@ -1,0 +1,24 @@
+---
+import type { MarkdownHeading } from "astro";
+import TableOfContentsList from "./TableOfContentsList.astro";
+
+interface Props {
+  headings: MarkdownHeading[];
+  label: string;
+  variant: "desktop" | "mobile";
+}
+
+const { headings, label, variant } = Astro.props;
+---
+
+{variant === "mobile" ? (
+  <details class="article-toc article-toc-mobile">
+    <summary>{label}</summary>
+    <nav aria-label={label}><TableOfContentsList headings={headings} /></nav>
+  </details>
+) : (
+  <nav class="article-toc article-toc-desktop" aria-label={label}>
+    <p>{label}</p>
+    <TableOfContentsList headings={headings} />
+  </nav>
+)}

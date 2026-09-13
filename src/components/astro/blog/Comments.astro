@@ -1,0 +1,108 @@
+---
+import type { Language } from "@/i18n/ui";
+import type { ActiveCommentsConfig } from "@/lib/comments/types";
+import { Button } from "@/components/react/ui/button";
+import { Skeleton } from "@/components/react/ui/skeleton";
+
+interface Props {
+  config: ActiveCommentsConfig;
+  path: string;
+  lang: Language;
+  labels: {
+    title: string;
+    loading: string;
+    error: string;
+    retry: string;
+    noScript: string;
+  };
+}
+
+const { config, path, lang, labels } = Astro.props;
+---
+
+<section
+  class="comments-root"
+  aria-labelledby="comments-title"
+  aria-busy="false"
+  data-comments-root
+  data-comments-state="idle"
+  data-comments-config={JSON.stringify(config)}
+  data-comments-path={path}
+  data-comments-lang={lang}
+>
+  <header class="comments-header">
+    <p aria-hidden="true">DISCUSSION</p>
+    <h2 id="comments-title">{labels.title}</h2>
+  </header>
+  <div class="comments-loading" data-comments-loading role="status" hidden>
+    <span>{labels.loading}</span>
+    <Skeleton className="h-24 w-full" />
+  </div>
+  <div class="comments-error" data-comments-error hidden>
+    <p>{labels.error}</p>
+    <Button type="button" variant="outline" size="sm" data-comments-retry>
+      {labels.retry}
+    </Button>
+  </div>
+  <div class="comments-target" data-comments-target hidden></div>
+  <noscript><p class="comments-noscript">{labels.noScript}</p></noscript>
+</section>
+
+<script>
+  import { mountComments } from "@/lib/comments/client";
+  import type { ActiveCommentsConfig } from "@/lib/comments/types";
+  import type { Language } from "@/i18n/ui";
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-comments-root]")) {
+    const target = root.querySelector<HTMLElement>("[data-comments-target]");
+    const loading = root.querySelector<HTMLElement>("[data-comments-loading]");
+    const error = root.querySelector<HTMLElement>("[data-comments-error]");
+    const retry = root.querySelector<HTMLButtonElement>("[data-comments-retry]");
+    if (!target || !loading || !error || !retry) continue;
+
+    const config = JSON.parse(
+      root.dataset.commentsConfig ?? "{}",
+    ) as ActiveCommentsConfig;
+    const path = root.dataset.commentsPath ?? window.location.pathname;
+    const lang = (root.dataset.commentsLang ?? "zh") as Language;
+    let state: "idle" | "loading" | "loaded" | "error" = "idle";
+
+    const setState = (next: typeof state) => {
+      state = next;
+      root.dataset.commentsState = next;
+      root.setAttribute("aria-busy", next === "loading" ? "true" : "false");
+      loading.hidden = next === "loaded" || next === "error";
+      error.hidden = next !== "error";
+      target.hidden = next !== "loading" && next !== "loaded";
+    };
+
+    const load = async () => {
+      if (state === "loading" || state === "loaded") return;
+      target.replaceChildren();
+      setState("loading");
+      try {
+        await mountComments({ container: target, path, lang, config });
+        setState("loaded");
+      } catch (cause) {
+        console.error("Comments failed to load", cause);
+        target.replaceChildren();
+        setState("error");
+      }
+    };
+
+    retry.addEventListener("click", load);
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          observer.disconnect();
+          void load();
+        },
+        { rootMargin: "600px 0px" },
+      );
+      observer.observe(root);
+    } else {
+      void load();
+    }
+  }
+</script>
