@@ -2,6 +2,7 @@
 
 - pnpm12
 - Astro7、React19、TailwindCss4
+- Shadcn/UI
 
 When starting the dev server, use background mode:
 
@@ -10,6 +11,10 @@ pn dev --background
 ```
 
 Manage the background server with `pn dev stop`, `pn dev status`, and `pn dev logs`.
+
+## Don't
+
+- 前端UI不要自动截图验证，要人工验证
 
 ## Documentation
 
