@@ -356,8 +356,7 @@
 }
 @layer components {
   .site-header {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 20;
     display: flex;
     align-items: center;
@@ -367,6 +366,10 @@
     border-bottom: 1px solid var(--border);
     background: color-mix(in srgb, var(--background) 90%, transparent);
     backdrop-filter: blur(12px);
+  }
+  .site-header[data-sticky="true"] {
+    position: sticky;
+    top: 0;
   }
   .skip-link {
     position: fixed;
@@ -550,13 +553,14 @@
     margin-top: 2.5rem;
   }
   .post-page {
-    max-width: 78rem;
+    container: post-page / inline-size;
+    max-width: 80rem;
     margin-inline: auto;
     padding: clamp(2rem, 5vw, 4rem) 1.5rem;
   }
   .article-progress {
     position: sticky;
-    top: 3rem;
+    top: 0;
     z-index: 10;
     width: 100%;
     height: 2px;
@@ -572,12 +576,15 @@
     transform: scaleX(var(--article-progress, 0));
     transform-origin: left;
   }
+  [data-header-sticky="true"] .article-progress {
+    top: 3rem;
+  }
   .post-layout {
     display: grid;
     align-items: start;
   }
   .post-column {
-    width: min(100%, 50rem);
+    width: min(100%, 48rem);
     min-width: 0;
     margin-inline: auto;
   }
@@ -684,8 +691,7 @@
     display: none;
   }
   .article-toc-desktop {
-    position: sticky;
-    top: 5rem;
+    min-width: 0;
   }
   .article-toc-desktop > p {
     margin-bottom: 0.8rem;
@@ -737,7 +743,7 @@
     --waline-code-bg-color: var(--muted);
   }
   .comments-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
   .comments-header p {
     color: var(--electric);
@@ -745,12 +751,6 @@
     font-size: 0.7rem;
     font-weight: 650;
     letter-spacing: 0.14em;
-  }
-  .comments-header h2 {
-    margin-top: 0.25rem;
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 700;
   }
   .comments-loading {
     display: grid;
@@ -794,10 +794,10 @@
       grid-column: 2;
     }
   }
-  @media (min-width: 72rem) {
+  @container post-page (min-width: 58rem) {
     .post-layout:has(.post-toc-rail) {
-      grid-template-columns: minmax(0, 50rem) minmax(12rem, 15rem);
-      gap: clamp(2rem, 5vw, 4rem);
+      grid-template-columns: minmax(0, 48rem) minmax(11rem, 14rem);
+      gap: clamp(1.75rem, 4cqi, 3rem);
       justify-content: center;
     }
     .post-layout:has(.post-toc-rail) .post-column {
@@ -808,6 +808,18 @@
     }
     .post-toc-rail {
       display: block;
+      position: sticky;
+      top: 2rem;
+      max-height: calc(100vh - 4rem);
+      padding-left: 1.25rem;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    [data-header-sticky="true"] .post-toc-rail {
+      top: 5rem;
+      max-height: calc(100vh - 7rem);
     }
   }
 }

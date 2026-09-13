@@ -46,7 +46,7 @@ src/data + src/content/blog
 | 文件 | 内容 |
 | --- | --- |
 | `astro.config.mjs` | 规范站点 URL、Astro 集成和语言路由 |
-| `src/data/site.yaml` | 身份资料、社交链接、双语介绍、技能、分页和封面默认值 |
+| `src/data/site.yaml` | 身份资料、社交链接、双语介绍、布局、评论、分页和封面默认值 |
 | `src/data/projects.yaml` | 项目共享字段及各语言介绍 |
 | `src/content/blog/*.md` | 文章内容、元信息与翻译关系 |
 | `src/i18n/ui.ts` | 导航、按钮、分页、空状态及无障碍文案 |
@@ -59,6 +59,18 @@ src/data + src/content/blog
 ### 社交与个人资料
 
 `site.avatar` 是可选的头像 URI，支持 HTTP(S) 地址；未配置或加载失败时显示 `initials`。头像会在首页和关于页复用。`site.social` 的 `type` 为 `github`、`linkedin`、`x` 或 `website`，决定图标；`label` 是显示名称，改变排序或名称不会改变图标含义。`profile.zh`、`profile.en` 各包含 `bio`、`location`、`availability` 与 `about` 段落数组。
+
+### 顶部栏与语言菜单
+
+顶部栏默认常驻视口顶部，可以通过 `site.yaml` 关闭：
+
+```yaml
+layout:
+  header:
+    sticky: true
+```
+
+设为 `false` 后，顶部栏随页面内容滚动。语言入口使用下拉菜单展示当前语言与另一种语言；文章缺少已发布译文时，目标语言显示缺译状态并禁用链接。
 
 ### 分页
 
@@ -179,7 +191,7 @@ pnpm build
 
 ## 评论配置
 
-评论默认显式关闭：
+未配置评论时 schema 默认关闭，也可以显式写出：
 
 ```yaml
 comments:
@@ -207,7 +219,7 @@ comments:
 
 Waline 的 `pageSize` 为 1–50。未知字段、无效 HTTP(S) 地址、空 Twikoo 环境 ID 和非法地域会在构建期报错。文章 `comments: false` 的优先级高于站点 provider；关闭时不会输出评论容器或加载脚本。
 
-评论区接近视口约 600px 时才导入对应客户端，加载失败后显示重试入口。中英文译文统一使用 `/blog/{translationKey}` 作为评论路径，因此共享同一讨论；评论界面语言跟随当前文章。仓库只保存公开的客户端地址，评论服务端、数据库、审核策略与密钥需要在 Waline 或 Twikoo 部署端管理。
+评论区接近视口约 600px 时才导入对应客户端，加载失败后显示重试入口。中英文译文统一使用 `/blog/{translationKey}` 作为评论路径，因此共享同一讨论。评论界面语言来自当前文章 frontmatter 的 `lang`：Waline 使用 `zh-CN`／`en-US`，Twikoo 使用 `zh-CN`／`en`；它不读取浏览器语言。仓库只保存公开的客户端地址，评论服务端、数据库、审核策略与密钥需要在 Waline 或 Twikoo 部署端管理。
 
 ## 双语项目
 

@@ -9,6 +9,9 @@ site:
     serverURL: https://waline.honestman.me
     pageSize: 10
     login: enable # enable / disable / force
+  layout:
+    header:
+      sticky: true
   social:
     - type: github
       label: GitHub

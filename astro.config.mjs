@@ -8,6 +8,9 @@ import expressiveCode from "astro-expressive-code";
 // https://astro.build/config
 export default defineConfig({
   site: "https://honestman.me",
+  devToolbar: {
+    enabled: false,
+  },
   i18n: {
     locales: ["zh", "en"],
     defaultLocale: "zh",

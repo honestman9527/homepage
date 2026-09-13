@@ -5,6 +5,8 @@ translationKey: a-quick-note-on-motion
 title: "A quick note on motion design"
 description: "Short placeholder post on using motion deliberately — where animation helps, and where it just gets in the way."
 pubDate: 2026-06-03
+toc: true
+comments: true
 tags: ["design", "motion"]
 ---
 

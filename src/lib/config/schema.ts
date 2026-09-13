@@ -103,6 +103,15 @@ export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
           .strict(),
       ),
       comments: commentsSchema,
+      layout: z
+        .object({
+          header: z
+            .object({ sticky: z.boolean().default(true) })
+            .strict()
+            .default({ sticky: true }),
+        })
+        .strict()
+        .default({ header: { sticky: true } }),
       profile: z.object({ zh: profile, en: profile }).strict(),
       skills: z.array(text),
       listing: z

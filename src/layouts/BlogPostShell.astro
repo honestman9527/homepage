@@ -39,7 +39,10 @@ const cover = resolveCover(
   site.covers.default,
 );
 const tocHeadings = post.data.toc
-  ? headings.filter(({ depth }) => depth === 2 || depth === 3)
+  ? headings.filter(
+      ({ depth, slug }) =>
+        (depth === 2 || depth === 3) && slug !== "footnote-label",
+    )
   : [];
 const readingMinutes = estimateReadingMinutes(post.body ?? "");
 const commentsConfig = resolveCommentsConfig(site.comments, post.data.comments);
@@ -134,9 +137,10 @@ const hasNavigation = Boolean(navigation.older || navigation.newer);
               <Comments
                 config={commentsConfig}
                 path={commentPath(post.data.translationKey)}
-                lang={lang}
+                lang={post.data.lang}
                 labels={{
                   title: t("comments.title"),
+                  eyebrow: t("comments.eyebrow"),
                   loading: t("comments.loading"),
                   error: t("comments.error"),
                   retry: t("comments.retry"),

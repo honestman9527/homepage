@@ -20,7 +20,8 @@
 
     const update = () => {
       frame = 0;
-      const headerHeight = header?.offsetHeight ?? 48;
+      const headerHeight =
+        header?.dataset.sticky === "true" ? header.offsetHeight : 0;
       const start = readingRegion.getBoundingClientRect().top + window.scrollY;
       const availableHeight = Math.max(window.innerHeight - headerHeight, 1);
       const distance = Math.max(readingRegion.offsetHeight - availableHeight, 1);

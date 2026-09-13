@@ -135,6 +135,13 @@ describe("strict content schemas", () => {
     const parsed = siteSchema(image).parse(site);
     expect(parsed.listing.blog.pageSize).toBe(6);
     expect(parsed.comments).toEqual({ provider: "none" });
+    expect(parsed.layout.header.sticky).toBe(true);
+    expect(
+      siteSchema(image).parse({
+        ...site,
+        layout: { header: { sticky: false } },
+      }).layout.header.sticky,
+    ).toBe(false);
     expect(parsed.avatar).toBe(
       "https://example.com/avatar.png",
     );
@@ -149,6 +156,12 @@ describe("strict content schemas", () => {
       siteSchema(image).safeParse({
         ...site,
         listing: { blog: { pageSize: 0 } },
+      }).success,
+    ).toBe(false);
+    expect(
+      siteSchema(image).safeParse({
+        ...site,
+        layout: { header: { sticky: true, position: "top" } },
       }).success,
     ).toBe(false);
   });

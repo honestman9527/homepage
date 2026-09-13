@@ -5,10 +5,10 @@ import {
   SidebarTrigger,
 } from "@/components/react/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { LanguageToggle } from "@/components/react/LanguageToggle";
+import { LanguageMenu } from "@/components/react/LanguageMenu";
 import type { ThemeLabels } from "@/components/react/ThemeToggle";
 import type { LanguageLink } from "@/lib/content";
-import type { NavId } from "@/i18n/ui";
+import type { Language, NavId } from "@/i18n/ui";
 import type { NavItem, SidebarLabels } from "./types";
 
 interface Props {
@@ -16,6 +16,10 @@ interface Props {
   pageTitle: string;
   nav: NavItem[];
   languageLink: LanguageLink;
+  currentLang: Language;
+  currentHref: string;
+  languageLabel: string;
+  stickyHeader: boolean;
   labels: SidebarLabels;
   themeLabels: ThemeLabels;
   brandName: string;
@@ -28,6 +32,10 @@ export function AppShell({
   pageTitle,
   nav,
   languageLink,
+  currentLang,
+  currentHref,
+  languageLabel,
+  stickyHeader,
   labels,
   themeLabels,
   brandName,
@@ -60,14 +68,23 @@ export function AppShell({
           year,
         }}
       />
-      <SidebarInset id="main-content" tabIndex={-1}>
-        <header className="site-header">
+      <SidebarInset
+        id="main-content"
+        tabIndex={-1}
+        data-header-sticky={String(stickyHeader)}
+      >
+        <header className="site-header" data-sticky={String(stickyHeader)}>
           <SidebarTrigger label={labels.toggle} />
           <span className="font-display min-w-0 truncate text-sm font-semibold">
             {pageTitle}
           </span>
           <span className="ml-auto shrink-0">
-            <LanguageToggle link={languageLink} />
+            <LanguageMenu
+              current={currentLang}
+              currentHref={currentHref}
+              link={languageLink}
+              label={languageLabel}
+            />
           </span>
         </header>
         <div className="flex-1 min-w-0">{children}</div>

@@ -10,6 +10,7 @@ interface Props {
   lang: Language;
   labels: {
     title: string;
+    eyebrow: string;
     loading: string;
     error: string;
     retry: string;
@@ -31,8 +32,8 @@ const { config, path, lang, labels } = Astro.props;
   data-comments-lang={lang}
 >
   <header class="comments-header">
-    <p aria-hidden="true">DISCUSSION</p>
-    <h2 id="comments-title">{labels.title}</h2>
+    <p aria-hidden="true">{labels.eyebrow}</p>
+    <h2 id="comments-title" class="sr-only">{labels.title}</h2>
   </header>
   <div class="comments-loading" data-comments-loading role="status" hidden>
     <span>{labels.loading}</span>
