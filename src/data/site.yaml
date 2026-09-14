@@ -40,10 +40,10 @@ site:
   covers:
     aspectRatio: '16:9'
     # To use a custom remote default cover instead:
-    # default:
-    #   type: image
-    #   src: https://cdn.example.com/default-cover.webp
-    #   alt: Default content cover
+    default:
+      type: image
+      src: https://raw.7s.nz/file/images/carton/TWZ5so4a.webp
+      alt: Default content cover
     default:
       type: topographic
     topographic:
