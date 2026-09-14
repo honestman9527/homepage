@@ -1,6 +1,10 @@
 ---
 import "../styles/global.css";
 import { readTheme } from "@/lib/theme";
+import {
+  applyInitialSidebarPreference,
+  readSidebarPreference,
+} from "@/lib/sidebar-preference";
 import type { Language } from "@/i18n/ui";
 interface Props {
   title: string; description: string; lang: Language; skipLabel: string;
@@ -10,6 +14,7 @@ interface Props {
 const { title, description, lang, skipLabel, alternates = [], article } = Astro.props;
 const canonical = new URL(Astro.url.pathname.replace(/\/+$/, "") || "/", Astro.site);
 const themeScript = `document.documentElement.classList.toggle("dark", (${readTheme.toString()})().theme === "dark");`;
+const sidebarScript = `(${applyInitialSidebarPreference.toString()})(${readSidebarPreference.toString()});`;
 ---
 <!doctype html>
 <html lang={lang}>
@@ -28,6 +33,7 @@ const themeScript = `document.documentElement.classList.toggle("dark", (${readTh
     {alternates.map((alternate) => <link rel="alternate" hreflang={alternate.lang} href={new URL(alternate.href, Astro.site)} />)}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline set:html={themeScript} />
+    <script is:inline set:html={sidebarScript} />
     <title>{title}</title>
   </head>
   <body>
