@@ -1,15 +1,11 @@
 ---
-import { getCollection, render } from "astro:content";
 import type { Language } from "@/i18n/ui";
 import { languages } from "@/i18n/ui";
 import { otherLanguage, getTranslations } from "@/i18n/utils";
 import { routePath } from "@/i18n/routes";
-import { getPageEntry } from "@/lib/content/pages";
-import { getSiteConfig } from "@/lib/site-config";
+import { getAboutConfig, getSiteConfig } from "@/lib/site-config";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/astro/Avatar.astro";
-import MarkdownDocument from "@/components/astro/content/MarkdownDocument.astro";
-import Cover from "@/components/astro/content/Cover.astro";
 import { ProfileSummary } from "@/components/react/profile/ProfileSummary";
 import { SkillList } from "@/components/react/profile/SkillList";
 
@@ -19,9 +15,7 @@ interface Props {
 
 const { lang } = Astro.props;
 const site = await getSiteConfig();
-const entries = await getCollection("pages");
-const page = getPageEntry(entries, "about", lang);
-const { Content, headings } = await render(page);
+const about = (await getAboutConfig())[lang];
 const profile = site.profile[lang];
 const other = otherLanguage(lang);
 const t = getTranslations(lang);
@@ -33,8 +27,8 @@ const alternates = (["zh", "en"] as const).map((language) => ({
 
 <SidebarLayout
   activeNavId="about"
-  title={`${page.data.title} — ${site.name}`}
-  description={page.data.description}
+  title={`${about.title} — ${site.name}`}
+  description={about.description}
   languageLink={{
     lang: other,
     href: routePath(other, "about"),
@@ -42,16 +36,10 @@ const alternates = (["zh", "en"] as const).map((language) => ({
   }}
   alternates={alternates}
 >
-  <MarkdownDocument
-    headings={headings}
-    lang={page.data.lang}
-    toc={page.data.toc}
-    tocLabel={t("blog.toc")}
-  >
+  <main class="about-page" lang={lang}>
     <ProfileSummary
-      slot="header"
       name={site.name}
-      heading={page.data.title}
+      heading={about.title}
       bio={profile.bio}
       location={profile.location}
       availability={profile.availability}
@@ -66,22 +54,16 @@ const alternates = (["zh", "en"] as const).map((language) => ({
       />
     </ProfileSummary>
 
-    {
-      page.data.cover && (
-        <Cover
-          slot="cover"
-          cover={page.data.cover}
-          contentKey="about"
-          options={site.covers.topographic}
-          aspectRatio={site.covers.aspectRatio}
-          eager
-        />
-      )
-    }
+    <div class="about-sections">
+      {about.sections.map((section) => (
+        <section aria-labelledby={section.id}>
+          <h2 id={section.id}>{section.title}</h2>
+          {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        </section>
+      ))}
+    </div>
 
-    <Content />
-
-    <section slot="afterword" class="mt-14" aria-labelledby="about-toolbox">
+    <section class="about-toolbox" aria-labelledby="about-toolbox">
       <h2
         id="about-toolbox"
         class="text-muted-foreground mb-3 font-mono text-xs tracking-widest uppercase"
@@ -90,5 +72,5 @@ const alternates = (["zh", "en"] as const).map((language) => ({
       </h2>
       <SkillList skills={site.skills} label={t("about.toolbox")} />
     </section>
-  </MarkdownDocument>
+  </main>
 </SidebarLayout>

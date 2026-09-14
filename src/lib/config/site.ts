@@ -3,6 +3,7 @@ import { z } from "zod";
 import { commentsSchema } from "./comments";
 import { coverSchema, topographicSchema } from "./cover";
 import { httpUrlSchema, pageSizeSchema, textSchema } from "./shared";
+import { navigationIds } from "../../config/routes";
 
 export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
   const cover = coverSchema(image);
@@ -44,6 +45,12 @@ export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
         .default({ header: { sticky: true } }),
       profile: z.object({ zh: profile, en: profile }).strict(),
       skills: z.array(textSchema),
+      navigation: z
+        .array(z.enum(navigationIds))
+        .refine((items) => new Set(items).size === items.length, {
+          message: "Navigation items must be unique",
+        })
+        .default([...navigationIds]),
       listing: z
         .object({
           blog: listing.default({ pageSize: 6 }),

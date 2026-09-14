@@ -1,4 +1,4 @@
-import type { ArticleNavigation as ArticleNavigationData } from "@/lib/content";
+import type { ArticleNavigation as ArticleNavigationData } from "@/lib/content/blog";
 import { Badge } from "@/components/react/ui/badge";
 import {
   Card,

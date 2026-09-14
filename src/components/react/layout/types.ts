@@ -15,23 +15,19 @@ export interface SidebarLabels {
   close: string;
 }
 
-export interface SidebarBrandViewModel {
-  name: string;
-  domain: string;
-  homeHref: string;
-}
-
-export interface SidebarFooterViewModel {
-  copyright: string;
-  themeLabels: ThemeLabels;
-}
-
 export interface AppSidebarViewModel {
   activeNavId: NavId;
   navigation: readonly NavItem[];
   labels: SidebarLabels;
-  brand: SidebarBrandViewModel;
-  footer: SidebarFooterViewModel;
+  brand: {
+    name: string;
+    domain: string;
+    homeHref: string;
+  };
+  footer: {
+    copyright: string;
+    themeLabels: ThemeLabels;
+  };
 }
 
 export interface LanguageMenuViewModel {

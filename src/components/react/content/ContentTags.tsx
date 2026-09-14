@@ -7,6 +7,7 @@ export interface ContentTagsProps {
   variant?: ComponentProps<typeof Badge>["variant"];
   className?: string;
   label?: string;
+  hrefs?: readonly (string | undefined)[];
 }
 
 export function ContentTags({
@@ -14,6 +15,7 @@ export function ContentTags({
   variant = "outline",
   className,
   label,
+  hrefs,
 }: ContentTagsProps) {
   return (
     <div
@@ -21,7 +23,11 @@ export function ContentTags({
       aria-label={label}
     >
       {tags.map((tag, index) => (
-        <Badge key={`${tag}-${index}`} variant={variant}>
+        <Badge
+          key={`${tag}-${index}`}
+          variant={variant}
+          render={hrefs?.[index] ? <a href={hrefs[index]} /> : undefined}
+        >
           {tag}
         </Badge>
       ))}

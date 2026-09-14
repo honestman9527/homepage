@@ -3,7 +3,6 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/react/layout/AppShell";
 import { getLangFromUrl, getTranslations, otherLanguage } from "@/i18n/utils";
 import { localePath, routePath } from "@/i18n/routes";
-import { navigationOrder } from "@/config/routes";
 import { getSiteConfig } from "@/lib/site-config";
 import type { Language, NavId } from "@/i18n/ui";
 import type { LanguageLink } from "@/i18n/types";
@@ -21,7 +20,7 @@ const other = otherLanguage(lang);
 const path = Astro.url.pathname.replace(/^\/en(?=\/|$)/, "");
 const languageLink = Astro.props.languageLink ?? { lang: other, href: localePath(other, path), label: other === "en" ? "English" : "中文" };
 const alternates = Astro.props.alternates ?? (["zh", "en"] as const).map((language) => ({ lang: language, href: localePath(language, path) }));
-const navigation = navigationOrder.map((id) => ({
+const navigation = site.navigation.map((id) => ({
   id,
   label: t(`nav.${id}`),
   href: routePath(lang, id),

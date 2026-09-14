@@ -18,6 +18,7 @@ interface Props {
   date: string;
   dateTime: string;
   tags: readonly string[];
+  tagHrefs?: readonly string[];
   contentLang: Language;
   originalLabel?: string;
   readLabel: string;
@@ -31,6 +32,7 @@ export function BlogCard({
   date,
   dateTime,
   tags,
+  tagHrefs,
   contentLang,
   originalLabel,
   readLabel,
@@ -54,7 +56,7 @@ export function BlogCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ContentTags tags={tags} />
+          <ContentTags tags={tags} hrefs={tagHrefs} />
         </CardContent>
         <CardFooter>
           <div className="card-meta">

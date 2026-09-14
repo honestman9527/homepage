@@ -3,9 +3,19 @@ import { Pagination } from "@/components/react/content/Pagination";
 import { listingPath } from "@/i18n/routes";
 import { getTranslations } from "@/i18n/utils";
 import type { Language } from "@/i18n/ui";
-interface Props { currentPage: number; totalPages: number; lang: Language; kind: "blog" | "projects"; }
-const { currentPage, totalPages, lang, kind } = Astro.props;
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  lang: Language;
+  kind?: "blog" | "projects";
+  hrefs?: string[];
+}
+const { currentPage, totalPages, lang, kind, hrefs: customHrefs } = Astro.props;
 const t = getTranslations(lang);
-const hrefs = Array.from({ length: totalPages }, (_, i) => listingPath(lang, kind, i + 1));
+if (!kind && !customHrefs) throw new Error("Pagination requires a kind or hrefs");
+const hrefs = customHrefs ?? Array.from(
+  { length: totalPages },
+  (_, i) => listingPath(lang, kind!, i + 1),
+);
 ---
 <Pagination currentPage={currentPage} totalPages={totalPages} hrefs={hrefs} labels={{ navigation: t("pagination.label"), previous: t("pagination.previous"), next: t("pagination.next"), more: t("pagination.more"), pages: hrefs.map((_, i) => t("pagination.page", { page: i + 1 })), summary: t("pagination.summary", { page: currentPage, total: totalPages }) }} />

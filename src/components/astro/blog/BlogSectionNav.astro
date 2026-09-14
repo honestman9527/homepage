@@ -1,0 +1,26 @@
+---
+import type { Language } from "@/i18n/ui";
+import { listingPath, searchPath, tagsPath } from "@/i18n/routes";
+import { getTranslations } from "@/i18n/utils";
+
+interface Props {
+  lang: Language;
+  active: "posts" | "tags" | "search";
+}
+
+const { lang, active } = Astro.props;
+const t = getTranslations(lang);
+const items = [
+  { id: "posts", label: t("blog.nav.posts"), href: listingPath(lang, "blog") },
+  { id: "tags", label: t("blog.nav.tags"), href: tagsPath(lang) },
+  { id: "search", label: t("blog.nav.search"), href: searchPath(lang) },
+] as const;
+---
+
+<nav class="blog-section-nav" aria-label={t("blog.title")}>
+  {items.map((item) => (
+    <a href={item.href} aria-current={item.id === active ? "page" : undefined}>
+      {item.label}
+    </a>
+  ))}
+</nav>

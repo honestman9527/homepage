@@ -16,8 +16,11 @@ export type NavId = {
     : never;
 }[RouteId];
 
-export type ListingRouteId = Extract<RouteId, "blog" | "projects">;
+export const navigationIds = [
+  "home",
+  "projects",
+  "blog",
+  "about",
+] as const satisfies readonly NavId[];
 
-export const navigationOrder = Object.keys(routeConfig).filter(
-  (id): id is NavId => routeConfig[id as RouteId].navigation,
-);
+export type ListingRouteId = Extract<RouteId, "blog" | "projects">;

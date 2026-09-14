@@ -1,11 +1,9 @@
 import type { ImageMetadata } from "astro";
 import { z } from "zod";
-import type { RouteId } from "../../config/routes";
 import { coverSchema } from "./cover";
 import { httpUrlSchema, languageSchema, textSchema } from "./shared";
 
-export const pageRouteIds = ["about"] as const satisfies readonly RouteId[];
-export type PageRouteId = (typeof pageRouteIds)[number];
+const reservedBlogKeys = new Set(["page", "search", "tags"]);
 
 export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
   return z
@@ -22,6 +20,10 @@ export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
         .regex(
           /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
           "Use a stable lowercase hyphenated slug",
+        )
+        .refine(
+          (key) => !reservedBlogKeys.has(key),
+          "This blog key is reserved by a blog route",
         ),
       isOriginal: z.boolean(),
       toc: z.boolean().default(true),
@@ -57,18 +59,3 @@ export function projectSchema(image: () => z.ZodType<ImageMetadata>) {
       path: ["translations"],
     });
 }
-
-export function pageSchema(image: () => z.ZodType<ImageMetadata>) {
-  return z
-    .object({
-      routeId: z.enum(pageRouteIds),
-      lang: languageSchema,
-      title: textSchema,
-      description: textSchema,
-      toc: z.boolean().default(true),
-      cover: coverSchema(image).optional(),
-    })
-    .strict();
-}
-
-export type PageData = z.infer<ReturnType<typeof pageSchema>>;

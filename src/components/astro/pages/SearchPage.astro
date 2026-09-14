@@ -1,0 +1,54 @@
+---
+import type { Language } from "@/i18n/ui";
+import { getBlogItems, type BlogSearchItem } from "@/lib/content/blog";
+import { tagPath } from "@/i18n/routes";
+import { formatDate, getTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import BlogSectionNav from "@/components/astro/blog/BlogSectionNav.astro";
+import { BlogSearch } from "@/components/react/content/BlogSearch";
+
+interface Props { lang: Language }
+const { lang } = Astro.props;
+const t = getTranslations(lang);
+const site = await getSiteConfig();
+const items: BlogSearchItem[] = (await getBlogItems(lang)).map((item) => ({
+  key: item.key,
+  title: item.post.data.title,
+  description: item.post.data.description,
+  href: item.href,
+  lang: item.post.data.lang,
+  date: formatDate(item.original.data.pubDate, lang),
+  dateTime: item.original.data.pubDate.toISOString(),
+  originalLabel: item.originalLabel,
+  tags: item.tags.map((label) => ({ label, href: tagPath(lang, label) })),
+}));
+---
+
+<SidebarLayout
+  activeNavId="blog"
+  title={`${t("blog.search.title")} — ${site.name}`}
+  description={t("blog.search.subtitle")}
+>
+  <main class="listing-page">
+    <header class="page-heading">
+      <p>{t("blog.title")}</p>
+      <h1>{t("blog.search.subtitle")}</h1>
+      <BlogSectionNav lang={lang} active="search" />
+    </header>
+    <BlogSearch
+      client:load
+      items={items}
+      readLabel={t("blog.readPost")}
+      labels={{
+        input: t("blog.search.label"),
+        placeholder: t("blog.search.placeholder"),
+        results: t("blog.search.results", { count: "{count}" }),
+        initialTitle: t("blog.search.empty.title"),
+        initialDescription: t("blog.search.empty.description"),
+        emptyTitle: t("blog.search.none.title"),
+        emptyDescription: t("blog.search.none.description"),
+      }}
+    />
+  </main>
+</SidebarLayout>

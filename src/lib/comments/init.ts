@@ -1,5 +1,5 @@
 import type { Language } from "@/i18n/ui";
-import { mountComments } from "./client";
+import { mountComments } from "./runtime";
 import type {
   ActiveCommentsConfig,
   CommentCleanup,

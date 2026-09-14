@@ -1,8 +1,8 @@
 ---
 import type { MarkdownHeading } from "astro";
 import type { Language } from "@/i18n/ui";
-import ArticleExperience from "@/components/astro/blog/ArticleExperience.astro";
-import TableOfContents from "@/components/astro/blog/TableOfContents.astro";
+import ArticleExperience from "./ArticleExperience.astro";
+import TableOfContents from "./TableOfContents.astro";
 
 interface Props {
   headings: MarkdownHeading[];
@@ -35,43 +35,18 @@ const hasAfterword = Astro.slots.has("afterword");
     <div class="post-column">
       <article lang={lang} data-reading-region>
         <slot name="header" />
-
-        {
-          tocHeadings.length > 0 && (
-            <TableOfContents
-              headings={tocHeadings}
-              label={tocLabel}
-              variant="mobile"
-            />
-          )
-        }
-
-        {
-          hasCover && (
-            <div class="post-cover">
-              <slot name="cover" />
-            </div>
-          )
-        }
-
-        <div class="prose-blog" data-article-content>
-          <slot />
-        </div>
+        {tocHeadings.length > 0 && (
+          <TableOfContents headings={tocHeadings} label={tocLabel} variant="mobile" />
+        )}
+        {hasCover && <div class="post-cover"><slot name="cover" /></div>}
+        <div class="prose-blog" data-article-content><slot /></div>
       </article>
-
       {hasAfterword && <slot name="afterword" />}
     </div>
-
-    {
-      tocHeadings.length > 0 && (
-        <aside class="post-toc-rail">
-          <TableOfContents
-            headings={tocHeadings}
-            label={tocLabel}
-            variant="desktop"
-          />
-        </aside>
-      )
-    }
+    {tocHeadings.length > 0 && (
+      <aside class="post-toc-rail">
+        <TableOfContents headings={tocHeadings} label={tocLabel} variant="desktop" />
+      </aside>
+    )}
   </div>
 </div>

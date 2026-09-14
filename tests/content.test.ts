@@ -1,22 +1,34 @@
 import { describe, expect, it } from "vitest";
+import { vi } from "vitest";
+
+vi.mock("astro:content", () => ({ getCollection: vi.fn() }));
+vi.mock("astro:i18n", () => ({
+  getRelativeLocaleUrl: (lang: "zh" | "en", path = "") => {
+    const suffix = path ? `/${path}` : "";
+    return lang === "zh" ? suffix || "/" : `/en${suffix}`;
+  },
+}));
 import {
   groupBlog,
   getAdjacentItems,
-  estimateReadingMinutes,
+  normalizeTags,
   selectBlog,
-  selectProjects,
-  pageSlice,
-  pageNumbers,
   type BlogEntry,
+} from "../src/lib/content/blog";
+import {
+  selectProjects,
   type ProjectEntry,
-} from "../src/lib/content/model";
+} from "../src/lib/content/projects";
+import { pageSlice, pageNumbers } from "../src/lib/content/pagination";
+import { estimateReadingMinutes } from "../src/lib/content/reading";
+import { searchBlogItems } from "../src/lib/content/search";
 import {
   formatDate,
   getLangFromUrl,
   getTranslations,
   normalizePath,
 } from "../src/i18n/utils";
-import { commentPath } from "../src/lib/comments/path";
+import { commentPath } from "../src/lib/comments/runtime";
 function post(
   key: string,
   lang: "zh" | "en" = "en",
@@ -113,6 +125,34 @@ describe("translation groups", () => {
       title: "Original",
       contentLang: "en",
     });
+  });
+});
+
+describe("blog discovery", () => {
+  it("trims and deduplicates tags while preserving case", () => {
+    expect(normalizeTags([" Astro ", "Astro", "astro", "C++"])).toEqual([
+      "Astro",
+      "astro",
+      "C++",
+    ]);
+  });
+
+  it("matches every whitespace-separated term across metadata", () => {
+    const items = [
+      {
+        title: "Astro homepage",
+        description: "A fast personal site",
+        tags: [{ label: "Design" }],
+      },
+      {
+        title: "React notes",
+        description: "Component patterns",
+        tags: [{ label: "Astro" }],
+      },
+    ];
+    expect(searchBlogItems(items, "ASTRO site")).toEqual([items[0]]);
+    expect(searchBlogItems(items, "astro design")).toEqual([items[0]]);
+    expect(searchBlogItems(items, "  ")).toEqual([]);
   });
 });
 

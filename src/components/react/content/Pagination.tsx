@@ -7,7 +7,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/react/ui/pagination";
-import { pageNumbers } from "@/lib/content/model";
+import { pageNumbers } from "@/lib/content/pagination";
 interface Props {
   currentPage: number;
   totalPages: number;

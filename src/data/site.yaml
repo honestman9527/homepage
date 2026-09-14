@@ -32,6 +32,7 @@ site:
       bio: A developer crafting interfaces, tools, and the occasional experiment.
       location: The internet · Remote
   skills: [TypeScript, React, Astro, Tailwind CSS, Node.js, Rust, Python, PostgreSQL, Docker, GraphQL]
+  navigation: [home, projects, blog, about]
   listing:
     blog:
       pageSize: 6
@@ -39,11 +40,11 @@ site:
       pageSize: 6
   covers:
     aspectRatio: '16:9'
-    # To use a custom remote default cover instead:
-    default:
-      type: image
-      src: https://raw.7s.nz/file/images/carton/TWZ5so4a.webp
-      alt: Default content cover
+    # To use a remote image, replace default with:
+    # default:
+    #   type: image
+    #   src: https://example.com/default-cover.webp
+    #   alt: Default content cover
     default:
       type: topographic
     topographic:

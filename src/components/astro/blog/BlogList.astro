@@ -1,0 +1,66 @@
+---
+import type { Language } from "@/i18n/ui";
+import type { BlogItem } from "@/lib/content/blog";
+import { tagPath } from "@/i18n/routes";
+import { formatDate, getTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
+import { resolveCover } from "@/lib/content/cover";
+import { BlogCard } from "@/components/react/content/BlogCard";
+import { ListingEmpty } from "@/components/react/content/ListingEmpty";
+import Cover from "@/components/astro/content/Cover.astro";
+
+interface Props {
+  lang: Language;
+  items: BlogItem[];
+  emptyTitle?: string;
+  emptyDescription?: string;
+}
+
+const { lang, items, emptyTitle, emptyDescription } = Astro.props;
+const site = await getSiteConfig();
+const t = getTranslations(lang);
+---
+
+{items.length ? (
+  <div class="card-grid">
+    {items.map(({ post, original, href, key, tags, originalLabel }, index) => {
+      const cover = resolveCover(
+        post.data.cover,
+        original.data.cover,
+        site.listing.blog.defaultCover,
+        site.covers.default,
+      );
+      return (
+        <BlogCard
+          title={post.data.title}
+          description={post.data.description}
+          href={href}
+          contentLang={post.data.lang}
+          date={formatDate(original.data.pubDate, lang)}
+          dateTime={original.data.pubDate.toISOString()}
+          tags={tags}
+          tagHrefs={tags.map((tag) => tagPath(lang, tag))}
+          originalLabel={originalLabel}
+          readLabel={t("blog.readPost")}
+          hasCover={cover.type !== "none"}
+        >
+          <Cover
+            slot="cover"
+            cover={cover}
+            contentKey={key}
+            options={site.covers.topographic}
+            aspectRatio={site.covers.aspectRatio}
+            href={href}
+            label={post.data.title}
+            eager={index === 0}
+          />
+        </BlogCard>
+      );
+    })}
+  </div>
+) : (
+  <ListingEmpty
+    title={emptyTitle ?? t("empty.blog.title")}
+    description={emptyDescription ?? t("empty.blog.description")}
+  />
+)}

@@ -1,19 +1,19 @@
 ---
 import { render } from "astro:content";
-import type { BlogEntry } from "@/lib/content/model";
-import type { ArticleNavigation } from "@/lib/content";
+import type { BlogEntry, ArticleNavigation } from "@/lib/content/blog";
 import type { LanguageLink } from "@/i18n/types";
 import type { Language } from "@/i18n/ui";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import { ArticleHeader } from "@/components/react/content/ArticleHeader";
 import Cover from "@/components/astro/content/Cover.astro";
-import MarkdownDocument from "@/components/astro/content/MarkdownDocument.astro";
+import MarkdownDocument from "@/components/astro/blog/MarkdownDocument.astro";
 import ArticleAfterword from "@/components/astro/blog/ArticleAfterword.astro";
 import { resolveCover } from "@/lib/content/cover";
-import { estimateReadingMinutes } from "@/lib/content/model";
+import { estimateReadingMinutes } from "@/lib/content/reading";
+import { normalizeTags } from "@/lib/content/blog";
+import { tagPath } from "@/i18n/routes";
 import { getSiteConfig } from "@/lib/site-config";
-import { commentPath } from "@/lib/comments/path";
-import { resolveCommentsConfig } from "@/lib/comments/config";
+import { commentPath, resolveCommentsConfig } from "@/lib/comments/runtime";
 import { formatDate, getTranslations } from "@/i18n/utils";
 
 interface Props {
@@ -38,6 +38,7 @@ const cover = resolveCover(
 );
 const readingMinutes = estimateReadingMinutes(post.body ?? "");
 const commentsConfig = resolveCommentsConfig(site.comments, post.data.comments);
+const tags = normalizeTags(post.data.tags);
 ---
 
 <SidebarLayout
@@ -63,7 +64,8 @@ const commentsConfig = resolveCommentsConfig(site.comments, post.data.comments);
       lang={post.data.lang}
       title={post.data.title}
       description={post.data.description}
-      tags={post.data.tags}
+      tags={tags}
+      tagHrefs={tags.map((tag) => tagPath(post.data.lang, tag))}
       published={{
         label: formatDate(original.data.pubDate, lang),
         dateTime: original.data.pubDate.toISOString(),

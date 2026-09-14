@@ -1,0 +1,46 @@
+---
+import type { Language } from "@/i18n/ui";
+import { getBlogItems, getBlogTags } from "@/lib/content/blog";
+import { getTranslations } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import BlogSectionNav from "@/components/astro/blog/BlogSectionNav.astro";
+import { TagCard } from "@/components/react/content/TagCard";
+import { ListingEmpty } from "@/components/react/content/ListingEmpty";
+
+interface Props { lang: Language }
+const { lang } = Astro.props;
+const t = getTranslations(lang);
+const site = await getSiteConfig();
+const tags = getBlogTags(await getBlogItems(lang), lang);
+---
+
+<SidebarLayout
+  activeNavId="blog"
+  title={`${t("blog.tags.title")} — ${site.name}`}
+  description={t("blog.tags.subtitle")}
+>
+  <main class="listing-page">
+    <header class="page-heading">
+      <p>{t("blog.title")}</p>
+      <h1>{t("blog.tags.subtitle")}</h1>
+      <BlogSectionNav lang={lang} active="tags" />
+    </header>
+    {tags.length ? (
+      <div class="tag-grid">
+        {tags.map((tag) => (
+          <TagCard
+            name={tag.name}
+            href={tag.href}
+            countLabel={t("blog.tags.count", { count: tag.count })}
+          />
+        ))}
+      </div>
+    ) : (
+      <ListingEmpty
+        title={t("empty.blog.title")}
+        description={t("empty.blog.description")}
+      />
+    )}
+  </main>
+</SidebarLayout>

@@ -1,0 +1,25 @@
+about:
+  zh:
+    title: 关于
+    description: 简单介绍
+    sections:
+      - id: introduction
+        title: 自我介绍
+        paragraphs:
+          - 这里写介绍——一两句话说明你是谁、在意什么、喜欢解决什么样的问题。
+      - id: current-focus
+        title: 最近关注
+        paragraphs:
+          - 第二段可以写你现在的关注点、坐标，或正在学的东西。
+  en:
+    title: About
+    description: A short introduction
+    sections:
+      - id: introduction
+        title: Introduction
+        paragraphs:
+          - Introduce yourself here — who you are, what you care about, and the kind of problems you enjoy solving.
+      - id: current-focus
+        title: Current focus
+        paragraphs:
+          - A second paragraph works well for your current focus, location, or what you’re learning right now.

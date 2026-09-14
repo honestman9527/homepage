@@ -10,7 +10,7 @@ import {
   type Cover,
 } from "../src/lib/config/schema";
 import { resolveCover, contourPaths } from "../src/lib/content/cover";
-import { resolveCommentsConfig } from "../src/lib/comments/config";
+import { resolveCommentsConfig } from "../src/lib/comments/runtime";
 // Asset loading is tested by the Astro fixture build; these tests isolate config semantics.
 const image = () => z.never();
 const options = topographicSchema.parse({});
@@ -94,6 +94,9 @@ describe("strict content schemas", () => {
       { ...blog, title: " " },
       { ...blog, pubDate: "not a date" },
       { ...blog, translationKey: "../escape" },
+      { ...blog, translationKey: "search" },
+      { ...blog, translationKey: "tags" },
+      { ...blog, translationKey: "page" },
     ])
       expect(blogSchema(image).safeParse(value).success).toBe(false);
   });
@@ -134,6 +137,7 @@ describe("strict content schemas", () => {
     };
     const parsed = siteSchema(image).parse(site);
     expect(parsed.listing.blog.pageSize).toBe(6);
+    expect(parsed.navigation).toEqual(["home", "projects", "blog", "about"]);
     expect(parsed.comments).toEqual({ provider: "none" });
     expect(parsed.layout.header.sticky).toBe(true);
     expect(
@@ -200,6 +204,18 @@ describe("strict content schemas", () => {
         ...site,
         layout: { header: { sticky: true, position: "top" } },
       }).success,
+    ).toBe(false);
+    expect(
+      siteSchema(image).parse({ ...site, navigation: ["blog", "home"] })
+        .navigation,
+    ).toEqual(["blog", "home"]);
+    expect(
+      siteSchema(image).safeParse({ ...site, navigation: ["home", "home"] })
+        .success,
+    ).toBe(false);
+    expect(
+      siteSchema(image).safeParse({ ...site, navigation: ["home", "contact"] })
+        .success,
     ).toBe(false);
   });
 });

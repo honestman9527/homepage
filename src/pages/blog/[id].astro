@@ -1,7 +1,7 @@
 ---
 import type { InferGetStaticPropsType } from "astro";
 import BlogPostShell from "@/layouts/BlogPostShell.astro";
-import { getBlogPaths } from "@/lib/content";
+import { getBlogPaths } from "@/lib/content/blog";
 export async function getStaticPaths() { return getBlogPaths("zh"); }
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const props = Astro.props;

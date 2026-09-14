@@ -1,8 +1,8 @@
 ---
-import type { GetStaticPaths, Page as AstroPage } from "astro";
+import type { InferGetStaticPropsType } from "astro";
 import Page from "@/components/astro/pages/ProjectsPage.astro";
-import { getListingPaths } from "@/lib/content";
-export const getStaticPaths = (async ({ paginate }) => getListingPaths(paginate, "zh", "projects")) satisfies GetStaticPaths;
-interface Props { page: AstroPage<unknown>; }
+import { getProjectListingPaths } from "@/lib/content/projects";
+export async function getStaticPaths() { return getProjectListingPaths("zh"); }
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 ---
-<Page lang="zh" currentPage={Astro.props.page.currentPage} />
+<Page lang="zh" page={Astro.props.page} />

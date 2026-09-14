@@ -1,0 +1,64 @@
+---
+import type { Language, LanguageLink } from "@/i18n/ui";
+import type { BlogItem } from "@/lib/content/blog";
+import { tagListingPath, tagsPath } from "@/i18n/routes";
+import { getTranslations, otherLanguage } from "@/i18n/utils";
+import { getSiteConfig } from "@/lib/site-config";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import BlogList from "@/components/astro/blog/BlogList.astro";
+import BlogSectionNav from "@/components/astro/blog/BlogSectionNav.astro";
+import ListingFooter from "@/components/astro/content/ListingFooter.astro";
+
+interface Props {
+  lang: Language;
+  tag: string;
+  page: { items: BlogItem[]; currentPage: number; totalPages: number };
+  languageHref: string;
+}
+
+const { lang, tag, page, languageHref } = Astro.props;
+const t = getTranslations(lang);
+const site = await getSiteConfig();
+const other = otherLanguage(lang);
+const languageLink: LanguageLink = {
+  lang: other,
+  href: languageHref,
+  label: other === "en" ? "English" : "中文",
+};
+const suffix = page.currentPage > 1
+  ? ` · ${t("pagination.page", { page: page.currentPage })}`
+  : "";
+const hrefs = Array.from(
+  { length: page.totalPages },
+  (_, index) => tagListingPath(lang, tag, index + 1),
+);
+const alternates = [
+  { lang, href: tagListingPath(lang, tag, page.currentPage) },
+  ...(languageHref !== tagsPath(other)
+    ? [{ lang: other, href: languageHref }]
+    : []),
+];
+---
+
+<SidebarLayout
+  activeNavId="blog"
+  title={`${tag}${suffix} — ${site.name}`}
+  description={t("blog.tag.subtitle", { tag })}
+  languageLink={languageLink}
+  alternates={alternates}
+>
+  <main class="listing-page">
+    <header class="page-heading">
+      <p>{t("blog.tags.title")}</p>
+      <h1>{t("blog.tag.subtitle", { tag })}</h1>
+      <BlogSectionNav lang={lang} active="tags" />
+    </header>
+    <BlogList lang={lang} items={page.items} />
+    <ListingFooter
+      currentPage={page.currentPage}
+      totalPages={page.totalPages}
+      lang={lang}
+      hrefs={hrefs}
+    />
+  </main>
+</SidebarLayout>

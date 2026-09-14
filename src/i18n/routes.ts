@@ -29,3 +29,28 @@ export function listingPath(
 export function blogPath(lang: Language, key: string): string {
   return localePath(lang, `${routeConfig.blog.segment}/${key}`);
 }
+
+export function searchPath(lang: Language): string {
+  return localePath(lang, `${routeConfig.blog.segment}/search`);
+}
+
+export function tagsPath(lang: Language): string {
+  return localePath(lang, `${routeConfig.blog.segment}/tags`);
+}
+
+export function tagPath(lang: Language, tag: string): string {
+  return localePath(
+    lang,
+    `${routeConfig.blog.segment}/tags/${encodeURIComponent(tag)}`,
+  );
+}
+
+export function tagListingPath(
+  lang: Language,
+  tag: string,
+  page = 1,
+): string {
+  if (!Number.isInteger(page) || page < 1)
+    throw new RangeError("Tag page must be a positive integer");
+  return page === 1 ? tagPath(lang, tag) : `${tagPath(lang, tag)}/page/${page}`;
+}

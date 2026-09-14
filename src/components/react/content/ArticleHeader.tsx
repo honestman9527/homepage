@@ -11,6 +11,7 @@ export interface ArticleHeaderProps {
   title: string;
   description: string;
   tags: readonly string[];
+  tagHrefs?: readonly string[];
   published: ArticleDateViewModel;
   readingTime: string;
   updated?: ArticleDateViewModel & { prefix: string };
@@ -21,6 +22,7 @@ export function ArticleHeader({
   title,
   description,
   tags,
+  tagHrefs,
   published,
   readingTime,
   updated,
@@ -45,7 +47,7 @@ export function ArticleHeader({
       <p className="post-description" lang={lang}>
         {description}
       </p>
-      <ContentTags tags={tags} className="post-tags" />
+      <ContentTags tags={tags} hrefs={tagHrefs} className="post-tags" />
     </header>
   );
 }

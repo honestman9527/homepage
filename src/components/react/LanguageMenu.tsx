@@ -46,7 +46,17 @@ export function LanguageMenu({ current, currentHref, link, label }: Props) {
           {link.href ? (
             <DropdownMenuItem
               render={
-                <a href={link.href} hrefLang={link.lang} lang={link.lang} />
+                <a
+                  href={link.href}
+                  hrefLang={link.lang}
+                  lang={link.lang}
+                  onClick={(event) => {
+                    if (!/\/blog\/search\/?$/.test(window.location.pathname)) return;
+                    const target = new URL(event.currentTarget.href);
+                    target.search = window.location.search;
+                    event.currentTarget.href = target.href;
+                  }}
+                />
               }
             >
               {link.label}
