@@ -1,3 +1,6 @@
+# 项目按 year 降序排列，同年按 id 排序。
+# originalLang 必须为 zh 或 en，且 translations 中必须存在对应语言。
+# 当前页面语言缺译时会回退到原文，并显示原文语言标记。
 - id: project-one
   originalLang: en
   translations:
@@ -6,11 +9,18 @@
       description: >-
         Placeholder for your flagship project. One or two sentences about what it
         does, who it is for, and what makes it interesting.
+  # tags 可省略，默认为空数组。
   tags: [Astro, React, Tailwind CSS]
+  # href 必填；demoHref 可省略。两者都必须为 HTTP(S) 地址。
   href: https://github.com/example/project-one
   demoHref: https://example.com
+  # year 接受 1900–9999 的整数；featured 可省略，默认为 false。
   year: 2026
   featured: true
+  # 可选封面示例：
+  # cover:
+  #   type: topographic # 也可使用 image 或 none
+  #   palette: teal
 
 - id: project-two
   originalLang: en

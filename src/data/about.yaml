@@ -1,10 +1,13 @@
+# About 是单条数据集合；zh 和 en 两种语言都必须存在。
 about:
   zh:
     title: 关于
     description: 简单介绍
+    # 章节按数组顺序显示。id 使用小写字母、数字和连字符，且在当前语言内唯一。
     sections:
       - id: introduction
         title: 自我介绍
+        # 每个章节至少一个段落；内容按纯文本输出，不解析 Markdown、MDX 或 HTML。
         paragraphs:
           - 这里写介绍——一两句话说明你是谁、在意什么、喜欢解决什么样的问题。
       - id: current-focus
@@ -14,6 +17,7 @@ about:
   en:
     title: About
     description: A short introduction
+    # 两种语言的章节无需一一对应，但建议使用相同 id 方便维护。
     sections:
       - id: introduction
         title: Introduction

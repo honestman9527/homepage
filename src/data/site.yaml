@@ -1,17 +1,26 @@
-# Build-time settings. Relative image paths are resolved from this YAML file.
+# 站点配置在构建期校验；对象不接受未声明的字段。
+# 封面使用本地图片时，路径相对于本文件。
 site:
+  # 身份信息：avatar 可省略，省略后使用 initials。
   name: Honestman
   initials: HM
   avatar: https://raw.7s.nz/file/icon/sblHaFiM.webp
   email: hello@honestman.me
+
+  # 评论提供商：none | waline | twikoo。
+  # none 只保留 provider；Waline 需要 serverURL；Twikoo 需要 envId。
   comments:
     provider: waline
     serverURL: https://waline.honestman.me
-    pageSize: 10
-    login: enable # enable / disable / force
+    pageSize: 10 # 1–50，默认 10
+    login: enable # enable | disable | force
+
+  # sticky 默认为 true。
   layout:
     header:
       sticky: true
+
+  # type: github | linkedin | x | website；url 必须为 HTTP(S)。
   social:
     - type: github
       label: GitHub
@@ -22,6 +31,8 @@ site:
     - type: x
       label: X
       url: https://x.com
+
+  # zh 和 en 都是必填项，每种语言都需要三个字段。
   profile:
     zh:
       availability: 接受新项目委托
@@ -31,24 +42,36 @@ site:
       availability: Available for new projects
       bio: A developer crafting interfaces, tools, and the occasional experiment.
       location: The internet · Remote
+
+  # 技能按数组顺序显示。
   skills: [TypeScript, React, Astro, Tailwind CSS, Node.js, Rust, Python, PostgreSQL, Docker, GraphQL]
+
+  # 可选值：home、projects、blog、about。顺序决定侧栏顺序；省略只隐藏入口。
+  # 项目不能重复，空数组会隐藏全部主导航。
   navigation: [home, projects, blog, about]
+
+  # pageSize 接受 1–48 的整数。每个列表还可设置 defaultCover。
   listing:
     blog:
       pageSize: 6
     projects:
       pageSize: 6
+
+  # aspectRatio: 16:9 | 4:3 | 1:1。
+  # default 支持 topographic、image 和 none；none 会关闭后续封面回退。
   covers:
     aspectRatio: '16:9'
-    # To use a remote image, replace default with:
+    # 使用远程图片时，用以下内容替换当前 default（远程地址必须为 HTTPS）：
     # default:
     #   type: image
     #   src: https://example.com/default-cover.webp
-    #   alt: Default content cover
+    #   alt: 默认内容封面
+    # 完全关闭默认封面：default: { type: none }
     default:
       type: topographic
+    # 等高线默认参数，也可在单个封面中覆盖。
     topographic:
       seed: honestman
-      density: 12
-      strokeWidth: 1
-      palette: blue
+      density: 12 # 4–32 的整数
+      strokeWidth: 1 # 0.25–3
+      palette: blue # blue | teal | neutral
