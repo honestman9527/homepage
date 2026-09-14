@@ -1,0 +1,57 @@
+@layer components {
+  .comments-root {
+    margin-top: 2rem;
+    --waline-theme-color: var(--electric);
+    --waline-active-color: var(--electric);
+    --waline-color: var(--foreground);
+    --waline-bg-color: var(--background);
+    --waline-bg-color-light: var(--muted);
+    --waline-border-color: var(--border);
+    --waline-info-color: var(--muted-foreground);
+    --waline-code-bg-color: var(--muted);
+  }
+  .comments-header {
+    margin-bottom: 1rem;
+  }
+  .comments-header p {
+    color: var(--electric);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 650;
+    letter-spacing: 0.14em;
+  }
+  .comments-loading {
+    display: grid;
+    gap: 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+  .comments-error,
+  .comments-noscript {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--muted-foreground);
+    background: var(--card);
+  }
+  .comments-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .comments-root [hidden] {
+    display: none;
+  }
+  .comments-target :is(.el-input__inner, .el-textarea__inner) {
+    color: var(--foreground);
+    background-color: var(--card);
+    border-color: var(--border);
+  }
+  .comments-target :is(.tk-nick, .tk-time, .tk-extras, .tk-comments-no) {
+    color: var(--muted-foreground);
+  }
+  .comments-target :is(.tk-action-icon, .tk-sort-item.__active, a) {
+    color: var(--electric);
+  }
+}

@@ -10,13 +10,14 @@ import {
 import { Badge } from "@/components/react/ui/badge";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import type { Language } from "@/i18n/ui";
+import { ContentTags } from "./ContentTags";
 interface Props {
   title: string;
   description: string;
   href: string;
   date: string;
   dateTime: string;
-  tags: string[];
+  tags: readonly string[];
   contentLang: Language;
   originalLabel?: string;
   readLabel: string;
@@ -53,13 +54,7 @@ export function BlogCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <Badge key={tag} variant="outline">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          <ContentTags tags={tags} />
         </CardContent>
         <CardFooter>
           <div className="card-meta">

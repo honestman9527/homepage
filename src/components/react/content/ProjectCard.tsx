@@ -11,13 +11,14 @@ import { Badge } from "@/components/react/ui/badge";
 import { Button } from "@/components/react/ui/button";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import type { Language } from "@/i18n/ui";
+import { ContentTags } from "./ContentTags";
 interface Props {
   title: string;
   description: string;
   href: string;
   demoHref?: string;
   year: number;
-  tags: string[];
+  tags: readonly string[];
   featured: boolean;
   featuredLabel: string;
   visitLabel: string;
@@ -70,13 +71,7 @@ export function ProjectCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <Badge key={tag} variant="outline">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          <ContentTags tags={tags} />
         </CardContent>
         <CardFooter>
           <div className="flex flex-wrap items-center gap-2">

@@ -9,7 +9,7 @@ import { resolveCover } from "@/lib/content/cover";
 import { BlogCard } from "@/components/react/content/BlogCard";
 import Cover from "@/components/astro/content/Cover.astro";
 import ListingFooter from "@/components/astro/content/ListingFooter.astro";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/react/ui/empty";
+import { ListingEmpty } from "@/components/react/content/ListingEmpty";
 interface Props { lang: Language; currentPage?: number; }
 const { lang, currentPage = 1 } = Astro.props;
 const site = await getSiteConfig();
@@ -27,7 +27,7 @@ const suffix = currentPage > 1 ? ` · ${t("pagination.page", { page: currentPage
         originalLabel={originalLabel} readLabel={t("blog.readPost")} hasCover={cover.type !== "none"}>
         <Cover slot="cover" cover={cover} contentKey={key} options={site.covers.topographic} aspectRatio={site.covers.aspectRatio} href={href} label={post.data.title} eager={index === 0} />
       </BlogCard>;
-    })}</div> : <Empty><EmptyHeader><EmptyTitle>{t("empty.blog.title")}</EmptyTitle><EmptyDescription>{t("empty.blog.description")}</EmptyDescription></EmptyHeader></Empty>}
+    })}</div> : <ListingEmpty title={t("empty.blog.title")} description={t("empty.blog.description")} />}
     <ListingFooter currentPage={currentPage} totalPages={totalPages} lang={lang} kind="blog" />
   </section>
 </SidebarLayout>

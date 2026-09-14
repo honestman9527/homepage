@@ -1,7 +1,8 @@
-export const languages = { zh: "中文", en: "English" } as const;
-export type Language = keyof typeof languages;
-export const defaultLanguage: Language = "zh";
-export type NavId = "home" | "projects" | "blog" | "about";
+import type { Language } from "./types";
+
+export { defaultLanguage, languages } from "./types";
+export type { Language, LanguageLink } from "./types";
+export type { NavId, RouteId } from "../config/routes";
 
 const zh = {
   "site.title": "主页",
@@ -33,8 +34,6 @@ const zh = {
   "projects.liveDemo": "在线演示",
   "projects.visit": "查看项目",
   "projects.featured": "精选",
-  "about.title": "关于",
-  "about.subtitle": "简单介绍",
   "about.toolbox": "工具箱",
   "theme.toggle": "切换主题",
   "theme.light": "切换到浅色主题",
@@ -88,8 +87,6 @@ const en: Record<TranslationKey, string> = {
   "projects.liveDemo": "Live demo",
   "projects.visit": "View project",
   "projects.featured": "Featured",
-  "about.title": "About",
-  "about.subtitle": "A short introduction",
   "about.toolbox": "Toolbox",
   "theme.toggle": "Toggle theme",
   "theme.light": "Switch to light theme",

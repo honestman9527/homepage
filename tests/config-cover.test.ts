@@ -66,6 +66,7 @@ describe("cover configuration", () => {
     ).toBe("image");
     for (const value of [
       { type: "image", src: "http://example.com/a.png", alt: "" },
+      { type: "image", src: "https://example.com/a.png" },
       { type: "topographic", density: 100 },
       { type: "none", src: "x" },
       { type: "topographic", palette: "red" },
@@ -121,7 +122,6 @@ describe("strict content schemas", () => {
       bio: "Bio",
       location: "Remote",
       availability: "Available",
-      about: ["About"],
     };
     const site = {
       name: "Name",
@@ -145,6 +145,43 @@ describe("strict content schemas", () => {
     expect(parsed.avatar).toBe(
       "https://example.com/avatar.png",
     );
+    expect(
+      siteSchema(image).parse({
+        ...site,
+        listing: {
+          blog: {
+            defaultCover: {
+              type: "image",
+              src: "https://cdn.example.com/blog.webp",
+              alt: "Blog",
+            },
+          },
+        },
+        covers: {
+          default: {
+            type: "image",
+            src: "https://cdn.example.com/default.webp",
+            alt: "Default",
+          },
+        },
+      }),
+    ).toMatchObject({
+      listing: {
+        blog: {
+          pageSize: 6,
+          defaultCover: {
+            type: "image",
+            src: "https://cdn.example.com/blog.webp",
+          },
+        },
+      },
+      covers: {
+        default: {
+          type: "image",
+          src: "https://cdn.example.com/default.webp",
+        },
+      },
+    });
     expect(siteSchema(image).safeParse({ ...site, email: "bad" }).success).toBe(
       false,
     );

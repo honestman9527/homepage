@@ -12,8 +12,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/react/ui/dropdown-menu";
+import type { LanguageLink } from "@/i18n/types";
 import { languages, type Language } from "@/i18n/ui";
-import type { LanguageLink } from "@/lib/content";
 
 interface Props {
   current: Language;

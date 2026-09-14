@@ -2,10 +2,12 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/react/layout/AppShell";
 import { getLangFromUrl, getTranslations, otherLanguage } from "@/i18n/utils";
-import { localePath } from "@/i18n/routes";
+import { localePath, routePath } from "@/i18n/routes";
+import { navigationOrder } from "@/config/routes";
 import { getSiteConfig } from "@/lib/site-config";
 import type { Language, NavId } from "@/i18n/ui";
-import type { LanguageLink } from "@/lib/content";
+import type { LanguageLink } from "@/i18n/types";
+import type { AppShellViewModel } from "@/components/react/layout/types";
 interface Props {
   title?: string; description?: string; activeNavId: NavId;
   languageLink?: LanguageLink; alternates?: { lang: Language; href: string }[];
@@ -19,14 +21,51 @@ const other = otherLanguage(lang);
 const path = Astro.url.pathname.replace(/^\/en(?=\/|$)/, "");
 const languageLink = Astro.props.languageLink ?? { lang: other, href: localePath(other, path), label: other === "en" ? "English" : "中文" };
 const alternates = Astro.props.alternates ?? (["zh", "en"] as const).map((language) => ({ lang: language, href: localePath(language, path) }));
-const nav = (["home", "projects", "blog", "about"] as const).map((id) => ({ id, label: t(`nav.${id}`), href: localePath(lang, id === "home" ? "" : id) }));
+const navigation = navigationOrder.map((id) => ({
+  id,
+  label: t(`nav.${id}`),
+  href: routePath(lang, id),
+}));
+const year = new Date().getUTCFullYear();
+const viewModel = {
+  header: {
+    title: t(`nav.${activeNavId}`),
+    sticky: site.layout.header.sticky,
+    sidebarToggleLabel: t("sidebar.toggle"),
+    language: {
+      current: lang,
+      currentHref: Astro.url.pathname,
+      link: languageLink,
+      label: t("language.menu"),
+    },
+  },
+  sidebar: {
+    activeNavId,
+    navigation,
+    labels: {
+      toggle: t("sidebar.toggle"),
+      title: t("sidebar.title"),
+      description: t("sidebar.description"),
+      close: t("sidebar.close"),
+    },
+    brand: {
+      name: site.name,
+      domain: Astro.site!.hostname,
+      homeHref: routePath(lang, "home"),
+    },
+    footer: {
+      copyright: `© ${year}`,
+      themeLabels: {
+        toggle: t("theme.toggle"),
+        light: t("theme.light"),
+        dark: t("theme.dark"),
+      },
+    },
+  },
+} satisfies AppShellViewModel;
 ---
 <BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} lang={lang} skipLabel={t("common.skip")} alternates={alternates} article={article}>
-  <AppShell client:load activeNavId={activeNavId} pageTitle={t(`nav.${activeNavId}`)} nav={nav} languageLink={languageLink}
-    labels={{ toggle: t("sidebar.toggle"), title: t("sidebar.title"), description: t("sidebar.description"), close: t("sidebar.close") }}
-    themeLabels={{ toggle: t("theme.toggle"), light: t("theme.light"), dark: t("theme.dark") }}
-    currentLang={lang} currentHref={Astro.url.pathname} languageLabel={t("language.menu")} stickyHeader={site.layout.header.sticky}
-    brandName={site.name} brandDomain={Astro.site!.hostname} year={new Date().getUTCFullYear()}>
+  <AppShell client:load viewModel={viewModel}>
     <slot />
   </AppShell>
 </BaseLayout>

@@ -1,16 +1,14 @@
 ---
 import { render } from "astro:content";
 import type { BlogEntry } from "@/lib/content/model";
-import type { ArticleNavigation, LanguageLink } from "@/lib/content";
+import type { ArticleNavigation } from "@/lib/content";
+import type { LanguageLink } from "@/i18n/types";
 import type { Language } from "@/i18n/ui";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
-import { Badge } from "@/components/react/ui/badge";
-import { Separator } from "@/components/react/ui/separator";
-import { ArticleNavigation as ArticleNavigationView } from "@/components/react/content/ArticleNavigation";
+import { ArticleHeader } from "@/components/react/content/ArticleHeader";
 import Cover from "@/components/astro/content/Cover.astro";
-import ArticleExperience from "@/components/astro/blog/ArticleExperience.astro";
-import Comments from "@/components/astro/blog/Comments.astro";
-import TableOfContents from "@/components/astro/blog/TableOfContents.astro";
+import MarkdownDocument from "@/components/astro/content/MarkdownDocument.astro";
+import ArticleAfterword from "@/components/astro/blog/ArticleAfterword.astro";
 import { resolveCover } from "@/lib/content/cover";
 import { estimateReadingMinutes } from "@/lib/content/model";
 import { getSiteConfig } from "@/lib/site-config";
@@ -38,15 +36,8 @@ const cover = resolveCover(
   site.listing.blog.defaultCover,
   site.covers.default,
 );
-const tocHeadings = post.data.toc
-  ? headings.filter(
-      ({ depth, slug }) =>
-        (depth === 2 || depth === 3) && slug !== "footnote-label",
-    )
-  : [];
 const readingMinutes = estimateReadingMinutes(post.body ?? "");
 const commentsConfig = resolveCommentsConfig(site.comments, post.data.comments);
-const hasNavigation = Boolean(navigation.older || navigation.newer);
 ---
 
 <SidebarLayout
@@ -60,109 +51,62 @@ const hasNavigation = Boolean(navigation.older || navigation.newer);
     updated: post.data.updatedDate,
   }}
 >
-  <div class="post-page">
-    <ArticleExperience />
-    <div class="post-layout">
-      <div class="post-column">
-        <article lang={post.data.lang} data-reading-region>
-          <header class="post-header">
-            <div class="post-meta">
-              <time datetime={original.data.pubDate.toISOString()}>
-                {formatDate(original.data.pubDate, lang)}
-              </time>
-              <span aria-hidden="true">·</span>
-              <span>{t("blog.readingTime", { minutes: readingMinutes })}</span>
-              {
-                post.data.updatedDate && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span>
-                      {t("common.updated")} {" "}
-                      <time datetime={post.data.updatedDate.toISOString()}>
-                        {formatDate(post.data.updatedDate, lang)}
-                      </time>
-                    </span>
-                  </>
-                )
-              }
-            </div>
-            <h1>{post.data.title}</h1>
-            <p class="post-description">{post.data.description}</p>
-            <div class="post-tags">
-              {post.data.tags.map((tag) => <Badge variant="outline">{tag}</Badge>)}
-            </div>
-          </header>
-
-          {
-            tocHeadings.length > 0 && (
-              <TableOfContents
-                headings={tocHeadings}
-                label={t("blog.toc")}
-                variant="mobile"
-              />
-            )
+  <MarkdownDocument
+    headings={headings}
+    lang={post.data.lang}
+    toc={post.data.toc}
+    tocLabel={t("blog.toc")}
+    showProgress
+  >
+    <ArticleHeader
+      slot="header"
+      lang={post.data.lang}
+      title={post.data.title}
+      description={post.data.description}
+      tags={post.data.tags}
+      published={{
+        label: formatDate(original.data.pubDate, lang),
+        dateTime: original.data.pubDate.toISOString(),
+      }}
+      readingTime={t("blog.readingTime", { minutes: readingMinutes })}
+      updated={post.data.updatedDate
+        ? {
+            prefix: t("common.updated"),
+            label: formatDate(post.data.updatedDate, lang),
+            dateTime: post.data.updatedDate.toISOString(),
           }
+        : undefined}
+    />
 
-          <div class="post-cover">
-            <Cover
-              cover={cover}
-              contentKey={post.data.translationKey}
-              options={site.covers.topographic}
-              aspectRatio={site.covers.aspectRatio}
-              eager
-            />
-          </div>
-          <div class="prose-blog" data-article-content><Content /></div>
-        </article>
+    <Cover
+      slot="cover"
+      cover={cover}
+      contentKey={post.data.translationKey}
+      options={site.covers.topographic}
+      aspectRatio={site.covers.aspectRatio}
+      eager
+    />
 
-        {
-          hasNavigation && (
-            <div class="post-afterword">
-              <Separator />
-              <ArticleNavigationView
-                navigation={navigation}
-                labels={{
-                  older: t("blog.olderPost"),
-                  newer: t("blog.newerPost"),
-                }}
-              />
-            </div>
-          )
-        }
+    <Content />
 
-        {
-          commentsConfig && (
-            <div class="post-comments">
-              <Separator />
-              <Comments
-                config={commentsConfig}
-                path={commentPath(post.data.translationKey)}
-                lang={post.data.lang}
-                labels={{
-                  title: t("comments.title"),
-                  eyebrow: t("comments.eyebrow"),
-                  loading: t("comments.loading"),
-                  error: t("comments.error"),
-                  retry: t("comments.retry"),
-                  noScript: t("comments.noScript"),
-                }}
-              />
-            </div>
-          )
-        }
-      </div>
-
-      {
-        tocHeadings.length > 0 && (
-          <aside class="post-toc-rail">
-            <TableOfContents
-              headings={tocHeadings}
-              label={t("blog.toc")}
-              variant="desktop"
-            />
-          </aside>
-        )
-      }
-    </div>
-  </div>
+    <ArticleAfterword
+      slot="afterword"
+      navigation={navigation}
+      commentsConfig={commentsConfig}
+      commentsPath={commentPath(post.data.translationKey)}
+      lang={post.data.lang}
+      labels={{
+        older: t("blog.olderPost"),
+        newer: t("blog.newerPost"),
+        comments: {
+          title: t("comments.title"),
+          eyebrow: t("comments.eyebrow"),
+          loading: t("comments.loading"),
+          error: t("comments.error"),
+          retry: t("comments.retry"),
+          noScript: t("comments.noScript"),
+        },
+      }}
+    />
+  </MarkdownDocument>
 </SidebarLayout>

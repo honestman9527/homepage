@@ -1,12 +1,11 @@
 ---
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/astro/Avatar.astro";
-import { Badge } from "@/components/react/ui/badge";
+import { ProfileSummary } from "@/components/react/profile/ProfileSummary";
 import SocialLinks from "@/components/astro/SocialLinks.astro";
 import { getTranslations } from "@/i18n/utils";
 import type { Language } from "@/i18n/ui";
 import { getSiteConfig } from "@/lib/site-config";
-import { MapPinIcon } from "@phosphor-icons/react";
 interface Props { lang: Language; }
 const { lang } = Astro.props;
 const site = await getSiteConfig();
@@ -17,13 +16,22 @@ const t = getTranslations(lang);
   <section class="relative flex min-h-[calc(100svh-3rem)] flex-col items-center justify-center px-4 py-16 sm:px-6">
     <div class="bg-grid mask-fade-y pointer-events-none absolute inset-0" aria-hidden="true"></div>
     <div class="relative flex max-w-md flex-col items-center gap-6 text-center">
-      <Avatar fallback={site.initials} src={site.avatar} alt={site.name} class="size-28 text-3xl" />
-      <div class="flex flex-col items-center gap-2">
-        <h1 class="font-display text-4xl font-bold tracking-tight">{site.name}<span class="text-electric">.</span></h1>
-        <Badge variant="secondary">{profile.availability}</Badge>
-        <p class="text-muted-foreground text-lg text-pretty">{profile.bio}</p>
-        <p class="text-muted-foreground flex items-center gap-1 text-sm"><MapPinIcon size={14} />{profile.location}</p>
-      </div>
+      <ProfileSummary
+        name={site.name}
+        bio={profile.bio}
+        location={profile.location}
+        availability={profile.availability}
+        headingLevel={1}
+        align="center"
+      >
+        <Avatar
+          slot="avatar"
+          fallback={site.initials}
+          src={site.avatar}
+          alt={site.name}
+          class="size-24 text-2xl"
+        />
+      </ProfileSummary>
       <div class="flex flex-col items-center gap-3"><a href={`mailto:${site.email}`} class="text-foreground hover:text-electric font-mono text-sm">{site.email}</a><SocialLinks email={site.email} social={site.social} emailLabel={t("common.email")} /></div>
     </div>
   </section>

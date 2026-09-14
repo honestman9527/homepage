@@ -24,22 +24,24 @@ pnpm preview
 ## 架构与边界
 
 ```text
-src/data + src/content/blog
-  → lib/config/schema：构建期校验
-  → lib/content：译文关联、草稿过滤、排序、分页
+src/data + src/content/blog + src/content/pages
+  → lib/config/*：按领域执行构建期校验
+  → lib/content/*：页面选择、译文关联、排序与分页
+  → config/routes：固定路由与导航顺序
   → pages：薄路由入口
-  → components/astro：页面、静态内容、封面与布局插槽
-      → components/react：交互外壳、领域 Card 与 shadcn UI
-      → layouts：元信息与静态内容插槽
+  → layouts + components/astro：内容查询、MDX、图片与静态组合
+      → components/react：交互外壳、静态展示组件与 shadcn UI
 ```
 
-- `components/astro` 与 `components/react` 分开；Astro 目录不依赖 React 布局类型，React 目录内的 `ui` 保留 shadcn 源码。
-- 页面在构建期读取数据。Card、封面和分页只接收 props，不访问 Content Collections；React Card 未添加 `client:*` 时仍由 Astro 静态输出。
+- `components/astro` 与 `components/react` 分开；React 目录内的 `ui` 保留完整的 shadcn 源码，不按业务文件继续拆分。
+- 页面在构建期读取数据。Card、文章头部、个人资料、技能和分页只接收 props；未添加 `client:*` 的 React 组件由 Astro 输出静态 HTML。
 - 只有 React `AppShell` 使用 `client:load`，负责共享侧栏上下文。传入的 Astro 正文、TOC 与相邻文章仍是静态 HTML。
-- 图片失败处理使用一个小型原生脚本，不增加 React island。分页通过普通链接工作。
-- 阅读进度与 TOC 高亮使用原生脚本；评论仅在启用 provider 时动态导入对应客户端，不形成新的 React 水合根。
+- `AppShell` 内部按 Header、Brand、Navigation、Footer 和侧栏偏好 Hook 拆分，但仍属于同一水合树。
+- Markdown 文档、封面和 Content Collections 保持在 Astro；阅读进度、TOC 高亮和图片失败回退使用小型原生增强。
+- 评论容器与加载状态机分离，仅在启用 provider 时动态导入对应客户端，不形成新的 React 水合根。
 - React 使用 Base UI 的 `render` API；锚点 Button 设置 `nativeButton={false}`。
 - `activeNavId` 控制导航选中状态，语言切换目标由 Astro 提供，不从选中项猜测实际地址。
+- `global.css` 只保留 Tailwind、shadcn、字体、主题 token 和基础规则；布局、列表、文章与评论样式位于独立领域 CSS 文件。
 
 ## 配置职责
 
@@ -49,8 +51,10 @@ src/data + src/content/blog
 | `src/data/site.yaml` | 身份资料、社交链接、双语介绍、布局、评论、分页和封面默认值 |
 | `src/data/projects.yaml` | 项目共享字段及各语言介绍 |
 | `src/content/blog/*.md` | 文章内容、元信息与翻译关系 |
+| `src/content/pages/*.mdx` | About 等独立双语文档内容 |
+| `src/config/routes.ts` | 固定路由段、路由 ID 与导航顺序 |
 | `src/i18n/ui.ts` | 导航、按钮、分页、空状态及无障碍文案 |
-| `src/styles/global.css` | 语义颜色、字体、明暗主题和领域布局 |
+| `src/styles/*.css` | 全局主题入口及按领域拆分的页面样式 |
 
 站点规范地址只在 Astro 的 `site` 中配置，侧栏显示域名从该地址派生。YAML 不包含组件名、Tailwind 类名或执行逻辑。
 
@@ -58,7 +62,7 @@ src/data + src/content/blog
 
 ### 社交与个人资料
 
-`site.avatar` 是可选的头像 URI，支持 HTTP(S) 地址；未配置或加载失败时显示 `initials`。头像会在首页和关于页复用。`site.social` 的 `type` 为 `github`、`linkedin`、`x` 或 `website`，决定图标；`label` 是显示名称，改变排序或名称不会改变图标含义。`profile.zh`、`profile.en` 各包含 `bio`、`location`、`availability` 与 `about` 段落数组。
+`site.avatar` 是可选的头像 URI，支持 HTTP(S) 地址；未配置或加载失败时显示 `initials`。头像会在首页和关于页复用。`site.social` 的 `type` 为 `github`、`linkedin`、`x` 或 `website`，决定图标；`label` 是显示名称，改变排序或名称不会改变图标含义。`profile.zh`、`profile.en` 各包含 `bio`、`location` 与 `availability`；About 长文位于独立 MDX 文件中。
 
 ### 顶部栏与语言菜单
 
@@ -71,6 +75,10 @@ layout:
 ```
 
 设为 `false` 后，顶部栏随页面内容滚动。语言入口使用下拉菜单展示当前语言与另一种语言；文章缺少已发布译文时，目标语言显示缺译状态并禁用链接。
+
+### 固定路由配置
+
+`src/config/routes.ts` 集中维护 `home`、`projects`、`blog`、`about` 的固定路径段和导航顺序。`RouteId`、`NavId`、导航链接、列表分页和文章地址均从该表推导。当前配置保持 `/blog`、`/projects`、`/about` 以及对应的 `/en` 地址不变；它是编译期配置，不从 YAML 动态生成文件路由。
 
 ### 分页
 
@@ -126,9 +134,39 @@ cover:
 
 默认图片同样使用 `{type: image, src, alt}`，配置在 `site.covers.default`，或独立放在 `site.listing.blog.defaultCover`／`site.listing.projects.defaultCover`。
 
+自定义远程默认图继续使用同一个 `src` 字段，不增加第二套 URL 接口：
+
+```yaml
+covers:
+  default:
+    type: image
+    src: https://cdn.example.com/default-cover.webp
+    alt: 默认内容封面
+```
+
 封面选择顺序：**条目 → 博客原文 → 集合默认 → 全局默认 → 等高线**。显式 `none` 会终止回退。缺省的等高线参数不会覆盖站点自定义参数。
 
 本地图片不存在时构建失败。远程图片保持固定展示比例，加载失败后由原生脚本隐藏图片，露出等高线后备图。图案由站点 seed 和内容稳定标识生成；同文译文共享图案，不使用客户端随机数或持续动画。
+
+## About MDX
+
+About 使用独立 `pages` Content Collection，不会进入博客列表、分页或相邻文章计算。中英文内容分别位于 `about.zh.mdx` 与 `about.en.mdx`，两种语言必须各有且仅有一个 entry：
+
+```yaml
+---
+routeId: about
+lang: zh
+title: 关于
+description: 简单介绍
+toc: true
+# cover:                # 可选；省略时 About 不显示封面
+#   type: image
+#   src: https://cdn.example.com/about.webp
+#   alt: About 封面
+---
+```
+
+页面展示 YAML 中的头像与个人资料、MDX 正文以及 YAML 中的技能列表。MDX 的 `h2`／`h3` 会生成与博客一致的响应式 TOC，但 About 不显示发布日期、阅读时长、相邻文章或评论。MDX 继承站点的 Sätteri 与 Expressive Code 配置。
 
 ## 双语文章
 
@@ -157,7 +195,7 @@ draft: false
 - 正文页设置自身 canonical，`hreflang` 只列真实已发布的语言版本。
 - 缺译的另一个语言地址保留临时兼容跳转。当前静态构建生成 HTML refresh 页面，并非服务器 HTTP 307；新增译文后该地址输出译文。
 
-当前三篇文章保持英文占位正文，中文列表展示“英文原文”。没有自动生成或发布中文译文。
+`designing-this-homepage` 已包含中英文版本；其余英文示例缺少中文译文时，中文列表会标注并链接“英文原文”。
 
 ## 博客详情与 Markdown
 
@@ -244,7 +282,7 @@ Waline 的 `pageSize` 为 1–50。未知字段、无效 HTTP(S) 地址、空 Tw
 
 ## 人工验收清单
 
-1. 检查中英文首页、关于、项目、博客列表；确认侧栏选中项正确，项目主链接与演示链接不同。
+1. 检查中英文首页、MDX About、项目、博客列表；确认 About 的资料、TOC、技能和可选封面正确，侧栏选中项正确，项目主链接与演示链接不同。
 2. 将每页条数临时设为 2，检查中英文列表第二页、返回第一页及语言切换；验收后恢复需要的值。
 3. 为一篇文章添加中文译文，检查配对切换、canonical 和 hreflang；再设为草稿，检查原文回退。
 4. 检查条目图片、默认图片、等高线、`none`、错误远程 URL；用本地不存在的路径确认构建报错。

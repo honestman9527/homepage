@@ -1,6 +1,6 @@
 import { getCollection } from "astro:content";
 import type { PaginateFunction } from "astro";
-import type { Language } from "../../i18n/ui";
+import type { Language } from "../../i18n/types";
 import { blogPath } from "../../i18n/routes";
 import { getTranslations, otherLanguage } from "../../i18n/utils";
 import { getSiteConfig } from "../site-config";
@@ -34,11 +34,7 @@ export async function getProjectItems(lang: Language) {
 }
 export type BlogItem = Awaited<ReturnType<typeof getBlogItems>>[number];
 export type ProjectItem = Awaited<ReturnType<typeof getProjectItems>>[number];
-export interface LanguageLink {
-  href?: string;
-  label: string;
-  lang: Language;
-}
+export type { LanguageLink } from "../../i18n/types";
 export interface ArticleNavigationItem {
   href: string;
   title: string;
@@ -130,3 +126,5 @@ export async function getListingPaths(
     format: (url) => url.replace(/\/page\/1\/?$/, ""),
   }).filter(({ props }) => props.page.currentPage > 1);
 }
+
+export * from "./model";

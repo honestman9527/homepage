@@ -50,60 +50,7 @@ const { config, path, lang, labels } = Astro.props;
 </section>
 
 <script>
-  import { mountComments } from "@/lib/comments/client";
-  import type { ActiveCommentsConfig } from "@/lib/comments/types";
-  import type { Language } from "@/i18n/ui";
+  import { initializeComments } from "@/lib/comments/init";
 
-  for (const root of document.querySelectorAll<HTMLElement>("[data-comments-root]")) {
-    const target = root.querySelector<HTMLElement>("[data-comments-target]");
-    const loading = root.querySelector<HTMLElement>("[data-comments-loading]");
-    const error = root.querySelector<HTMLElement>("[data-comments-error]");
-    const retry = root.querySelector<HTMLButtonElement>("[data-comments-retry]");
-    if (!target || !loading || !error || !retry) continue;
-
-    const config = JSON.parse(
-      root.dataset.commentsConfig ?? "{}",
-    ) as ActiveCommentsConfig;
-    const path = root.dataset.commentsPath ?? window.location.pathname;
-    const lang = (root.dataset.commentsLang ?? "zh") as Language;
-    let state: "idle" | "loading" | "loaded" | "error" = "idle";
-
-    const setState = (next: typeof state) => {
-      state = next;
-      root.dataset.commentsState = next;
-      root.setAttribute("aria-busy", next === "loading" ? "true" : "false");
-      loading.hidden = next === "loaded" || next === "error";
-      error.hidden = next !== "error";
-      target.hidden = next !== "loading" && next !== "loaded";
-    };
-
-    const load = async () => {
-      if (state === "loading" || state === "loaded") return;
-      target.replaceChildren();
-      setState("loading");
-      try {
-        await mountComments({ container: target, path, lang, config });
-        setState("loaded");
-      } catch (cause) {
-        console.error("Comments failed to load", cause);
-        target.replaceChildren();
-        setState("error");
-      }
-    };
-
-    retry.addEventListener("click", load);
-    if ("IntersectionObserver" in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (!entries.some((entry) => entry.isIntersecting)) return;
-          observer.disconnect();
-          void load();
-        },
-        { rootMargin: "600px 0px" },
-      );
-      observer.observe(root);
-    } else {
-      void load();
-    }
-  }
+  initializeComments();
 </script>

@@ -1,0 +1,58 @@
+---
+import type { Language } from "@/i18n/ui";
+import type { ArticleNavigation } from "@/lib/content";
+import type { ActiveCommentsConfig } from "@/lib/comments/types";
+import { ArticleNavigation as ArticleNavigationView } from "@/components/react/content/ArticleNavigation";
+import Comments from "@/components/astro/blog/Comments.astro";
+import { Separator } from "@/components/react/ui/separator";
+
+interface Props {
+  navigation: ArticleNavigation;
+  commentsConfig?: ActiveCommentsConfig;
+  commentsPath: string;
+  lang: Language;
+  labels: {
+    older: string;
+    newer: string;
+    comments: {
+      title: string;
+      eyebrow: string;
+      loading: string;
+      error: string;
+      retry: string;
+      noScript: string;
+    };
+  };
+}
+
+const { navigation, commentsConfig, commentsPath, lang, labels } = Astro.props;
+const hasNavigation = Boolean(navigation.older || navigation.newer);
+---
+
+{
+  (hasNavigation || commentsConfig) && (
+    <div>
+      {hasNavigation && (
+        <div class="post-afterword">
+          <Separator />
+          <ArticleNavigationView
+            navigation={navigation}
+            labels={{ older: labels.older, newer: labels.newer }}
+          />
+        </div>
+      )}
+
+      {commentsConfig && (
+        <div class="post-comments">
+          <Separator />
+          <Comments
+            config={commentsConfig}
+            path={commentsPath}
+            lang={lang}
+            labels={labels.comments}
+          />
+        </div>
+      )}
+    </div>
+  )
+}

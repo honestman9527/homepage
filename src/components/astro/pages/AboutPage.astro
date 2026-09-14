@@ -1,24 +1,94 @@
 ---
+import { getCollection, render } from "astro:content";
+import type { Language } from "@/i18n/ui";
+import { languages } from "@/i18n/ui";
+import { otherLanguage, getTranslations } from "@/i18n/utils";
+import { routePath } from "@/i18n/routes";
+import { getPageEntry } from "@/lib/content/pages";
+import { getSiteConfig } from "@/lib/site-config";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/astro/Avatar.astro";
-import { Badge } from "@/components/react/ui/badge";
-import { getTranslations } from "@/i18n/utils";
-import type { Language } from "@/i18n/ui";
-import { getSiteConfig } from "@/lib/site-config";
-interface Props { lang: Language; }
+import MarkdownDocument from "@/components/astro/content/MarkdownDocument.astro";
+import Cover from "@/components/astro/content/Cover.astro";
+import { ProfileSummary } from "@/components/react/profile/ProfileSummary";
+import { SkillList } from "@/components/react/profile/SkillList";
+
+interface Props {
+  lang: Language;
+}
+
 const { lang } = Astro.props;
-const t = getTranslations(lang);
 const site = await getSiteConfig();
+const entries = await getCollection("pages");
+const page = getPageEntry(entries, "about", lang);
+const { Content, headings } = await render(page);
+const profile = site.profile[lang];
+const other = otherLanguage(lang);
+const t = getTranslations(lang);
+const alternates = (["zh", "en"] as const).map((language) => ({
+  lang: language,
+  href: routePath(language, "about"),
+}));
 ---
-<SidebarLayout activeNavId="about" title={`${t("about.title")} — ${site.name}`} description={t("about.subtitle")}>
-  <section class="listing-page">
-    <header class="page-heading"><p>{t("about.title")}</p><h1>{t("about.subtitle")}</h1></header>
-    <div class="grid items-start gap-10 md:grid-cols-[auto_1fr]">
-      <Avatar fallback={site.initials} src={site.avatar} alt={site.name} class="size-24 text-2xl" />
-      <div class="flex max-w-2xl flex-col gap-4 text-lg text-pretty">{site.profile[lang].about.map((paragraph) => <p>{paragraph}</p>)}</div>
-    </div>
-    <div class="mt-14"><h2 class="text-muted-foreground mb-3 font-mono text-xs tracking-widest uppercase">{t("about.toolbox")}</h2>
-      <div class="flex flex-wrap gap-1.5">{site.skills.map((skill) => <Badge variant="secondary">{skill}</Badge>)}</div>
-    </div>
-  </section>
+
+<SidebarLayout
+  activeNavId="about"
+  title={`${page.data.title} — ${site.name}`}
+  description={page.data.description}
+  languageLink={{
+    lang: other,
+    href: routePath(other, "about"),
+    label: languages[other],
+  }}
+  alternates={alternates}
+>
+  <MarkdownDocument
+    headings={headings}
+    lang={page.data.lang}
+    toc={page.data.toc}
+    tocLabel={t("blog.toc")}
+  >
+    <ProfileSummary
+      slot="header"
+      name={site.name}
+      heading={page.data.title}
+      bio={profile.bio}
+      location={profile.location}
+      availability={profile.availability}
+      headingLevel={1}
+    >
+      <Avatar
+        slot="avatar"
+        fallback={site.initials}
+        src={site.avatar}
+        alt={site.name}
+        class="size-24 text-2xl"
+      />
+    </ProfileSummary>
+
+    {
+      page.data.cover && (
+        <Cover
+          slot="cover"
+          cover={page.data.cover}
+          contentKey="about"
+          options={site.covers.topographic}
+          aspectRatio={site.covers.aspectRatio}
+          eager
+        />
+      )
+    }
+
+    <Content />
+
+    <section slot="afterword" class="mt-14" aria-labelledby="about-toolbox">
+      <h2
+        id="about-toolbox"
+        class="text-muted-foreground mb-3 font-mono text-xs tracking-widest uppercase"
+      >
+        {t("about.toolbox")}
+      </h2>
+      <SkillList skills={site.skills} label={t("about.toolbox")} />
+    </section>
+  </MarkdownDocument>
 </SidebarLayout>

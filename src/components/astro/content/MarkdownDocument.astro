@@ -1,0 +1,77 @@
+---
+import type { MarkdownHeading } from "astro";
+import type { Language } from "@/i18n/ui";
+import ArticleExperience from "@/components/astro/blog/ArticleExperience.astro";
+import TableOfContents from "@/components/astro/blog/TableOfContents.astro";
+
+interface Props {
+  headings: MarkdownHeading[];
+  lang: Language;
+  toc?: boolean;
+  tocLabel: string;
+  showProgress?: boolean;
+}
+
+const {
+  headings,
+  lang,
+  toc = true,
+  tocLabel,
+  showProgress = false,
+} = Astro.props;
+const tocHeadings = toc
+  ? headings.filter(
+      ({ depth, slug }) =>
+        (depth === 2 || depth === 3) && slug !== "footnote-label",
+    )
+  : [];
+const hasCover = Astro.slots.has("cover");
+const hasAfterword = Astro.slots.has("afterword");
+---
+
+<div class="post-page">
+  <ArticleExperience showProgress={showProgress} />
+  <div class="post-layout">
+    <div class="post-column">
+      <article lang={lang} data-reading-region>
+        <slot name="header" />
+
+        {
+          tocHeadings.length > 0 && (
+            <TableOfContents
+              headings={tocHeadings}
+              label={tocLabel}
+              variant="mobile"
+            />
+          )
+        }
+
+        {
+          hasCover && (
+            <div class="post-cover">
+              <slot name="cover" />
+            </div>
+          )
+        }
+
+        <div class="prose-blog" data-article-content>
+          <slot />
+        </div>
+      </article>
+
+      {hasAfterword && <slot name="afterword" />}
+    </div>
+
+    {
+      tocHeadings.length > 0 && (
+        <aside class="post-toc-rail">
+          <TableOfContents
+            headings={tocHeadings}
+            label={tocLabel}
+            variant="desktop"
+          />
+        </aside>
+      )
+    }
+  </div>
+</div>
