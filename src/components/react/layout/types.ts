@@ -6,6 +6,15 @@ export interface NavItem {
   id: NavId;
   label: string;
   href: string;
+  toggleLabel?: string;
+  children?: readonly NavSubItem[];
+}
+
+export interface NavSubItem {
+  id: string;
+  label: string;
+  href: string;
+  isActive: boolean;
 }
 
 export interface SidebarLabels {

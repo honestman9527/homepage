@@ -5,7 +5,6 @@ import { tagPath } from "@/i18n/routes";
 import { formatDate, getTranslations } from "@/i18n/utils";
 import { getSiteConfig } from "@/lib/site-config";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
-import BlogSectionNav from "@/components/astro/blog/BlogSectionNav.astro";
 import { BlogSearch } from "@/components/react/content/BlogSearch";
 
 interface Props { lang: Language }
@@ -34,7 +33,6 @@ const items: BlogSearchItem[] = (await getBlogItems(lang)).map((item) => ({
     <header class="page-heading">
       <p>{t("blog.title")}</p>
       <h1>{t("blog.search.subtitle")}</h1>
-      <BlogSectionNav lang={lang} active="search" />
     </header>
     <BlogSearch
       client:load

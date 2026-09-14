@@ -7,6 +7,15 @@ import {
 import type { Language } from "./types";
 import { normalizePath } from "./utils";
 
+export type BlogSectionId = "posts" | "tags" | "search";
+
+export function getBlogSectionFromPath(pathname: string): BlogSectionId {
+  const path = normalizePath(pathname).replace(/^\/en(?=\/|$)/, "");
+  if (path === "/blog/search") return "search";
+  if (path === "/blog/tags" || path.startsWith("/blog/tags/")) return "tags";
+  return "posts";
+}
+
 export function localePath(lang: Language, path = ""): string {
   return normalizePath(getRelativeLocaleUrl(lang, path.replace(/^\//, "")));
 }

@@ -37,24 +37,6 @@
     letter-spacing: -0.035em;
     text-wrap: balance;
   }
-  .blog-section-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
-  }
-  .blog-section-nav a {
-    padding: 0.4rem 0.7rem;
-    border-radius: var(--radius);
-    color: var(--muted-foreground);
-    font-size: 0.8rem;
-    transition: color 0.15s ease, background 0.15s ease;
-  }
-  .blog-section-nav a:hover,
-  .blog-section-nav a[aria-current="page"] {
-    background: var(--muted);
-    color: var(--foreground);
-  }
   .card-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

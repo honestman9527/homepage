@@ -6,7 +6,6 @@ import { getTranslations } from "@/i18n/utils";
 import { getSiteConfig } from "@/lib/site-config";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import BlogList from "@/components/astro/blog/BlogList.astro";
-import BlogSectionNav from "@/components/astro/blog/BlogSectionNav.astro";
 import ListingFooter from "@/components/astro/content/ListingFooter.astro";
 
 interface Props {
@@ -37,7 +36,6 @@ const suffix =
     <header class="page-heading">
       <p>{t("blog.title")}</p>
       <h1>{t("blog.subtitle")}</h1>
-      <BlogSectionNav lang={lang} active="posts" />
     </header>
     <BlogList lang={lang} items={page.items} />
     <ListingFooter

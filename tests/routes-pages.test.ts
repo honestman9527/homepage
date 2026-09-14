@@ -15,6 +15,7 @@ import {
 } from "../src/config/routes";
 import {
   blogPath,
+  getBlogSectionFromPath,
   listingPath,
   routePath,
   searchPath,
@@ -49,6 +50,17 @@ describe("route configuration", () => {
     expect(tagListingPath("zh", "Astro", 2)).toBe(
       "/blog/tags/Astro/page/2",
     );
+  });
+
+  it("selects the matching blog sidebar section", () => {
+    expect(getBlogSectionFromPath("/blog")).toBe("posts");
+    expect(getBlogSectionFromPath("/blog/page/2")).toBe("posts");
+    expect(getBlogSectionFromPath("/en/blog/a-post")).toBe("posts");
+    expect(getBlogSectionFromPath("/blog/tags")).toBe("tags");
+    expect(getBlogSectionFromPath("/en/blog/tags/C%2B%2B/page/2")).toBe(
+      "tags",
+    );
+    expect(getBlogSectionFromPath("/en/blog/search")).toBe("search");
   });
 
   it.each([0, -1, 1.5])("rejects invalid pagination page %s", (page) => {

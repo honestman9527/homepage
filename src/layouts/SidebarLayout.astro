@@ -2,7 +2,14 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/react/layout/AppShell";
 import { getLangFromUrl, getTranslations, otherLanguage } from "@/i18n/utils";
-import { localePath, routePath } from "@/i18n/routes";
+import {
+  getBlogSectionFromPath,
+  listingPath,
+  localePath,
+  routePath,
+  searchPath,
+  tagsPath,
+} from "@/i18n/routes";
 import { getSiteConfig } from "@/lib/site-config";
 import type { Language, NavId } from "@/i18n/ui";
 import type { LanguageLink } from "@/i18n/types";
@@ -20,10 +27,21 @@ const other = otherLanguage(lang);
 const path = Astro.url.pathname.replace(/^\/en(?=\/|$)/, "");
 const languageLink = Astro.props.languageLink ?? { lang: other, href: localePath(other, path), label: other === "en" ? "English" : "中文" };
 const alternates = Astro.props.alternates ?? (["zh", "en"] as const).map((language) => ({ lang: language, href: localePath(language, path) }));
+const activeBlogSection = getBlogSectionFromPath(Astro.url.pathname);
+const blogNavigation = [
+  { id: "posts", label: t("blog.nav.posts"), href: listingPath(lang, "blog") },
+  { id: "tags", label: t("blog.nav.tags"), href: tagsPath(lang) },
+  { id: "search", label: t("blog.nav.search"), href: searchPath(lang) },
+].map((item) => ({
+  ...item,
+  isActive: activeNavId === "blog" && item.id === activeBlogSection,
+}));
 const navigation = site.navigation.map((id) => ({
   id,
   label: t(`nav.${id}`),
   href: routePath(lang, id),
+  toggleLabel: id === "blog" ? t("blog.nav.toggle") : undefined,
+  children: id === "blog" ? blogNavigation : undefined,
 }));
 const year = new Date().getUTCFullYear();
 const viewModel = {
