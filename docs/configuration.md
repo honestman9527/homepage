@@ -20,6 +20,7 @@ pnpm build
 | `name` | 是 | 站点展示名称 |
 | `initials` | 是 | 没有头像时使用的缩写 |
 | `avatar` | 否 | HTTP(S) 头像 URL |
+| `favicon.light`、`favicon.dark` | 否 | 浅色与深色模式的站点图标，使用 `public/` 下文件的根相对路径 |
 | `email` | 是 | 有效邮箱地址 |
 | `social` | 是 | 社交链接数组，可以为空 |
 | `profile.zh`、`profile.en` | 是 | 中文和英文资料，两种语言都必须存在 |
@@ -35,6 +36,9 @@ site:
   name: Honestman
   initials: HM
   avatar: https://example.com/avatar.webp
+  favicon:
+    light: /hm-light.svg
+    dark: /hm-dark.svg
   email: hello@example.com
   social:
     - type: github
@@ -51,6 +55,8 @@ site:
       location: Remote
   skills: [TypeScript, Astro, React]
 ```
+
+`favicon` 整组省略时，浅色和深色模式都会使用 `/favicon.svg`。配置自定义图标时，`light` 和 `dark` 都必须提供；文件放在 `public/` 中，配置值以单个 `/` 开头。浏览器会根据系统的 `prefers-color-scheme` 选择对应图标。
 
 ### 导航与布局
 

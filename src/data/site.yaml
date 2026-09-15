@@ -5,6 +5,10 @@ site:
   name: Honestman
   initials: HM
   avatar: https://raw.7s.nz/file/icon/sblHaFiM.webp
+  # 浏览器会根据系统深浅色偏好选择对应图标；路径指向 public/ 下的文件。
+  favicon:
+    light: /hm-light.svg
+    dark: /hm-dark.svg
   email: hello@honestman.me
 
   # 评论提供商：none | waline | twikoo。

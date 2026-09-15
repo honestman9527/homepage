@@ -140,6 +140,10 @@ describe("strict content schemas", () => {
     expect(parsed.navigation).toEqual(["home", "projects", "blog", "about"]);
     expect(parsed.comments).toEqual({ provider: "none" });
     expect(parsed.layout.header.sticky).toBe(true);
+    expect(parsed.favicon).toEqual({
+      light: "/favicon.svg",
+      dark: "/favicon.svg",
+    });
     expect(
       siteSchema(image).parse({
         ...site,
@@ -192,6 +196,24 @@ describe("strict content schemas", () => {
     expect(
       siteSchema(image).safeParse({ ...site, avatar: "javascript:alert(1)" })
         .success,
+    ).toBe(false);
+    expect(
+      siteSchema(image).parse({
+        ...site,
+        favicon: { light: "/hm-light.svg", dark: "/hm-dark.svg" },
+      }).favicon,
+    ).toEqual({ light: "/hm-light.svg", dark: "/hm-dark.svg" });
+    expect(
+      siteSchema(image).safeParse({
+        ...site,
+        favicon: { light: "//example.com/icon.svg", dark: "/dark.svg" },
+      }).success,
+    ).toBe(false);
+    expect(
+      siteSchema(image).safeParse({
+        ...site,
+        favicon: { light: "/light.svg" },
+      }).success,
     ).toBe(false);
     expect(
       siteSchema(image).safeParse({

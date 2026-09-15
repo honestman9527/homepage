@@ -6,4 +6,8 @@ export const textSchema = z.string().trim().min(1);
 export const httpUrlSchema = z
   .url()
   .refine((value) => /^https?:\/\//.test(value), "Use an HTTP(S) URL");
+export const publicPathSchema = z
+  .string()
+  .trim()
+  .regex(/^\/(?!\/)/, "Use a root-relative path beginning with a single slash");
 export const pageSizeSchema = z.number().int().min(1).max(48).default(6);

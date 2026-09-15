@@ -81,7 +81,7 @@ const viewModel = {
   },
 } satisfies AppShellViewModel;
 ---
-<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} lang={lang} skipLabel={t("common.skip")} alternates={alternates} article={article}>
+<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} lang={lang} skipLabel={t("common.skip")} favicon={site.favicon} alternates={alternates} article={article}>
   <AppShell client:load viewModel={viewModel}>
     <slot />
   </AppShell>

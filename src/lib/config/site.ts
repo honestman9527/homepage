@@ -2,7 +2,12 @@ import type { ImageMetadata } from "astro";
 import { z } from "zod";
 import { commentsSchema } from "./comments";
 import { coverSchema, topographicSchema } from "./cover";
-import { httpUrlSchema, pageSizeSchema, textSchema } from "./shared";
+import {
+  httpUrlSchema,
+  pageSizeSchema,
+  publicPathSchema,
+  textSchema,
+} from "./shared";
 import { navigationIds } from "../../config/routes";
 
 export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
@@ -23,6 +28,13 @@ export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
       name: textSchema,
       initials: textSchema,
       avatar: httpUrlSchema.optional(),
+      favicon: z
+        .object({
+          light: publicPathSchema,
+          dark: publicPathSchema,
+        })
+        .strict()
+        .default({ light: "/favicon.svg", dark: "/favicon.svg" }),
       email: z.email(),
       social: z.array(
         z

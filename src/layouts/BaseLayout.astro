@@ -5,13 +5,15 @@ import {
   applyInitialSidebarPreference,
   readSidebarPreference,
 } from "@/lib/sidebar-preference";
+import type { SiteConfig } from "@/lib/site-config";
 import type { Language } from "@/i18n/ui";
 interface Props {
   title: string; description: string; lang: Language; skipLabel: string;
+  favicon: SiteConfig["favicon"];
   alternates?: { lang: Language; href: string }[];
   article?: { published: Date; updated?: Date };
 }
-const { title, description, lang, skipLabel, alternates = [], article } = Astro.props;
+const { title, description, lang, skipLabel, favicon, alternates = [], article } = Astro.props;
 const canonical = new URL(Astro.url.pathname.replace(/\/+$/, "") || "/", Astro.site);
 const themeScript = `document.documentElement.classList.toggle("dark", (${readTheme.toString()})().theme === "dark");`;
 const sidebarScript = `(${applyInitialSidebarPreference.toString()})(${readSidebarPreference.toString()});`;
@@ -31,7 +33,8 @@ const sidebarScript = `(${applyInitialSidebarPreference.toString()})(${readSideb
     {article?.updated && <meta property="article:modified_time" content={article.updated.toISOString()} />}
     <link rel="canonical" href={canonical} />
     {alternates.map((alternate) => <link rel="alternate" hreflang={alternate.lang} href={new URL(alternate.href, Astro.site)} />)}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href={favicon.light} media="(prefers-color-scheme: light)" />
+    <link rel="icon" href={favicon.dark} media="(prefers-color-scheme: dark)" />
     <script is:inline set:html={themeScript} />
     <script is:inline set:html={sidebarScript} />
     <title>{title}</title>
