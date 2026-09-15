@@ -32,6 +32,7 @@ export interface AppSidebarViewModel {
     name: string;
     domain: string;
     homeHref: string;
+    logo: { light: string; dark: string };
   };
   footer: {
     copyright: string;

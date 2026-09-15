@@ -25,7 +25,8 @@ export function AppSidebar({ viewModel }: Props) {
       <SidebarHeader>
         <a href={brand.homeHref} className="brand-link" aria-label={brand.name}>
           <span className="brand-mark">
-            {brand.name.charAt(0).toUpperCase()}
+            <img src={brand.logo.light} alt="" width={32} height={32} className="block dark:hidden" />
+            <img src={brand.logo.dark} alt="" width={32} height={32} className="hidden dark:block" />
           </span>
           <span className="truncate group-data-[collapsible=icon]:hidden">
             {brand.domain}

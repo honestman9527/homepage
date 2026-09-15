@@ -1,33 +1,40 @@
 import { useEffect, useRef, useState } from "react";
-import { MoonIcon, SunIcon } from "@phosphor-icons/react";
+import { DesktopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/react/ui/button";
-import { readTheme, type Theme } from "@/lib/theme";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/react/ui/dropdown-menu";
+import { applyTheme, readTheme, type ThemePreference } from "@/lib/theme";
 
 export interface ThemeLabels {
   toggle: string;
   light: string;
   dark: string;
+  system: string;
 }
 export function ThemeToggle({ labels }: { labels: ThemeLabels }) {
-  const [theme, setTheme] = useState<Theme | null>(null);
-  const preference = useRef<Theme | null>(null);
+  const [selected, setSelected] = useState<ThemePreference | null>(null);
+  const preference = useRef<ThemePreference>("system");
   useEffect(() => {
-    const apply = (next: Theme) => {
-      document.documentElement.classList.toggle("dark", next === "dark");
-      setTheme(next);
+    const sync = () => {
+      const current = readTheme();
+      preference.current = current.preference;
+      setSelected(current.preference);
+      applyTheme(current.theme);
     };
-    const initial = readTheme();
-    preference.current = initial.preference;
-    apply(initial.theme);
+    sync();
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onSystem = () => {
-      if (preference.current === null) apply(media.matches ? "dark" : "light");
+      if (preference.current === "system") applyTheme(media.matches ? "dark" : "light");
     };
     const onStorage = (event: StorageEvent) => {
       if (event.key !== "theme" && event.key !== null) return;
-      const current = readTheme();
-      preference.current = current.preference;
-      apply(current.theme);
+      sync();
     };
     media.addEventListener("change", onSystem);
     window.addEventListener("storage", onStorage);
@@ -36,31 +43,37 @@ export function ThemeToggle({ labels }: { labels: ThemeLabels }) {
       window.removeEventListener("storage", onStorage);
     };
   }, []);
-  function toggle() {
-    const next = (theme ?? readTheme().theme) === "dark" ? "light" : "dark";
+  function select(next: unknown) {
+    if (next !== "light" && next !== "dark" && next !== "system") return;
     preference.current = next;
+    setSelected(next);
     try {
       window.localStorage.setItem("theme", next);
     } catch {
       /* Keep an in-memory preference. */
     }
-    document.documentElement.classList.toggle("dark", next === "dark");
-    setTheme(next);
+    applyTheme(next === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : next);
   }
+  const Icon = selected === "light" ? SunIcon : selected === "dark" ? MoonIcon : DesktopIcon;
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label={
-        theme === null
-          ? labels.toggle
-          : theme === "dark"
-            ? labels.light
-            : labels.dark
-      }
-      onClick={toggle}
-    >
-      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon" />}
+        aria-label={selected === null ? labels.toggle : `${labels.toggle}: ${labels[selected]}`}
+      >
+        <Icon aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="end" className="w-auto min-w-40">
+        <DropdownMenuGroup>
+          <DropdownMenuRadioGroup value={selected} onValueChange={select} aria-label={labels.toggle}>
+            <DropdownMenuRadioItem value="light"><SunIcon aria-hidden="true" />{labels.light}</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="dark"><MoonIcon aria-hidden="true" />{labels.dark}</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="system"><DesktopIcon aria-hidden="true" />{labels.system}</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
