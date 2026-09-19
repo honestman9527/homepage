@@ -1,19 +1,19 @@
 # 项目按 year 降序排列，同年按 id 排序。
 # originalLang 必须为 zh 或 en，且 translations 中必须存在对应语言。
 # 当前页面语言缺译时会回退到原文，并显示原文语言标记。
-- id: project-one
+- id: CF-Workers-Navigation
   originalLang: en
   translations:
     en:
-      title: Project One
+      title: CF-Workers-Navigation
       description: >-
         Placeholder for your flagship project. One or two sentences about what it
         does, who it is for, and what makes it interesting.
   # tags 可省略，默认为空数组。
-  tags: [Astro, React, Tailwind CSS]
+  tags: [Cloudflare Worker, Hono, React, Tailwind CSS]
   # href 必填；demoHref 可省略。两者都必须为 HTTP(S) 地址。
-  href: https://github.com/example/project-one
-  demoHref: https://example.com
+  href: https://github.com/honestman9527/CF-Workers-Navigation
+  demoHref: https://nav.7s.nz
   # year 接受 1900–9999 的整数；featured 可省略，默认为 false。
   year: 2026
   featured: true
@@ -22,38 +22,4 @@
   #   type: topographic # 也可使用 image 或 none
   #   palette: teal
 
-- id: project-two
-  originalLang: en
-  translations:
-    en:
-      title: Project Two
-      description: >-
-        Placeholder description for the second project — a short problem/solution
-        blurb works well here.
-  tags: [TypeScript, Node.js]
-  href: https://github.com/example/project-two
-  year: 2025
 
-- id: project-three
-  originalLang: en
-  translations:
-    en:
-      title: Project Three
-      description: >-
-        Placeholder description for the third project. Keep it to one or two
-        sentences for scannability.
-  tags: [Rust, WASM]
-  href: https://github.com/example/project-three
-  year: 2025
-
-- id: project-four
-  originalLang: en
-  translations:
-    en:
-      title: Project Four
-      description: >-
-        Placeholder description for the fourth project — link out to the repo or
-        live demo later.
-  tags: [Python, ML]
-  href: https://github.com/example/project-four
-  year: 2024
