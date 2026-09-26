@@ -21,5 +21,24 @@
   # cover:
   #   type: topographic # 也可使用 image 或 none
   #   palette: teal
-
+- id: CF-Workers-ShortLinks
+  originalLang: en
+  translations:
+    en:
+      title: ShortLinks
+      description: >-
+        Placeholder for your flagship project. One or two sentences about what it
+        does, who it is for, and what makes it interesting.
+  # tags 可省略，默认为空数组。
+  tags: [Cloudflare Worker, Hono, React, Tailwind CSS]
+  # href 必填；demoHref 可省略。两者都必须为 HTTP(S) 地址。
+  href: https://github.com/honestman9527/CF-Workers-ShortLinks
+  demoHref: https://s.7s.nz
+  # year 接受 1900–9999 的整数；featured 可省略，默认为 false。
+  year: 2026
+  featured: true
+  # 可选封面示例：
+  # cover:
+  #   type: topographic # 也可使用 image 或 none
+  #   palette: teal
 
