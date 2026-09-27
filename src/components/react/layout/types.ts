@@ -35,6 +35,12 @@ export interface AppSidebarViewModel {
     logo: { light: string; dark: string };
   };
   footer: {
+    profile: {
+      name: string;
+      email: string;
+      avatar?: string;
+      initials: string;
+    };
     copyright: string;
     themeLabels: ThemeLabels;
   };

@@ -19,7 +19,7 @@ pnpm build
 | --- | --- | --- |
 | `name` | 是 | 站点展示名称 |
 | `initials` | 是 | 没有头像时使用的缩写 |
-| `avatar` | 否 | HTTP(S) 头像 URL |
+| `avatar` | 否 | HTTP(S) 头像 URL，用于首页、About 和侧栏底部；省略时显示 `initials` |
 | `favicon.light`、`favicon.dark` | 否 | 浅色与深色模式的站点图标，使用 `public/` 下文件的根相对路径 |
 | `email` | 是 | 有效邮箱地址 |
 | `social` | 是 | 社交链接数组，可以为空 |
