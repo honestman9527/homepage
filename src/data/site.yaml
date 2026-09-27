@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=none
 # 站点配置在构建期校验；对象不接受未声明的字段。
 # 封面使用本地图片时，路径相对于本文件。
 site:
