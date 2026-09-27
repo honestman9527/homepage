@@ -1,8 +1,6 @@
 import type { ArticleNavigation as ArticleNavigationData } from "@/lib/content/blog";
-import { Badge } from "@/components/react/ui/badge";
 import {
   Card,
-  CardFooter,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -42,11 +40,6 @@ export function ArticleNavigation({ navigation, labels }: Props) {
               </a>
             </CardTitle>
           </CardHeader>
-          {item.originalLabel && (
-            <CardFooter>
-              <Badge variant="outline">{item.originalLabel}</Badge>
-            </CardFooter>
-          )}
         </Card>
       ))}
     </nav>

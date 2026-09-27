@@ -19,7 +19,6 @@ const items: BlogSearchItem[] = (await getBlogItems(lang)).map((item) => ({
   lang: item.post.data.lang,
   date: formatDate(item.original.data.pubDate, lang),
   dateTime: item.original.data.pubDate.toISOString(),
-  originalLabel: item.originalLabel,
   tags: item.tags.map((label) => ({ label, href: tagPath(lang, label) })),
 }));
 ---

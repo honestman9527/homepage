@@ -22,7 +22,6 @@ export interface ArticleNavigationItem {
   href: string;
   title: string;
   lang: Language;
-  originalLabel?: string;
 }
 
 export interface ArticleNavigation {
@@ -38,7 +37,6 @@ export interface BlogSearchItem {
   lang: Language;
   date: string;
   dateTime: string;
-  originalLabel?: string;
   tags: { label: string; href: string }[];
 }
 
@@ -74,13 +72,12 @@ export function groupBlog(posts: BlogEntry[]): BlogGroup[] {
 }
 
 export function selectBlog(groups: BlogGroup[], lang: Language) {
-  return groups.map((group) => ({
-    ...group,
-    post:
-      group.variants.find(
-        (post) => post.data.lang === lang && !post.data.draft,
-      ) ?? group.original,
-  }));
+  return groups.flatMap((group) => {
+    const post = group.variants.find(
+      (variant) => variant.data.lang === lang && !variant.data.draft,
+    );
+    return post ? [{ ...group, post }] : [];
+  });
 }
 
 export function getAdjacentItems<T extends { key: string }>(
@@ -96,15 +93,10 @@ export function getAdjacentItems<T extends { key: string }>(
 }
 
 export async function getBlogItems(lang: Language) {
-  const t = getTranslations(lang);
   return selectBlog(groupBlog(await getCollection("blog")), lang).map((item) => ({
     ...item,
-    href: blogPath(item.post.data.lang, item.key),
+    href: blogPath(lang, item.key),
     tags: normalizeTags(item.post.data.tags),
-    originalLabel:
-      item.post.data.lang !== lang
-        ? t(`original.${item.post.data.lang}`)
-        : undefined,
   }));
 }
 
@@ -188,11 +180,7 @@ export async function getBlogPaths(lang: Language) {
   const selected = selectBlog(groupBlog(await getCollection("blog")), lang);
   const navigationItems = selected.map((item) => ({
     ...item,
-    href: blogPath(item.post.data.lang, item.key),
-    originalLabel:
-      item.post.data.lang !== lang
-        ? t(`original.${item.post.data.lang}`)
-        : undefined,
+    href: blogPath(lang, item.key),
   }));
   const toNavigationItem = (
     item: (typeof navigationItems)[number] | undefined,
@@ -202,19 +190,10 @@ export async function getBlogPaths(lang: Language) {
           href: item.href,
           title: item.post.data.title,
           lang: item.post.data.lang,
-          originalLabel: item.originalLabel,
         }
       : undefined;
 
   return selected.map((item) => {
-    if (item.post.data.lang !== lang)
-      return {
-        params: { id: item.key },
-        props: {
-          kind: "redirect" as const,
-          destination: blogPath(item.post.data.lang, item.key),
-        },
-      };
     const other = otherLanguage(lang);
     const translation = item.variants.find(
       (entry) => entry.data.lang === other && !entry.data.draft,
@@ -223,7 +202,6 @@ export async function getBlogPaths(lang: Language) {
     return {
       params: { id: item.key },
       props: {
-        kind: "article" as const,
         post: item.post,
         original: item.original,
         lang,

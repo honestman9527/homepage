@@ -4,7 +4,5 @@ import BlogPostShell from "@/layouts/BlogPostShell.astro";
 import { getBlogPaths } from "@/lib/content/blog";
 export async function getStaticPaths() { return getBlogPaths("zh"); }
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
-const props = Astro.props;
-if (props.kind === "redirect") return Astro.redirect(props.destination, 307);
 ---
-{props.kind === "article" && <BlogPostShell {...props} />}
+<BlogPostShell {...Astro.props} />

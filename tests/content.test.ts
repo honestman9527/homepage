@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
+import { getCollection } from "astro:content";
 
 vi.mock("astro:content", () => ({ getCollection: vi.fn() }));
 vi.mock("astro:i18n", () => ({
@@ -10,6 +11,7 @@ vi.mock("astro:i18n", () => ({
 }));
 import {
   groupBlog,
+  getBlogPaths,
   getAdjacentItems,
   normalizeTags,
   selectBlog,
@@ -55,7 +57,7 @@ function post(
 }
 
 describe("translation groups", () => {
-  it("selects a published translation once, with original date ordering", () => {
+  it("lists only published posts in the requested language, with original date ordering", () => {
     const groups = groupBlog([
       post("b"),
       post("a"),
@@ -63,27 +65,23 @@ describe("translation groups", () => {
     ]);
     expect(
       selectBlog(groups, "zh").map((item) => [item.key, item.post.data.lang]),
-    ).toEqual([
-      ["a", "zh"],
-      ["b", "en"],
-    ]);
+    ).toEqual([["a", "zh"]]);
     expect(selectBlog(groups, "en").map((item) => item.key)).toEqual([
       "a",
       "b",
     ]);
   });
-  it("falls back when the translation is a draft and hides draft originals", () => {
-    const result = selectBlog(
-      groupBlog([
-        post("published"),
-        post("published", "zh", false, true),
-        post("private", "en", true, true),
-        post("private", "zh", false),
-      ]),
-      "zh",
-    );
-    expect(result).toHaveLength(1);
-    expect(result[0].post.data.lang).toBe("en");
+  it("omits draft translations and entire groups with draft originals", () => {
+    const groups = groupBlog([
+      post("published"),
+      post("published", "zh", false, true),
+      post("private", "en", true, true),
+      post("private", "zh", false),
+    ]);
+    expect(selectBlog(groups, "zh")).toEqual([]);
+    expect(selectBlog(groups, "en").map((item) => item.key)).toEqual([
+      "published",
+    ]);
   });
   it("rejects duplicate locales and invalid original associations", () => {
     expect(() => groupBlog([post("a"), post("a")])).toThrow("Duplicate");
@@ -93,6 +91,27 @@ describe("translation groups", () => {
     expect(() => groupBlog([post("a", "zh", false)])).toThrow(
       "exactly one original",
     );
+  });
+  it("generates article routes and alternates only for published languages", async () => {
+    vi.mocked(getCollection).mockResolvedValue([
+      post("english-only"),
+      post("paired"),
+      post("paired", "zh", false),
+    ]);
+
+    const chinesePaths = await getBlogPaths("zh");
+    expect(chinesePaths.map(({ params }) => params.id)).toEqual(["paired"]);
+    expect(chinesePaths[0].props.languageLink.href).toBe("/en/blog/paired");
+
+    const englishPaths = await getBlogPaths("en");
+    expect(englishPaths.map(({ params }) => params.id)).toEqual([
+      "english-only",
+      "paired",
+    ]);
+    expect(englishPaths[0].props.languageLink.href).toBeUndefined();
+    expect(englishPaths[0].props.alternates).toEqual([
+      { lang: "en", href: "/en/blog/english-only" },
+    ]);
   });
   it("selects project translations while retaining shared links", () => {
     const project: ProjectEntry = {
@@ -206,7 +225,7 @@ describe("article reading model", () => {
         post("middle", "zh", false, false, "2026-02-02"),
         post("newer", "en", true, false, "2026-03-01"),
       ]),
-      "zh",
+      "en",
     );
     expect(selected.map(({ key }) => key)).toEqual(["newer", "middle", "older"]);
     expect(getAdjacentItems(selected, "middle")).toMatchObject({
@@ -215,6 +234,16 @@ describe("article reading model", () => {
     });
     expect(getAdjacentItems(selected, "newer").newer).toBeUndefined();
     expect(getAdjacentItems(selected, "older").older).toBeUndefined();
+    expect(
+      selectBlog(
+        groupBlog([
+          post("older", "en", true, false, "2026-01-01"),
+          post("middle", "en", true, false, "2026-02-01"),
+          post("middle", "zh", false, false, "2026-02-02"),
+        ]),
+        "zh",
+      ).map(({ key }) => key),
+    ).toEqual(["middle"]);
     expect(getAdjacentItems([{ key: "only" }], "only")).toEqual({
       newer: undefined,
       older: undefined,

@@ -7,7 +7,6 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/react/ui/card";
-import { Badge } from "@/components/react/ui/badge";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import type { Language } from "@/i18n/ui";
 import { ContentTags } from "./ContentTags";
@@ -20,7 +19,6 @@ interface Props {
   tags: readonly string[];
   tagHrefs?: readonly string[];
   contentLang: Language;
-  originalLabel?: string;
   readLabel: string;
   cover?: ReactNode;
   hasCover: boolean;
@@ -34,7 +32,6 @@ export function BlogCard({
   tags,
   tagHrefs,
   contentLang,
-  originalLabel,
   readLabel,
   cover,
   hasCover,
@@ -61,9 +58,6 @@ export function BlogCard({
         <CardFooter>
           <div className="card-meta">
             <time dateTime={dateTime}>{date}</time>
-            {originalLabel && (
-              <Badge variant="secondary">{originalLabel}</Badge>
-            )}
             <a
               href={href}
               className="card-read-link"

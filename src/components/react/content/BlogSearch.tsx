@@ -69,7 +69,6 @@ export function BlogSearch({ items, readLabel, labels }: Props) {
                   dateTime={item.dateTime}
                   tags={item.tags.map(({ label }) => label)}
                   tagHrefs={item.tags.map(({ href }) => href)}
-                  originalLabel={item.originalLabel}
                   readLabel={readLabel}
                   hasCover={false}
                 />

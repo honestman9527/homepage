@@ -23,7 +23,7 @@ const t = getTranslations(lang);
 
 {items.length ? (
   <div class="card-grid">
-    {items.map(({ post, original, href, key, tags, originalLabel }, index) => {
+    {items.map(({ post, original, href, key, tags }, index) => {
       const cover = resolveCover(
         post.data.cover,
         original.data.cover,
@@ -40,7 +40,6 @@ const t = getTranslations(lang);
           dateTime={original.data.pubDate.toISOString()}
           tags={tags}
           tagHrefs={tags.map((tag) => tagPath(lang, tag))}
-          originalLabel={originalLabel}
           readLabel={t("blog.readPost")}
           hasCover={cover.type !== "none"}
         >
