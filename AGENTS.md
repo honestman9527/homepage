@@ -1,63 +1,20 @@
-# Project Guidelines
+# 项目协作约定
 
-## 技术栈
+修改前先阅读[项目架构](docs/architecture.md)与[开发约定](docs/development.md)，再按任务查阅[配置说明](docs/configuration.md)或[博客写作](docs/blogging.md)。实现细节与长期约定维护在 `docs/`，本文件只保留协作入口和执行限制。
 
-- Node.js >= 22.12
-- pnpm 12
-- Astro 7、React 19、Tailwind CSS 4
-- shadcn/ui，基于 Base UI
+## DO
 
-## 开发命令
+- 使用中文答复和编写提交信息。
+- 保持“薄路由 → Astro 页面/布局 → 展示组件”的结构，遵循现有数据流和交互边界。
+- 使用现有 shadcn/ui 基础组件与项目 token。
+- 配置变更同步更新 schema、示例数据和文档，保持未知字段的严格校验。
+- 开发服务器使用后台模式；代码或配置变更后完成测试、类型检查和构建，并如实说明人工验收状态。
+- 将新增的长期约定写入对应 `docs/` 文档，保持本文件简短。
 
-```sh
-pnpm install
-pnpm test
-pnpm check
-pnpm build
-```
+## DON'T
 
-开发服务器必须使用后台模式：
-
-```sh
-pn dev --background
-pn dev status
-pn dev logs
-pn dev stop
-```
-
-## 架构约束
-
-- 修改前先阅读 [`docs/architecture.md`](docs/architecture.md)，保持“薄路由 → Astro 页面/布局 → 展示组件”的结构。
-- 页面与静态内容由 Astro 组织；只有需要持久交互状态的功能使用 React 岛。
-- 没有交互的 React 组件不添加 `client:*`，博客搜索只在搜索页水合。
-- 音乐控件复用 AppShell，只有其外部的原生音频节点跨页持久化；不持久化包含正文 slot 的整个 AppShell。
-- 音乐启用后的客户端导航需覆盖主题、侧栏、文章目录/进度和评论的初始化及清理；修改搜索 URL 时保留 history.state。
-- `src/content/` 仅存放博客 Markdown/MDX；站点、音乐、About 与项目配置放在 `src/data/`，统一通过 Content Collections 和 Zod schema 加载；音乐独立使用 `music.yaml`。
-- 站点仅提供中文、使用无前缀路由；路径通过 `src/config/routes.ts` 生成，不在组件中拼接重复路由规则。
-- 博客和项目逻辑分别维护在 `src/lib/content/` 对应模块中，共享逻辑才提取为独立模块。
-- 使用现有 shadcn/ui 基础组件及项目 token，不裁剪其公共 API，不为静态展示增加新的客户端状态。
-
-配置字段参见 [`docs/configuration.md`](docs/configuration.md)，博客规则参见 [`docs/blogging.md`](docs/blogging.md)。
-
-## 代码约定
-
-- 使用 TypeScript 严格模式和 `@/` 路径别名。
-- 优先直接导入实际模块，避免仅做转发的入口和单用途抽象。
-- 新增配置必须同步更新 schema、示例数据和对应文档；未知字段应继续在构建期报错。
-- 新增页面或动态路由时，检查公开入口、canonical 和内部链接；不生成英文路由或 hreflang。
-- 不增加依赖来解决已有平台能力可以完成的问题。
-
-## 验证
-
-- 代码或配置变更后运行 `pnpm test`、`pnpm check` 和 `pnpm build`。
-- 检查构建产物不包含草稿、失效路由或意外的客户端水合岛。
-- 前端布局、主题、侧栏和交互由人工验收；不要自动截图验证。
-
-## Astro 文档
-
-- [完整文档](https://docs.astro.build)
-- [路由](https://docs.astro.build/en/guides/routing/)
-- [Astro 组件](https://docs.astro.build/en/basics/astro-components/)
-- [框架组件与客户端指令](https://docs.astro.build/en/guides/framework-components/)
-- [Content Collections](https://docs.astro.build/en/guides/content-collections/)
-- [样式](https://docs.astro.build/en/guides/styling/)
+- 不为静态展示增加客户端状态或水合岛，不持久化包含正文 slot 的整个 AppShell。
+- 不裁剪基础组件的公共 API，不为已有平台能力能解决的问题增加依赖。
+- 不在组件中重复拼接路由规则，不生成英文路由或 hreflang。
+- 不通过放宽 schema 或静默忽略未知字段掩盖配置错误。
+- 不执行自动截图验证；前端布局、主题、侧栏和交互由人工验收。

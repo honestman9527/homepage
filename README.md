@@ -40,4 +40,4 @@ pnpm build
 | 项目列表 | `src/data/projects.yaml` | [配置说明](docs/configuration.md#项目配置) |
 | 博客文章 | `src/content/blog/` | [博客写作](docs/blogging.md) |
 
-更多实现约定参见[项目架构](docs/architecture.md)。页面交互和视觉效果使用人工验收，不执行自动截图。
+实现边界参见[项目架构](docs/architecture.md)，开发命令、编码和验收流程参见[开发约定](docs/development.md)。页面交互和视觉效果使用人工验收，不执行自动截图。
