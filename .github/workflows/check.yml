@@ -1,0 +1,38 @@
+name: 项目检查
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: 测试、类型与静态部署检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: 安装锁定依赖
+        run: pnpm install --frozen-lockfile
+      - name: 验证项目与 Workers 静态产物
+        run: pnpm verify

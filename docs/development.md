@@ -4,7 +4,7 @@
 
 ## 环境与命令
 
-- Node.js >= 22.12，pnpm 12；具体依赖版本以 `package.json` 和锁文件为准。
+- Node.js >= 22.12，自动构建统一使用 `.node-version` 的 Node.js 24；pnpm 版本以 `package.json` 的 `packageManager` 为准，依赖以锁文件为准。
 - Astro 7、React 19、Tailwind CSS 4。
 - shadcn/ui 基于 Base UI，复用现有基础组件和项目 token，保留其公共 API。
 
@@ -22,8 +22,18 @@ $astroDev = Start-Process -FilePath (Get-Command pnpm).Source `
   -ArgumentList @("dev") -WorkingDirectory (Get-Location).Path `
   -WindowStyle Hidden -RedirectStandardOutput .cache/astro-dev.log `
   -RedirectStandardError .cache/astro-dev.err.log -PassThru
+```
+
+启动后等待日志出现就绪地址；查看正常输出与错误：
+
+```powershell
 Get-Content .cache/astro-dev.log -Tail 30
-# 在同一个会话中停止进程及其子进程：
+Get-Content .cache/astro-dev.err.log -Tail 30
+```
+
+使用完毕，在同一个 PowerShell 会话中停止进程及其子进程：
+
+```powershell
 taskkill /PID $astroDev.Id /T /F
 ```
 
@@ -44,10 +54,10 @@ taskkill /PID $astroDev.Id /T /F
 代码或配置变更后运行：
 
 ```sh
-pnpm test
-pnpm check
-pnpm build
+pnpm verify
 ```
+
+该命令串行运行 `pnpm test`、`pnpm check`、`pnpm build` 和 `pnpm verify:workers`；任何一步失败都会停止。GitHub Actions 对 PR、`master` 推送和手动触发运行相同流程，使用冻结锁文件安装依赖，不需要 Cloudflare 凭据。自动发布流程自身也运行全部检查，不依赖 GitHub 检查是否已完成。
 
 检查构建产物：草稿不进入公开页面、列表、标签、搜索和相邻文章；内部链接能够解析，canonical 与 Open Graph URL 对应当前页面，不生成英文页面、旧 `/en` 跳转或 hreflang。新增页面或动态路由时同步检查公开入口和相关路径生成逻辑。
 
@@ -57,7 +67,9 @@ pnpm build
 
 ## Workers 静态预览与部署
 
-Wrangler 是开发依赖，`pnpm-workspace.yaml` 仅额外允许其本地运行时 `workerd` 的安装脚本。`wrangler.jsonc` 的构建命令为 `pnpm build`，本地预览和发布都会先构建，输出保持静态；没有运行时绑定，因此无需生成应用绑定类型。
+Wrangler 是开发依赖，`pnpm-workspace.yaml` 仅额外允许其本地运行时 `workerd` 的安装脚本。`wrangler.jsonc` 不配置构建命令，构建由 `package.json` 脚本显式执行，避免自动构建与发布重复运行。没有运行时绑定，因此无需生成应用绑定类型。
+
+`pnpm verify:workers` 验证已有 `dist/`：先执行部署 dry-run，再由 `scripts/verify-workers.mjs` 使用可用端口后台启动本地 Wrangler，检查全部页面、页面引用资源、站内链接、末尾斜杠跳转与 404，成功或失败后均关闭自己启动的进程；不要求登录，也不上传。它验证 HTTP 与静态产物，不执行截图或替代人工交互验收。
 
 本地预览必须后台启动。Windows PowerShell 使用以下命令，并保留该会话中的进程对象：
 
@@ -67,11 +79,22 @@ $workersPreview = Start-Process -FilePath (Get-Command pnpm).Source `
   -ArgumentList @("preview:workers") -WorkingDirectory (Get-Location).Path `
   -WindowStyle Hidden -RedirectStandardOutput .cache/workers-preview.log `
   -RedirectStandardError .cache/workers-preview.err.log -PassThru
+```
+
+这个本地命令先执行 Astro 构建，启动不代表就绪。查看两份日志，等待 Wrangler 显示就绪地址后访问默认的 `http://localhost:8787`：
+
+```powershell
 Get-Content .cache/workers-preview.log -Tail 30
+Get-Content .cache/workers-preview.err.log -Tail 30
+```
+
+预览不会自动重新构建源文件，修改内容后重新启动预览；日常开发使用 Astro 开发服务器。验收结束后，在同一个会话单独执行停止命令：
+
+```powershell
 taskkill /PID $workersPreview.Id /T /F
 ```
 
-默认访问 `http://localhost:8787`。验证页面、CSS／JS、案例路由、末尾斜杠跳转与未知路径的 404；正式发布前可运行 `pnpm exec wrangler deploy --dry-run` 检查配置与构建，不会上传产物。正式发布命令是 `pnpm deploy:workers`，需要 Cloudflare 登录或 CI 凭据；构建和本地验证不要求发布。当前阶段不自动切换托管或域名。
+以上 Windows 命令适用于当前 `pnpm.exe` 安装方式；关闭会话会丢失进程对象，应先停止预览。正式发布使用 `pnpm deploy:workers`，先完整验证再发布，需要 Cloudflare 登录或发布凭据。Git 自动部署、云端分支预览和回滚统一见[部署说明](deployment.md)；云端 `wrangler preview` 会上传，不能与本地 `preview:workers` 混淆。
 
 普通构建使用 `astro.config.mjs` 的站点地址。
 

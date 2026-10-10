@@ -13,7 +13,7 @@
 
 ## 开始使用
 
-需要 Node.js 22.12 或更高版本，以及 pnpm 12。
+需要 Node.js 22.12 或更高版本，以及 pnpm 12；自动构建统一使用 `.node-version` 指定的 Node.js 24 和 `package.json` 指定的 pnpm 版本。
 
 ```sh
 pnpm install
@@ -24,9 +24,7 @@ Astro 开发服务器按[开发约定](docs/development.md#环境与命令)后�
 提交前运行：
 
 ```sh
-pnpm test
-pnpm check
-pnpm build
+pnpm verify
 ```
 
 ## 自定义
@@ -44,21 +42,25 @@ pnpm build
 
 ## Cloudflare Workers 部署
 
-主要使用 Workers Static Assets 部署 Astro 的 `dist/`。保持静态输出，无须 Cloudflare adapter、服务端入口或数据库。`wrangler.jsonc` 会在预览／发布前执行 `pnpm build`，未知地址返回 404，页面地址统一不带末尾斜杠。
+主要使用 Workers Static Assets 托管 Astro 的 `dist/`，保持静态输出。未知地址返回 404，页面地址统一不带末尾斜杠。Wrangler 负责本地验证和发布，无须 Cloudflare adapter 或服务端入口。
 
-后台本地预览：
+自动部署采用 Cloudflare 原生 Workers Builds。在控制台连接 GitHub 仓库 `honestman9527/homepage` 后设置：
 
-```powershell
-New-Item -ItemType Directory -Force .cache | Out-Null
-$workersPreview = Start-Process -FilePath (Get-Command pnpm).Source `
-  -ArgumentList @("preview:workers") -WorkingDirectory (Get-Location).Path `
-  -WindowStyle Hidden -RedirectStandardOutput .cache/workers-preview.log `
-  -RedirectStandardError .cache/workers-preview.err.log -PassThru
-Get-Content .cache/workers-preview.log -Tail 30
-# 在同一个 PowerShell 会话中停止预览及其子进程：
-taskkill /PID $workersPreview.Id /T /F
-```
+| 设置 | 值 |
+| --- | --- |
+| Worker 名称／生产分支 | `honestman-homepage`／`master` |
+| 根目录 | `/` |
+| Build command | `pnpm install --frozen-lockfile && pnpm verify` |
+| Deploy command | `pnpm exec wrangler deploy` |
+| Preview command | `pnpm exec wrangler preview` |
+| 构建变量 | `PNPM_VERSION=12.1.0`、`SKIP_DEPENDENCY_INSTALL=true` |
 
-默认地址为 `http://localhost:8787`。仅校验构建与部署配置可运行 `pnpm exec wrangler deploy --dry-run`；正式发布时先配置 Cloudflare 登录或 CI 凭据，再运行 `pnpm deploy:workers`。站点名称为 `honestman-homepage`，配置不自动绑定自定义域名。本次改造仅准备配置与本地验证。
+连接后，生产分支检查通过才发布；启用 Preview Builds 后，其他受信任分支生成预览。GitHub Actions 仅做检查，不执行第二次发布。首次 GitHub 授权、预览与回滚见[部署说明](docs/deployment.md)。提交仓库配置不会自动完成控制台连接或绑定域名。
 
-canonical 与 Open Graph 使用 `astro.config.mjs` 的站点地址；正式使用其他主域名时同步修改该地址。详细验证流程参见[开发约定](docs/development.md#workers-静态预览与部署)。
+| 本地入口 | 用途 |
+| --- | --- |
+| `pnpm verify` | 测试、类型检查、构建，以及 Workers 页面／资源／链接／404 验证，不上传 |
+| `pnpm preview:workers` | 构建并预览；按[开发约定](docs/development.md#workers-静态预览与部署)后台启动与停止 |
+| `pnpm deploy:workers` | 完整验证后正式发布，需要 Cloudflare 登录或发布凭据 |
+
+canonical 与 Open Graph 使用 `astro.config.mjs` 的生产站点地址。预览保持该地址，正式更换主域名时同步修改。

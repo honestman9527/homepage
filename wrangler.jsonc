@@ -2,9 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "honestman-homepage",
   "compatibility_date": "2026-10-10",
-  "build": {
-    "command": "pnpm build"
-  },
+  "preview_urls": true,
+  "previews": {},
   "assets": {
     "directory": "./dist",
     "html_handling": "drop-trailing-slash",

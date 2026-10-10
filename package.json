@@ -9,8 +9,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "preview:workers": "wrangler dev --local",
-    "deploy:workers": "wrangler deploy",
+    "preview:workers": "pnpm build && wrangler dev --local",
+    "verify": "pnpm test && pnpm check && pnpm build && pnpm verify:workers",
+    "verify:workers": "wrangler deploy --dry-run && node scripts/verify-workers.mjs",
+    "deploy:workers": "pnpm verify && wrangler deploy",
     "astro": "astro",
     "check": "astro check",
     "test": "vitest run"

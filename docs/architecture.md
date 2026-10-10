@@ -78,7 +78,9 @@ AppShell 继续只管理侧栏、主题和音乐控制，业务状态留在所�
 
 ## 部署边界
 
-主要部署入口是 Workers Static Assets：Wrangler 构建并发布 `dist/`，请求直接读取静态资源，未知路径返回 404，HTML 地址统一不带末尾斜杠。当前没有 Worker 服务端入口、运行时绑定或 Cloudflare adapter。canonical 与 Open Graph 沿用 Astro 的站点地址，不根据访问域名临时改写。
+主要部署入口是 Workers Static Assets：Astro 构建 `dist/`，Wrangler 验证并发布，请求直接读取静态资源，未知路径返回 404，HTML 地址统一不带末尾斜杠。当前没有 Worker 服务端入口、运行时绑定或 Cloudflare adapter。canonical 与 Open Graph 沿用 Astro 的站点地址，不根据访问域名临时改写。
+
+Cloudflare 原生 Workers Builds 负责 Git 自动部署，生产分支为 `master`，非生产分支按需启用云端预览。GitHub Actions 只检查，不持有部署凭据或重复发布。所有入口共用 `pnpm verify` 的串行检查与构建流程；Wrangler 配置只声明托管与预览行为，不依赖平台不会采用的 custom build。版本、控制台设置、预览与回滚见[部署说明](deployment.md)。
 
 未来需要 API 时可加入按路径处理的 Worker 服务；只有 Astro 自身需要按需服务端渲染时才引入适配器。
 
