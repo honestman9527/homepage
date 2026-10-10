@@ -34,7 +34,7 @@ export function BlogSearch({ items, readLabel, labels }: Props) {
     const url = new URL(window.location.href);
     if (value.trim()) url.searchParams.set("q", value);
     else url.searchParams.delete("q");
-    window.history.replaceState({}, "", url);
+    window.history.replaceState(window.history.state, "", url);
   };
 
   return (

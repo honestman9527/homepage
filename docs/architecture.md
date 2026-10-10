@@ -22,7 +22,7 @@ flowchart LR
 
 | 目录 | 职责 |
 | --- | --- |
-| `src/data/` | 站点、About 和项目 YAML 配置 |
+| `src/data/` | 站点、音乐、About 和项目 YAML 配置 |
 | `src/content/blog/` | 博客 Markdown 与 MDX，`src/content/` 下唯一的正文集合 |
 | `src/lib/config/` | Content Collections 使用的 Zod schema |
 | `src/lib/content/` | 博客、项目、封面、分页、搜索和阅读时间逻辑 |
@@ -41,11 +41,19 @@ flowchart LR
 
 Astro 文件中没有 `client:*` 的 React 组件只生成静态 HTML。当前客户端边界是：
 
-- `AppShell client:load`：管理侧栏、移动菜单、主题。
+- `AppShell client:load`：管理侧栏、移动菜单、主题，以及启用后的音乐胶囊；播放器控件按需导入。
 - 博客搜索岛：只在搜索页加载，接收构建期生成的最小文章元数据。
 - 评论：不建立常驻 React 岛；评论区接近视口时动态导入 Waline 或 Twikoo 客户端。
 
 列表、卡片、标签、分页、个人资料和 About 正文不应新增独立水合根。
+
+## 音乐与站内导航
+
+音乐独立配置在 `src/data/music.yaml`，通过 `music` Content Collection 校验和加载，默认关闭。启用并配置有效歌单后，公共布局启用 Astro `ClientRouter`；只在 AppShell 外持久化一个无初始 `src`、`preload="none"` 的原生 `<audio transition:persist="site-music">`。页头控件复用 AppShell，通过浏览器端音乐控制模块订阅音频状态，组件卸载不停止音频。AppShell、正文和搜索岛在换页时正常更新，避免将页面 slot 一同持久化。
+
+音乐配置负责曲目身份和资源地址；播放顺序、随机队列、历史及错误跳过由 `src/lib/music/` 管理。首次点击播放才设置音源。浏览器存储仅保存歌曲 ID、进度、音量和模式，刷新后保持暂停；存储不可用时仍可播放。禁用音乐时不启用客户端导航、不渲染音频节点或胶囊，也不下载播放器控件。
+
+页面局部脚本使用 `onPageLifecycle`：首次加载与 `astro:page-load` 初始化，`astro:before-swap` 和 `pagehide` 清理，浏览器恢复缓存页面后重新初始化。文章目录和进度需取消 rAF、移除监听并断开 Observer；评论需调用提供商清理函数，包括处理异步加载期间离开页面的情况。主题、favicon 和侧栏偏好在 `astro:after-swap` 重施。搜索修改查询参数时保留 `history.state`，以兼容路由的后退和滚动恢复。
 
 ## 内容与路由
 

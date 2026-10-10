@@ -8,6 +8,7 @@
 - YAML 配置个人资料、About、项目、导航、评论与封面
 - 博客支持 Markdown、MDX、标签、搜索和分页
 - Astro 静态渲染，评论与搜索按需加载
+- 可选页头音乐胶囊，支持精选歌单、顺序/随机播放和站内连续播放；默认关闭，音源自行配置
 
 ## 开始使用
 
@@ -34,6 +35,7 @@ pnpm build
 | 内容 | 位置 | 说明 |
 | --- | --- | --- |
 | 站点、资料、导航、评论、封面 | `src/data/site.yaml` | [配置说明](docs/configuration.md) |
+| 音乐胶囊与歌单 | `src/data/music.yaml` | [配置说明](docs/configuration.md#音乐配置) |
 | About 页面 | `src/data/about.yaml` | [配置说明](docs/configuration.md#about-配置) |
 | 项目列表 | `src/data/projects.yaml` | [配置说明](docs/configuration.md#项目配置) |
 | 博客文章 | `src/content/blog/` | [博客写作](docs/blogging.md) |

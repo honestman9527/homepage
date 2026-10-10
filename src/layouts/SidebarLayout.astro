@@ -9,7 +9,7 @@ import {
   searchPath,
   tagsPath,
 } from "@/config/routes";
-import { getSiteConfig } from "@/lib/site-config";
+import { getMusicConfig, getSiteConfig } from "@/lib/site-config";
 import type { NavId } from "@/config/routes";
 import type { AppShellViewModel } from "@/components/react/layout/types";
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
   article?: { published: Date; updated?: Date };
 }
 const { title, description, activeNavId, article } = Astro.props;
-const site = await getSiteConfig();
+const [site, music] = await Promise.all([getSiteConfig(), getMusicConfig()]);
 const activeBlogSection = getBlogSectionFromPath(Astro.url.pathname);
 const blogNavigation = [
   { id: "posts", label: t("blog.nav.posts"), href: listingPath("blog") },
@@ -40,6 +40,7 @@ const viewModel = {
     title: t(`nav.${activeNavId}`),
     sticky: site.layout.header.sticky,
     sidebarToggleLabel: t("sidebar.toggle"),
+    music: music.enabled ? music.tracks : undefined,
   },
   sidebar: {
     activeNavId,
@@ -74,7 +75,7 @@ const viewModel = {
   },
 } satisfies AppShellViewModel;
 ---
-<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} skipLabel={t("common.skip")} favicon={site.favicon} article={article}>
+<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} skipLabel={t("common.skip")} favicon={site.favicon} article={article} musicEnabled={music.enabled}>
   <AppShell client:load viewModel={viewModel}>
     <slot />
   </AppShell>

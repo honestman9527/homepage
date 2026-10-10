@@ -7,6 +7,12 @@ export async function getSiteConfig(): Promise<SiteConfig> {
   return entry.data;
 }
 
+export async function getMusicConfig(): Promise<CollectionEntry<"music">["data"]> {
+  const entry = await getEntry("music", "music");
+  if (!entry) throw new Error("src/data/music.yaml must contain a music entry.");
+  return entry.data;
+}
+
 export type AboutConfig = CollectionEntry<"about">["data"];
 
 export async function getAboutConfig(): Promise<AboutConfig> {

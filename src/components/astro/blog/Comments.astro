@@ -48,6 +48,7 @@ const { config, path, labels } = Astro.props;
 
 <script>
   import { initializeComments } from "@/lib/comments/init";
+  import { onPageLifecycle } from "@/lib/page-lifecycle";
 
-  initializeComments();
+  onPageLifecycle(initializeComments);
 </script>

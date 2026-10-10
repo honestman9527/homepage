@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import { applyTheme, readTheme } from "@/lib/theme";
 import {
   applyInitialSidebarPreference,
@@ -10,8 +11,9 @@ interface Props {
   title: string; description: string; skipLabel: string;
   favicon: SiteConfig["favicon"];
   article?: { published: Date; updated?: Date };
+  musicEnabled?: boolean;
 }
-const { title, description, skipLabel, favicon, article } = Astro.props;
+const { title, description, skipLabel, favicon, article, musicEnabled = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname.replace(/\/+$/, "") || "/", Astro.site);
 const themeScript = `(${applyTheme.toString()})((${readTheme.toString()})().theme);`;
 const sidebarScript = `(${applyInitialSidebarPreference.toString()})(${readSidebarPreference.toString()});`;
@@ -34,9 +36,19 @@ const sidebarScript = `(${applyInitialSidebarPreference.toString()})(${readSideb
     <script is:inline set:html={themeScript} />
     <script is:inline set:html={sidebarScript} />
     <title>{title}</title>
+    {musicEnabled && <ClientRouter />}
+    <script>
+      import { applyTheme, readTheme } from "@/lib/theme";
+      import { applyInitialSidebarPreference, readSidebarPreference } from "@/lib/sidebar-preference";
+      document.addEventListener("astro:after-swap", () => {
+        applyTheme(readTheme().theme);
+        applyInitialSidebarPreference(readSidebarPreference);
+      });
+    </script>
   </head>
   <body>
     <a href="#main-content" class="skip-link">{skipLabel}</a>
+    {musicEnabled && <audio data-music-audio transition:persist="site-music" preload="none" hidden />}
     <slot />
   </body>
 </html>

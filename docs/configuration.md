@@ -182,6 +182,44 @@ cover:
 
 博客封面按“文章 → `listing.blog.defaultCover` → `covers.default` → 内置等高线”回退。项目封面按“项目 → `listing.projects.defaultCover` → `covers.default` → 内置等高线”回退。
 
+## 音乐配置
+
+`src/data/music.yaml` 必须保留顶层 `music` 键，音乐独立于 `site.yaml` 配置。`enabled` 和 `tracks` 可省略，默认关闭并使用空歌单。启用后，所有页面的页头右侧显示音乐胶囊，并启用站内客户端导航以保持音乐连续。桌面点击封面或歌曲信息展开浮层；手机点击封面打开底部面板，播放键可以直接暂停或续听。
+
+仓库示例不包含音频，保持 `enabled: false`、`tracks: []`。先放入自己的音频，再配置和启用：
+
+```yaml
+music:
+  enabled: true
+  tracks:
+    - id: quiet-afternoon
+      title: 午后
+      artist: 作者
+      src: /music/quiet-afternoon.mp3
+      cover: /music/quiet-afternoon.webp # 可省略
+```
+
+根相对路径对应 `public/` 中的文件，上例需要实际提供 `public/music/quiet-afternoon.mp3`；也可使用稳定 HTTPS 直链。这里的地址仅说明配置格式，不是仓库内置音源。
+
+| 字段 | 默认值或约束 |
+| --- | --- |
+| `enabled` | 默认 `false`，启用时至少需要一首 |
+| `tracks` | 默认空数组，建议 3–10 首精选歌曲，按配置顺序播放 |
+| `tracks[].id` | 必填且唯一，只接受小写字母、数字及单连字符分隔；更换为另一首歌时使用新 ID |
+| `tracks[].title`、`tracks[].artist` | 必填非空文本 |
+| `tracks[].src` | 必填，单 `/` 开头的根相对路径或 HTTPS 地址；路径中的空格需编码 |
+| `tracks[].cover` | 可选，格式同 `src`；省略或加载失败显示音乐图标 |
+
+音乐及每首歌曲都拒绝未知字段；`site.yaml` 中不再接受 `site.music`。首版没有自动播放或歌词配置。原生浏览器音频负责播放，不依赖音乐平台 API。
+
+- 默认音量 30%，首次点击前不下载音频。记住歌曲、进度、音量和模式，刷新与重访保持暂停，由访客点击续听。
+- 面板提供歌单、上一首、下一首、进度和音量；不支持网页音量设置的浏览器提示使用设备音量键。
+- 默认顺序循环，可切换随机播放。随机模式每轮打乱且避免重复，上一首沿已播放历史返回。
+- 明确失败后提示并等待 3 秒切换下一首；全部曲目失败时停止。暂停、重试或手动切歌取消倒计时。缓冲和浏览器要求点击播放时不会自动跳歌。
+- 轻微动效只在播放时出现，并尊重减少动态效果设置。
+
+修改歌单后运行项目检查，并用真实音源人工验收桌面、手机和前进后退时的播放连续性；不要自动截图验证。
+
 ## About 配置
 
 `src/data/about.yaml` 必须保留顶层 `about`，直接配置中文内容：

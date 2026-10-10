@@ -30,7 +30,9 @@ pn dev stop
 - 修改前先阅读 [`docs/architecture.md`](docs/architecture.md)，保持“薄路由 → Astro 页面/布局 → 展示组件”的结构。
 - 页面与静态内容由 Astro 组织；只有需要持久交互状态的功能使用 React 岛。
 - 没有交互的 React 组件不添加 `client:*`，博客搜索只在搜索页水合。
-- `src/content/` 仅存放博客 Markdown/MDX；站点、About 与项目配置放在 `src/data/`，统一通过 Content Collections 和 Zod schema 加载。
+- 音乐控件复用 AppShell，只有其外部的原生音频节点跨页持久化；不持久化包含正文 slot 的整个 AppShell。
+- 音乐启用后的客户端导航需覆盖主题、侧栏、文章目录/进度和评论的初始化及清理；修改搜索 URL 时保留 history.state。
+- `src/content/` 仅存放博客 Markdown/MDX；站点、音乐、About 与项目配置放在 `src/data/`，统一通过 Content Collections 和 Zod schema 加载；音乐独立使用 `music.yaml`。
 - 站点仅提供中文、使用无前缀路由；路径通过 `src/config/routes.ts` 生成，不在组件中拼接重复路由规则。
 - 博客和项目逻辑分别维护在 `src/lib/content/` 对应模块中，共享逻辑才提取为独立模块。
 - 使用现有 shadcn/ui 基础组件及项目 token，不裁剪其公共 API，不为静态展示增加新的客户端状态。

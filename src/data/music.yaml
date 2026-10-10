@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=none
+# 音乐配置在构建期校验；对象不接受未声明的字段。
+# 填入自己的音频后再启用；src/cover 支持 public/ 根相对路径或 HTTPS。
+# 建议精选 3–10 首；每首包含 id、title、artist、src，可选 cover。
+music:
+  enabled: false
+  tracks: []

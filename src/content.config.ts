@@ -1,5 +1,6 @@
 import { defineCollection } from "astro:content";
 import { file, glob } from "astro/loaders";
+import { musicSchema } from "./lib/config/music";
 import {
   blogSchema,
   aboutSchema,
@@ -10,6 +11,10 @@ import {
 const site = defineCollection({
   loader: file("src/data/site.yaml"),
   schema: ({ image }) => siteSchema(image),
+});
+const music = defineCollection({
+  loader: file("src/data/music.yaml"),
+  schema: musicSchema,
 });
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
@@ -23,4 +28,4 @@ const projects = defineCollection({
   loader: file("src/data/projects.yaml"),
   schema: ({ image }) => projectSchema(image),
 });
-export const collections = { site, about, blog, projects };
+export const collections = { site, music, about, blog, projects };
