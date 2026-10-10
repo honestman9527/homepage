@@ -53,7 +53,15 @@ pnpm verify
 | Build command | `pnpm install --frozen-lockfile && pnpm verify` |
 | Deploy command | `pnpm exec wrangler deploy` |
 | Preview command | `pnpm exec wrangler preview` |
-| 构建变量 | `PNPM_VERSION=12.1.0`、`SKIP_DEPENDENCY_INSTALL=true` |
+
+在控制台单独添加普通构建变量：
+
+| 变量名 | 值 |
+| --- | --- |
+| `PNPM_VERSION` | `12.1.0` |
+| `SKIP_DEPENDENCY_INSTALL` | `true` |
+
+仓库配置文件已提交：`.node-version` 指定 Node.js 24，`package.json` 声明 pnpm 版本和命令，`wrangler.jsonc` 管理静态托管，`astro.config.mjs` 设置生产站点地址。文件名无需添加为控制台变量；已有 `NODE_VERSION` 时，将其同步为 `24` 或移除覆盖。
 
 连接后，生产分支检查通过才发布；启用 Preview Builds 后，其他受信任分支生成预览。GitHub Actions 仅做检查，不执行第二次发布。首次 GitHub 授权、预览与回滚见[部署说明](docs/deployment.md)。提交仓库配置不会自动完成控制台连接或绑定域名。
 

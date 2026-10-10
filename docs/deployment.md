@@ -21,15 +21,33 @@ Cloudflare 原生 Workers Builds 是唯一自动发布入口；GitHub Actions �
 | Deploy command | `pnpm exec wrangler deploy` |
 | Preview command | `pnpm exec wrangler preview` |
 
-生产和预览构建使用相同的 Build command。构建变量设置为：
+生产和预览构建使用相同的 Build command。
 
-| 构建变量／文件 | 值 | 用途 |
+### 控制台构建变量
+
+在 Cloudflare 的 Build Variables and Secrets 中添加以下普通构建变量，生产和预览构建保持一致：
+
+| 变量名 | 值 | 用途 |
 | --- | --- | --- |
-| `.node-version` | `24` | 固定 Node.js 主版本；控制台已有 `NODE_VERSION` 时需同步或移除覆盖 |
 | `PNPM_VERSION` | `12.1.0` | 与 `package.json` 的 `packageManager` 一致 |
 | `SKIP_DEPENDENCY_INSTALL` | `true` | 禁用平台默认安装，由 Build command 使用锁文件安装一次 |
 
-Workers Builds 会自行提供发布凭据；无需在 GitHub Secrets 复制 Token。当前没有运行时环境变量，构建变量也不会自动成为运行时绑定。Wrangler 的 custom build 与 Workers Builds 配置不同，因此仓库统一在 `package.json` 组合检查、构建与发布，`wrangler.jsonc` 不配置 `build.command`。[官方构建配置](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)与[构建环境](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/)
+这些变量只影响构建环境，当前没有运行时环境变量，构建变量也不会自动成为运行时绑定。
+
+### 仓库配置文件
+
+以下文件已随仓库提交，无需将文件名添加为控制台变量：
+
+| 文件 | 当前配置 | 用途 |
+| --- | --- | --- |
+| [`.node-version`](../.node-version) | `24` | Cloudflare 自动读取，固定 Node.js 主版本 |
+| [`package.json`](../package.json) | `packageManager: pnpm@12.1.0` 和 `scripts` | 声明 pnpm 版本及检查、构建、发布命令 |
+| [`wrangler.jsonc`](../wrangler.jsonc) | `name: honestman-homepage`、`assets.directory: ./dist` 等 | 管理 Worker 名称、静态目录、HTML 路由和预览行为 |
+| [`astro.config.mjs`](../astro.config.mjs) | `site: https://honestman.me` | 设置生成 canonical 和 Open Graph 使用的生产站点地址 |
+
+通常无需另加 `NODE_VERSION`；控制台已有该变量时，将其同步为 `24` 或移除覆盖。更新 pnpm 版本时，同步修改 `package.json` 的 `packageManager` 和控制台的 `PNPM_VERSION`。
+
+Workers Builds 会自行提供发布凭据；无需在 GitHub Secrets 复制 Token。Wrangler 的 custom build 与 Workers Builds 配置不同，因此仓库统一在 `package.json` 组合检查、构建与发布，`wrangler.jsonc` 不配置 `build.command`。[官方构建配置](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)与[构建环境](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/)
 
 ## 分支和预览
 
