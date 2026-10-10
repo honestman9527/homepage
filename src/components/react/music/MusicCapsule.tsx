@@ -1,3 +1,4 @@
+import musicStyles from "@/styles/music.css?inline";
 import { useEffect, useId, useMemo, useState, useSyncExternalStore } from "react";
 import { Popover } from "@base-ui/react/popover";
 import { MusicNotesIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "@phosphor-icons/react";
@@ -143,6 +144,7 @@ export function MusicCapsule({ tracks }: { tracks: readonly MusicTrack[] }) {
   const controls = <PlayerControls tracks={tracks} state={state} player={player} />;
   return (
     <div className="music-capsule" data-music-capsule data-status={state.status}>
+      <style data-music-styles>{musicStyles}</style>
       {mobile ? (
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger render={trigger} />

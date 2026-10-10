@@ -6,10 +6,6 @@
 @import "@fontsource-variable/jetbrains-mono";
 
 @import "./layout.css";
-@import "./listing.css";
-@import "./article.css";
-@import "./comments.css";
-@import "./music.css";
 
 @custom-variant dark (&:is(.dark *));
 

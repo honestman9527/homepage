@@ -32,3 +32,23 @@ const profile = site.profile;
     </div>
   </section>
 </SidebarLayout>
+
+<style is:global>
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+  .mask-fade-y {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black 12%,
+      black 70%,
+      transparent
+    );
+  }
+}
+</style>

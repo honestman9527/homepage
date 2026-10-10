@@ -1,21 +1,3 @@
-@layer utilities {
-  .bg-grid {
-    background-image:
-      linear-gradient(to right, var(--border) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-    background-size: 72px 72px;
-  }
-  .mask-fade-y {
-    mask-image: linear-gradient(
-      to bottom,
-      transparent,
-      black 12%,
-      black 70%,
-      transparent
-    );
-  }
-}
-
 @layer components {
   .site-header {
     position: relative;
@@ -75,17 +57,5 @@
   [data-collapsible="icon"] .brand-link {
     padding-inline: 0;
     justify-content: center;
-  }
-  .social-link {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    color: var(--muted-foreground);
-    border-radius: var(--radius);
-  }
-  .social-link:hover {
-    color: var(--foreground);
-    background: var(--muted);
   }
 }
