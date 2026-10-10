@@ -1,37 +1,28 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { AppShell } from "@/components/react/layout/AppShell";
-import { getLangFromUrl, getTranslations, otherLanguage } from "@/i18n/utils";
+import { uiText as t } from "@/lib/ui";
 import {
   getBlogSectionFromPath,
   listingPath,
-  localePath,
   routePath,
   searchPath,
   tagsPath,
-} from "@/i18n/routes";
+} from "@/config/routes";
 import { getSiteConfig } from "@/lib/site-config";
-import type { Language, NavId } from "@/i18n/ui";
-import type { LanguageLink } from "@/i18n/types";
+import type { NavId } from "@/config/routes";
 import type { AppShellViewModel } from "@/components/react/layout/types";
 interface Props {
   title?: string; description?: string; activeNavId: NavId;
-  languageLink?: LanguageLink; alternates?: { lang: Language; href: string }[];
   article?: { published: Date; updated?: Date };
 }
 const { title, description, activeNavId, article } = Astro.props;
-const lang = getLangFromUrl(Astro.url);
-const t = getTranslations(lang);
 const site = await getSiteConfig();
-const other = otherLanguage(lang);
-const path = Astro.url.pathname.replace(/^\/en(?=\/|$)/, "");
-const languageLink = Astro.props.languageLink ?? { lang: other, href: localePath(other, path), label: other === "en" ? "English" : "中文" };
-const alternates = Astro.props.alternates ?? (["zh", "en"] as const).map((language) => ({ lang: language, href: localePath(language, path) }));
 const activeBlogSection = getBlogSectionFromPath(Astro.url.pathname);
 const blogNavigation = [
-  { id: "posts", label: t("blog.nav.posts"), href: listingPath(lang, "blog") },
-  { id: "tags", label: t("blog.nav.tags"), href: tagsPath(lang) },
-  { id: "search", label: t("blog.nav.search"), href: searchPath(lang) },
+  { id: "posts", label: t("blog.nav.posts"), href: listingPath("blog") },
+  { id: "tags", label: t("blog.nav.tags"), href: tagsPath() },
+  { id: "search", label: t("blog.nav.search"), href: searchPath() },
 ].map((item) => ({
   ...item,
   isActive: activeNavId === "blog" && item.id === activeBlogSection,
@@ -39,7 +30,7 @@ const blogNavigation = [
 const navigation = site.navigation.map((id) => ({
   id,
   label: t(`nav.${id}`),
-  href: routePath(lang, id),
+  href: routePath(id),
   toggleLabel: id === "blog" ? t("blog.nav.toggle") : undefined,
   children: id === "blog" ? blogNavigation : undefined,
 }));
@@ -49,12 +40,6 @@ const viewModel = {
     title: t(`nav.${activeNavId}`),
     sticky: site.layout.header.sticky,
     sidebarToggleLabel: t("sidebar.toggle"),
-    language: {
-      current: lang,
-      currentHref: Astro.url.pathname,
-      link: languageLink,
-      label: t("language.menu"),
-    },
   },
   sidebar: {
     activeNavId,
@@ -68,7 +53,7 @@ const viewModel = {
     brand: {
       name: site.name,
       domain: Astro.site!.hostname,
-      homeHref: routePath(lang, "home"),
+      homeHref: routePath("home"),
       logo: site.favicon,
     },
     footer: {
@@ -89,7 +74,7 @@ const viewModel = {
   },
 } satisfies AppShellViewModel;
 ---
-<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} lang={lang} skipLabel={t("common.skip")} favicon={site.favicon} alternates={alternates} article={article}>
+<BaseLayout title={title ?? `${site.name} — ${t("site.title")}`} description={description ?? t("site.description")} skipLabel={t("common.skip")} favicon={site.favicon} article={article}>
   <AppShell client:load viewModel={viewModel}>
     <slot />
   </AppShell>

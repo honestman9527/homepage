@@ -1,6 +1,6 @@
 # 项目架构
 
-本项目是静态优先的双语个人主页。Astro 负责路由、数据加载、Markdown/MDX 和页面组合；React 只承载需要浏览器状态的交互；Tailwind CSS 与 shadcn/ui 提供样式和基础组件。
+本项目是静态优先的中文个人主页。Astro 负责路由、数据加载、Markdown/MDX 和页面组合；React 只承载需要浏览器状态的交互；Tailwind CSS 与 shadcn/ui 提供样式和基础组件。
 
 ## 数据流
 
@@ -16,7 +16,7 @@ flowchart LR
   G --> I["少量 React 岛"]
 ```
 
-配置和内容只通过 Content Collections 进入页面。schema 负责字段形状和基础约束，内容模块负责译文分组、草稿过滤、排序、分页、标签与语言选择，页面组件接收已经确定的数据并渲染。
+配置和内容只通过 Content Collections 进入页面。schema 负责字段形状和基础约束，内容模块负责草稿过滤、排序、分页、标签与搜索，页面组件接收已经确定的数据并渲染。
 
 ## 目录职责
 
@@ -26,33 +26,36 @@ flowchart LR
 | `src/content/blog/` | 博客 Markdown 与 MDX，`src/content/` 下唯一的正文集合 |
 | `src/lib/config/` | Content Collections 使用的 Zod schema |
 | `src/lib/content/` | 博客、项目、封面、分页、搜索和阅读时间逻辑 |
-| `src/pages/` | 中文与英文的薄路由入口和静态路径生成 |
+| `src/pages/` | 薄路由入口和静态路径生成 |
 | `src/layouts/` | HTML 文档、侧栏壳和文章壳 |
 | `src/components/astro/` | 页面级组合与静态内容组件 |
 | `src/components/react/` | shadcn 展示组件和浏览器交互 |
-| `src/i18n/` | 语言类型、文案、路径与语言切换 |
+| `src/config/routes.ts` | 路由配置、类型和公开路径生成 |
+| `src/lib/ui.ts` | 中文文案、占位符替换与日期格式化 |
 | `src/lib/comments/` | 评论配置分发、懒加载、重试和清理 |
 | `src/styles/` | 全局、布局、列表、文章和评论样式 |
 
 ## 页面与组件边界
 
-路由文件只负责声明语言、调用 `getStaticPaths()` 或传入页面 props。页面内容在 `src/components/astro/pages/` 组合，公共页面框架由 `SidebarLayout.astro` 和 `BaseLayout.astro` 提供。
+路由文件只负责调用 `getStaticPaths()` 或传入页面 props。页面内容在 `src/components/astro/pages/` 组合，公共页面框架由 `SidebarLayout.astro` 和 `BaseLayout.astro` 提供。
 
 Astro 文件中没有 `client:*` 的 React 组件只生成静态 HTML。当前客户端边界是：
 
-- `AppShell client:load`：管理侧栏、移动菜单、主题和语言菜单。
+- `AppShell client:load`：管理侧栏、移动菜单、主题。
 - 博客搜索岛：只在搜索页加载，接收构建期生成的最小文章元数据。
 - 评论：不建立常驻 React 岛；评论区接近视口时动态导入 Waline 或 Twikoo 客户端。
 
 列表、卡片、标签、分页、个人资料和 About 正文不应新增独立水合根。
 
-## 内容与双语路由
+## 内容与路由
 
-Astro i18n 的默认语言是中文：中文页面不带前缀，英文页面使用 `/en`。公开路径统一通过 `src/i18n/routes.ts` 生成，避免页面自行编码语言和标签规则。
+站点只提供中文页面，所有路径均不带语言前缀。公开路径统一通过 `src/config/routes.ts` 生成。HTML 和评论客户端使用 `zh-CN`，日期使用中文格式并固定为 UTC。
 
-博客按 `translationKey` 分组，列表、搜索和标签页只收录当前语言已发布的文章；文章详情也只生成已有语言的页面。缺译时语言菜单显示不可用，不生成缺译跳转页。项目通过 `translations` 保存双语字段，缺译时仍以明确标记回退到原文。
+博客使用必填 `slug` 作为稳定标识，由 Astro 原生 glob loader 设置条目 ID。标识重复时构建失败，草稿不进入路由、列表、搜索或标签。文章按自身发布日期降序排列，同日按 slug 排序。项目直接保存标题与简介，按年份降序、同年按 ID 排序。
 
-`site.yaml` 中的 `navigation` 只决定侧栏入口和顺序。新增公开页面仍通过 Astro 文件路由实现；如果需要加入主导航，再同步扩展路由配置、语言文案和导航 schema。
+中文文章 URL 和评论标识均使用 `/blog/{slug}`。旧 `/en` 地址不生成页面或跳转。页面保留 canonical 与 Open Graph URL，不输出 hreflang。
+
+`site.yaml` 中的 `navigation` 只决定侧栏入口和顺序。新增公开页面仍通过 Astro 文件路由实现；如果需要加入主导航，再同步扩展路由配置、中文文案和导航 schema。
 
 ## 性能约定
 
@@ -65,5 +68,5 @@ Astro i18n 的默认语言是中文：中文页面不带前缀，英文页面使
 ## 修改入口
 
 - 个人资料、导航、评论和封面：参见[配置说明](configuration.md)。
-- Markdown/MDX、译文、标签和草稿：参见[博客写作](blogging.md)。
-- 新增页面或调整组件边界：先遵循本页的数据流和客户端边界，再同步中英文路由与测试。
+- Markdown/MDX、标签和草稿：参见[博客写作](blogging.md)。
+- 新增页面或调整组件边界：先遵循本页的数据流和客户端边界，再同步路由与测试。

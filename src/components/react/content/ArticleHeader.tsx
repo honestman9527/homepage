@@ -1,4 +1,3 @@
-import type { Language } from "@/i18n/ui";
 import { ContentTags } from "./ContentTags";
 
 export interface ArticleDateViewModel {
@@ -7,7 +6,6 @@ export interface ArticleDateViewModel {
 }
 
 export interface ArticleHeaderProps {
-  lang: Language;
   title: string;
   description: string;
   tags: readonly string[];
@@ -18,7 +16,6 @@ export interface ArticleHeaderProps {
 }
 
 export function ArticleHeader({
-  lang,
   title,
   description,
   tags,
@@ -43,8 +40,8 @@ export function ArticleHeader({
           </>
         )}
       </div>
-      <h1 lang={lang}>{title}</h1>
-      <p className="post-description" lang={lang}>
+      <h1>{title}</h1>
+      <p className="post-description">
         {description}
       </p>
       <ContentTags tags={tags} hrefs={tagHrefs} className="post-tags" />

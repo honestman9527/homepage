@@ -1,6 +1,5 @@
 import type { ThemeLabels } from "@/components/react/ThemeToggle";
-import type { LanguageLink } from "@/i18n/types";
-import type { Language, NavId } from "@/i18n/ui";
+import type { NavId } from "@/config/routes";
 
 export interface NavItem {
   id: NavId;
@@ -46,18 +45,10 @@ export interface AppSidebarViewModel {
   };
 }
 
-export interface LanguageMenuViewModel {
-  current: Language;
-  currentHref: string;
-  link: LanguageLink;
-  label: string;
-}
-
 export interface AppHeaderViewModel {
   title: string;
   sticky: boolean;
   sidebarToggleLabel: string;
-  language: LanguageMenuViewModel;
 }
 
 export interface AppShellViewModel {

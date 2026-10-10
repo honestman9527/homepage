@@ -5,6 +5,7 @@
 修改配置后运行：
 
 ```sh
+pnpm test
 pnpm check
 pnpm build
 ```
@@ -23,10 +24,9 @@ pnpm build
 | `favicon.light`、`favicon.dark` | 否 | 浅色与深色模式的站点图标，使用 `public/` 下文件的根相对路径 |
 | `email` | 是 | 有效邮箱地址 |
 | `social` | 是 | 社交链接数组，可以为空 |
-| `profile.zh`、`profile.en` | 是 | 中文和英文资料，两种语言都必须存在 |
-| `profile.*.bio` | 是 | 简介 |
-| `profile.*.location` | 是 | 所在地或工作方式 |
-| `profile.*.availability` | 是 | 当前状态 |
+| `profile.bio` | 是 | 简介 |
+| `profile.location` | 是 | 所在地或工作方式 |
+| `profile.availability` | 是 | 当前状态 |
 | `skills` | 是 | 技能名称数组，可以为空 |
 
 `social` 是社交链接数组。每项需要 `type`、`label` 和 HTTP(S) `url`；`type` 可使用 `github`、`linkedin`、`x` 或 `website`。
@@ -45,14 +45,9 @@ site:
       label: GitHub
       url: https://github.com/example
   profile:
-    zh:
-      availability: 接受新项目委托
-      bio: 开发者，专注于 Web 产品。
-      location: 远程
-    en:
-      availability: Available for new projects
-      bio: A developer focused on web products.
-      location: Remote
+    availability: 接受新项目委托
+    bio: 开发者，专注于 Web 产品。
+    location: 远程
   skills: [TypeScript, Astro, React]
 ```
 
@@ -133,7 +128,7 @@ site:
 - `envId` 必填，可以是非空环境 ID 或服务地址。
 - `region` 可省略；填写时只接受 `ap-shanghai` 或 `ap-guangzhou`。
 
-全局提供商启用后，文章仍可通过 frontmatter 的 `comments: false` 单独关闭评论。同一文章的中英文版本共享 `/blog/{translationKey}` 评论路径。
+全局提供商启用后，文章仍可通过 frontmatter 的 `comments: false` 单独关闭评论。文章评论使用稳定的 `/blog/{slug}` 路径，客户端语言固定为 `zh-CN`。
 
 ### 封面
 
@@ -185,53 +180,36 @@ cover:
   type: none
 ```
 
-博客封面按“当前译文 → 原文 → `listing.blog.defaultCover` → `covers.default` → 内置等高线”回退。项目封面按“项目 → `listing.projects.defaultCover` → `covers.default` → 内置等高线”回退。
+博客封面按“文章 → `listing.blog.defaultCover` → `covers.default` → 内置等高线”回退。项目封面按“项目 → `listing.projects.defaultCover` → `covers.default` → 内置等高线”回退。
 
 ## About 配置
 
-`src/data/about.yaml` 必须保留顶层 `about`，且 `about.zh` 和 `about.en` 都必须存在。
+`src/data/about.yaml` 必须保留顶层 `about`，直接配置中文内容：
 
 ```yaml
 about:
-  zh:
-    title: 关于
-    description: 简单介绍
-    sections:
-      - id: introduction
-        title: 自我介绍
-        paragraphs:
-          - 第一段介绍。
-          - 第二段介绍。
-  en:
-    title: About
-    description: A short introduction
-    sections:
-      - id: introduction
-        title: Introduction
-        paragraphs:
-          - The first paragraph.
+  title: 关于
+  description: 简单介绍
+  sections:
+    - id: introduction
+      title: 自我介绍
+      paragraphs:
+        - 第一段介绍。
+        - 第二段介绍。
 ```
 
-- `sections` 按数组顺序显示。
-- `id` 只接受小写字母、数字和连字符，并且在同一语言内不能重复。
-- 每个章节至少需要一个非空段落。
-- 段落按纯文本输出，不解析 Markdown、MDX 或 HTML。
-- 两种语言的章节 ID 建议保持一致，但当前 schema 不强制对应。
+- `title`、`description` 为必填非空文本，`sections` 为必填章节数组。
+- 章节按数组顺序显示；`id` 只接受小写字母、数字和单连字符分隔，且不能重复。
+- 每个章节至少需要一个非空段落；段落按纯文本输出，不解析 Markdown、MDX 或 HTML。
 
 ## 项目配置
 
-`src/data/projects.yaml` 是项目数组：
+`src/data/projects.yaml` 是项目数组，直接配置标题和简介：
 
 ```yaml
 - id: my-project
-  originalLang: zh
-  translations:
-    zh:
-      title: 我的项目
-      description: 项目简介。
-    en:
-      title: My project
-      description: Project summary.
+  title: 我的项目
+  description: 项目简介。
   tags: [Astro, React]
   href: https://github.com/example/project
   demoHref: https://example.com
@@ -245,8 +223,7 @@ about:
 | 字段 | 必填 | 默认值或约束 |
 | --- | --- | --- |
 | `id` | 是 | 非空内部标识；同年项目按 ID 排序 |
-| `originalLang` | 是 | `zh` 或 `en` |
-| `translations` | 是 | 可包含 `zh`、`en`；原始语言对应内容必须存在 |
+| `title`、`description` | 是 | 非空标题和简介 |
 | `tags` | 否 | 默认空数组 |
 | `href` | 是 | HTTP(S) 项目地址 |
 | `demoHref` | 否 | HTTP(S) 演示地址 |
@@ -254,4 +231,4 @@ about:
 | `featured` | 否 | 默认 `false` |
 | `cover` | 否 | 格式与站点封面相同 |
 
-当前语言缺少译文时，页面回退到 `originalLang` 的内容并显示原文语言标记。
+配置只接受单语结构。旧 `zh`、`en` 分组和项目的 `originalLang`、`translations` 字段会作为未知字段在构建期报错。

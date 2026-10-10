@@ -35,7 +35,7 @@ export function ArticleNavigation({ navigation, labels }: Props) {
           <CardHeader>
             <CardDescription>{item.label}</CardDescription>
             <CardTitle>
-              <a className="article-navigation-link" href={item.href} lang={item.lang}>
+              <a className="article-navigation-link" href={item.href}>
                 {item.title}
               </a>
             </CardTitle>

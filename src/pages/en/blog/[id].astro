@@ -1,8 +1,0 @@
----
-import type { InferGetStaticPropsType } from "astro";
-import BlogPostShell from "@/layouts/BlogPostShell.astro";
-import { getBlogPaths } from "@/lib/content/blog";
-export async function getStaticPaths() { return getBlogPaths("en"); }
-type Props = InferGetStaticPropsType<typeof getStaticPaths>;
----
-<BlogPostShell {...Astro.props} />

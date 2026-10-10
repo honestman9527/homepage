@@ -3,14 +3,10 @@ import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/astro/Avatar.astro";
 import { ProfileSummary } from "@/components/react/profile/ProfileSummary";
 import SocialLinks from "@/components/astro/SocialLinks.astro";
-import { getTranslations } from "@/i18n/utils";
-import type { Language } from "@/i18n/ui";
+import { uiText as t } from "@/lib/ui";
 import { getSiteConfig } from "@/lib/site-config";
-interface Props { lang: Language; }
-const { lang } = Astro.props;
 const site = await getSiteConfig();
-const profile = site.profile[lang];
-const t = getTranslations(lang);
+const profile = site.profile;
 ---
 <SidebarLayout activeNavId="home">
   <section class="relative flex min-h-[calc(100svh-3rem)] flex-col items-center justify-center px-4 py-16 sm:px-6">

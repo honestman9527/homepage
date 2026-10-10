@@ -12,11 +12,7 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
-  i18n: {
-    locales: ["zh", "en"],
-    defaultLocale: "zh",
-    routing: { prefixDefaultLocale: false },
-  },
+  prerenderConflictBehavior: "error",
   markdown: {
     processor: satteri(),
   },

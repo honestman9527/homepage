@@ -1,3 +1,4 @@
+import { blogPath } from "../../config/routes";
 import type { CommentsConfig } from "@/lib/config/schema";
 import type {
   ActiveCommentsConfig,
@@ -12,8 +13,8 @@ export function resolveCommentsConfig(
   return enabled && config.provider !== "none" ? config : undefined;
 }
 
-export function commentPath(translationKey: string): string {
-  return `/blog/${translationKey}`;
+export function commentPath(slug: string): string {
+  return blogPath(slug);
 }
 
 export async function mountComments(

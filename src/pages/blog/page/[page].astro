@@ -2,7 +2,7 @@
 import type { InferGetStaticPropsType } from "astro";
 import Page from "@/components/astro/pages/BlogPage.astro";
 import { getBlogListingPaths } from "@/lib/content/blog";
-export async function getStaticPaths() { return getBlogListingPaths("zh"); }
+export async function getStaticPaths() { return getBlogListingPaths(); }
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 ---
-<Page lang="zh" page={Astro.props.page} />
+<Page page={Astro.props.page} />

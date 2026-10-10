@@ -1,5 +1,4 @@
 ---
-import type { Language } from "@/i18n/ui";
 import type { ActiveCommentsConfig } from "@/lib/comments/types";
 import { Button } from "@/components/react/ui/button";
 import { Skeleton } from "@/components/react/ui/skeleton";
@@ -7,7 +6,6 @@ import { Skeleton } from "@/components/react/ui/skeleton";
 interface Props {
   config: ActiveCommentsConfig;
   path: string;
-  lang: Language;
   labels: {
     title: string;
     eyebrow: string;
@@ -18,7 +16,7 @@ interface Props {
   };
 }
 
-const { config, path, lang, labels } = Astro.props;
+const { config, path, labels } = Astro.props;
 ---
 
 <section
@@ -29,7 +27,6 @@ const { config, path, lang, labels } = Astro.props;
   data-comments-state="idle"
   data-comments-config={JSON.stringify(config)}
   data-comments-path={path}
-  data-comments-lang={lang}
 >
   <header class="comments-header">
     <p aria-hidden="true">{labels.eyebrow}</p>

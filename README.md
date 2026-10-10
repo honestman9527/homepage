@@ -1,12 +1,12 @@
 # Honestman Homepage
 
-一个配置驱动的双语个人主页，基于 Astro 7、React 19、Tailwind CSS 4 和 shadcn/ui。站点默认生成静态页面，React 只负责侧栏、主题、语言菜单和博客搜索等交互。
+一个配置驱动的中文个人主页，基于 Astro 7、React 19、Tailwind CSS 4 和 shadcn/ui。站点默认生成静态页面，React 只负责侧栏、主题和博客搜索等交互。
 
 ## 特性
 
-- 中文 `/` 与英文 `/en` 双语路由
+- 中文页面使用无前缀路由，旧 `/en` 地址返回 404
 - YAML 配置个人资料、About、项目、导航、评论与封面
-- 博客支持 Markdown、MDX、译文关联、标签、搜索和分页
+- 博客支持 Markdown、MDX、标签、搜索和分页
 - Astro 静态渲染，评论与搜索按需加载
 
 ## 开始使用

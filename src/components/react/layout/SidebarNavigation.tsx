@@ -22,7 +22,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/react/ui/sidebar";
-import type { NavId } from "@/i18n/ui";
+import type { NavId } from "@/config/routes";
 import type { NavItem } from "./types";
 
 const navIcons = {

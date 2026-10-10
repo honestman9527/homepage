@@ -1,16 +1,13 @@
 ---
-import { languages, type Language } from "@/i18n/ui";
 import type { BlogItem } from "@/lib/content/blog";
 import { getBlogPage } from "@/lib/content/blog";
-import { listingPath } from "@/i18n/routes";
-import { getTranslations, otherLanguage } from "@/i18n/utils";
+import { uiText as t } from "@/lib/ui";
 import { getSiteConfig } from "@/lib/site-config";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import BlogList from "@/components/astro/blog/BlogList.astro";
 import ListingFooter from "@/components/astro/content/ListingFooter.astro";
 
 interface Props {
-  lang: Language;
   page?: {
     items: BlogItem[];
     currentPage: number;
@@ -18,18 +15,8 @@ interface Props {
   };
 }
 
-const { lang } = Astro.props;
-const page = Astro.props.page ?? (await getBlogPage(lang));
+const page = Astro.props.page ?? (await getBlogPage());
 const site = await getSiteConfig();
-const t = getTranslations(lang);
-const other = otherLanguage(lang);
-const otherHasPage = page.currentPage <= (await getBlogPage(other)).totalPages;
-const currentHref = listingPath(lang, "blog", page.currentPage);
-const otherHref = listingPath(other, "blog", otherHasPage ? page.currentPage : 1);
-const alternates: { lang: Language; href: string }[] = [
-  { lang, href: currentHref },
-  ...(otherHasPage ? [{ lang: other, href: otherHref }] : []),
-];
 const suffix =
   page.currentPage > 1
     ? ` · ${t("pagination.page", { page: page.currentPage })}`
@@ -40,19 +27,16 @@ const suffix =
   activeNavId="blog"
   title={`${t("blog.title")}${suffix} — ${site.name}`}
   description={t("blog.subtitle")}
-  languageLink={{ lang: other, href: otherHref, label: languages[other] }}
-  alternates={alternates}
 >
   <main class="listing-page">
     <header class="page-heading">
       <p>{t("blog.title")}</p>
       <h1>{t("blog.subtitle")}</h1>
     </header>
-    <BlogList lang={lang} items={page.items} />
+    <BlogList items={page.items} />
     <ListingFooter
       currentPage={page.currentPage}
       totalPages={page.totalPages}
-      lang={lang}
       kind="blog"
     />
   </main>

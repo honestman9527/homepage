@@ -12,7 +12,7 @@ const sectionSchema = z
   })
   .strict();
 
-const localizedAboutSchema = z
+export const aboutSchema = z
   .object({
     title: textSchema,
     description: textSchema,
@@ -23,10 +23,3 @@ const localizedAboutSchema = z
     ({ sections }) => new Set(sections.map(({ id }) => id)).size === sections.length,
     { message: "About section ids must be unique", path: ["sections"] },
   );
-
-export const aboutSchema = z
-  .object({
-    zh: localizedAboutSchema,
-    en: localizedAboutSchema,
-  })
-  .strict();

@@ -1,8 +1,7 @@
 ---
-import type { Language } from "@/i18n/ui";
 import type { BlogItem } from "@/lib/content/blog";
-import { tagPath } from "@/i18n/routes";
-import { formatDate, getTranslations } from "@/i18n/utils";
+import { tagPath } from "@/config/routes";
+import { formatDate, uiText as t } from "@/lib/ui";
 import { getSiteConfig } from "@/lib/site-config";
 import { resolveCover } from "@/lib/content/cover";
 import { BlogCard } from "@/components/react/content/BlogCard";
@@ -10,23 +9,20 @@ import { ListingEmpty } from "@/components/react/content/ListingEmpty";
 import Cover from "@/components/astro/content/Cover.astro";
 
 interface Props {
-  lang: Language;
   items: BlogItem[];
   emptyTitle?: string;
   emptyDescription?: string;
 }
 
-const { lang, items, emptyTitle, emptyDescription } = Astro.props;
+const { items, emptyTitle, emptyDescription } = Astro.props;
 const site = await getSiteConfig();
-const t = getTranslations(lang);
 ---
 
 {items.length ? (
   <div class="card-grid">
-    {items.map(({ post, original, href, key, tags }, index) => {
+    {items.map(({ post, href, key, tags }, index) => {
       const cover = resolveCover(
         post.data.cover,
-        original.data.cover,
         site.listing.blog.defaultCover,
         site.covers.default,
       );
@@ -35,11 +31,10 @@ const t = getTranslations(lang);
           title={post.data.title}
           description={post.data.description}
           href={href}
-          contentLang={post.data.lang}
-          date={formatDate(original.data.pubDate, lang)}
-          dateTime={original.data.pubDate.toISOString()}
+          date={formatDate(post.data.pubDate)}
+          dateTime={post.data.pubDate.toISOString()}
           tags={tags}
-          tagHrefs={tags.map((tag) => tagPath(lang, tag))}
+          tagHrefs={tags.map((tag) => tagPath(tag))}
           readLabel={t("blog.readPost")}
           hasCover={cover.type !== "none"}
         >

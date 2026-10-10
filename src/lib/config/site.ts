@@ -55,7 +55,7 @@ export function siteSchema(image: () => z.ZodType<ImageMetadata>) {
         })
         .strict()
         .default({ header: { sticky: true } }),
-      profile: z.object({ zh: profile, en: profile }).strict(),
+      profile,
       skills: z.array(textSchema),
       navigation: z
         .array(z.enum(navigationIds))

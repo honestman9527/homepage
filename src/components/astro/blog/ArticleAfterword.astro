@@ -1,5 +1,4 @@
 ---
-import type { Language } from "@/i18n/ui";
 import type { ArticleNavigation } from "@/lib/content/blog";
 import type { ActiveCommentsConfig } from "@/lib/comments/types";
 import { ArticleNavigation as ArticleNavigationView } from "@/components/react/content/ArticleNavigation";
@@ -10,7 +9,6 @@ interface Props {
   navigation: ArticleNavigation;
   commentsConfig?: ActiveCommentsConfig;
   commentsPath: string;
-  lang: Language;
   labels: {
     older: string;
     newer: string;
@@ -25,7 +23,7 @@ interface Props {
   };
 }
 
-const { navigation, commentsConfig, commentsPath, lang, labels } = Astro.props;
+const { navigation, commentsConfig, commentsPath, labels } = Astro.props;
 const hasNavigation = Boolean(navigation.older || navigation.newer);
 ---
 
@@ -48,7 +46,6 @@ const hasNavigation = Boolean(navigation.older || navigation.newer);
           <Comments
             config={commentsConfig}
             path={commentsPath}
-            lang={lang}
             labels={labels.comments}
           />
         </div>

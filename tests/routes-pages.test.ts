@@ -1,11 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("astro:i18n", () => ({
-  getRelativeLocaleUrl: (lang: "zh" | "en", path = "") => {
-    const suffix = path ? `/${path}` : "";
-    return lang === "zh" ? suffix || "/" : `/en${suffix}`;
-  },
-}));
+import { describe, expect, it } from "vitest";
 
 import {
   navigationIds,
@@ -14,6 +7,7 @@ import {
   type RouteId,
 } from "../src/config/routes";
 import {
+  normalizePath,
   blogPath,
   getBlogSectionFromPath,
   listingPath,
@@ -22,7 +16,7 @@ import {
   tagListingPath,
   tagPath,
   tagsPath,
-} from "../src/i18n/routes";
+} from "../src/config/routes";
 import { aboutSchema } from "../src/lib/config/schema";
 
 describe("route configuration", () => {
@@ -35,19 +29,19 @@ describe("route configuration", () => {
   });
 
   it("keeps public URLs stable and encodes complete tag names", () => {
-    expect(routePath("zh", "home")).toBe("/");
-    expect(routePath("en", "home")).toBe("/en");
-    expect(routePath("zh", "about")).toBe("/about");
-    expect(listingPath("zh", "blog")).toBe("/blog");
-    expect(listingPath("en", "projects", 2)).toBe("/en/projects/page/2");
-    expect(blogPath("zh", "stable-key")).toBe("/blog/stable-key");
-    expect(searchPath("en")).toBe("/en/blog/search");
-    expect(tagsPath("zh")).toBe("/blog/tags");
-    expect(tagPath("zh", "C++")).toBe("/blog/tags/C%2B%2B");
-    expect(tagPath("en", "网页设计")).toBe(
-      "/en/blog/tags/%E7%BD%91%E9%A1%B5%E8%AE%BE%E8%AE%A1",
+    expect(normalizePath("//blog///")).toBe("/blog");
+    expect(routePath("home")).toBe("/");
+    expect(routePath("about")).toBe("/about");
+    expect(listingPath("blog")).toBe("/blog");
+    expect(listingPath("projects", 2)).toBe("/projects/page/2");
+    expect(blogPath("stable-key")).toBe("/blog/stable-key");
+    expect(searchPath()).toBe("/blog/search");
+    expect(tagsPath()).toBe("/blog/tags");
+    expect(tagPath("C++")).toBe("/blog/tags/C%2B%2B");
+    expect(tagPath("网页设计")).toBe(
+      "/blog/tags/%E7%BD%91%E9%A1%B5%E8%AE%BE%E8%AE%A1",
     );
-    expect(tagListingPath("zh", "Astro", 2)).toBe(
+    expect(tagListingPath("Astro", 2)).toBe(
       "/blog/tags/Astro/page/2",
     );
   });
@@ -55,59 +49,53 @@ describe("route configuration", () => {
   it("selects the matching blog sidebar section", () => {
     expect(getBlogSectionFromPath("/blog")).toBe("posts");
     expect(getBlogSectionFromPath("/blog/page/2")).toBe("posts");
-    expect(getBlogSectionFromPath("/en/blog/a-post")).toBe("posts");
+    expect(getBlogSectionFromPath("/blog/a-post")).toBe("posts");
     expect(getBlogSectionFromPath("/blog/tags")).toBe("tags");
-    expect(getBlogSectionFromPath("/en/blog/tags/C%2B%2B/page/2")).toBe(
+    expect(getBlogSectionFromPath("/blog/tags/C%2B%2B/page/2")).toBe(
       "tags",
     );
-    expect(getBlogSectionFromPath("/en/blog/search")).toBe("search");
+    expect(getBlogSectionFromPath("/blog/search")).toBe("search");
   });
 
   it.each([0, -1, 1.5])("rejects invalid pagination page %s", (page) => {
-    expect(() => listingPath("zh", "blog", page)).toThrow("positive integer");
-    expect(() => tagListingPath("zh", "Astro", page)).toThrow(
+    expect(() => listingPath("blog", page)).toThrow("positive integer");
+    expect(() => tagListingPath("Astro", page)).toThrow(
       "positive integer",
     );
   });
 });
 
 describe("about configuration", () => {
-  const localized = {
-    title: "About",
-    description: "A short introduction",
+  const about = {
+    title: "关于",
+    description: "简单介绍",
     sections: [
-      { id: "introduction", title: "Introduction", paragraphs: ["Hello"] },
+      { id: "introduction", title: "自我介绍", paragraphs: ["你好"] },
     ],
   };
 
-  it("requires complete Chinese and English content", () => {
-    expect(aboutSchema.parse({ zh: localized, en: localized }).zh.title).toBe(
-      "About",
-    );
-    expect(aboutSchema.safeParse({ zh: localized }).success).toBe(false);
+  it("accepts Chinese content without language wrappers", () => {
+    expect(aboutSchema.parse(about).title).toBe("关于");
+    expect(aboutSchema.safeParse({ ...about, zh: about }).success).toBe(false);
+    expect(aboutSchema.safeParse({ ...about, en: about }).success).toBe(false);
   });
 
   it("rejects duplicate, invalid, and empty sections", () => {
     const duplicate = {
-      ...localized,
-      sections: [...localized.sections, localized.sections[0]],
+      ...about,
+      sections: [...about.sections, about.sections[0]],
     };
-    expect(aboutSchema.safeParse({ zh: duplicate, en: localized }).success).toBe(
-      false,
-    );
+    expect(aboutSchema.safeParse(duplicate).success).toBe(false);
     expect(
       aboutSchema.safeParse({
-        zh: { ...localized, sections: [{ ...localized.sections[0], id: "Bad ID" }] },
-        en: localized,
+        ...about,
+        sections: [{ ...about.sections[0], id: "Bad ID" }],
       }).success,
     ).toBe(false);
     expect(
       aboutSchema.safeParse({
-        zh: {
-          ...localized,
-          sections: [{ ...localized.sections[0], paragraphs: [] }],
-        },
-        en: localized,
+        ...about,
+        sections: [{ ...about.sections[0], paragraphs: [] }],
       }).success,
     ).toBe(false);
   });

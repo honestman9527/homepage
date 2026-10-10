@@ -64,7 +64,6 @@ export function BlogSearch({ items, readLabel, labels }: Props) {
                   title={item.title}
                   description={item.description}
                   href={item.href}
-                  contentLang={item.lang}
                   date={item.date}
                   dateTime={item.dateTime}
                   tags={item.tags.map(({ label }) => label)}

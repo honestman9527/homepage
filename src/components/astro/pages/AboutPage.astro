@@ -1,42 +1,23 @@
 ---
-import type { Language } from "@/i18n/ui";
-import { languages } from "@/i18n/ui";
-import { otherLanguage, getTranslations } from "@/i18n/utils";
-import { routePath } from "@/i18n/routes";
+import { uiText as t } from "@/lib/ui";
 import { getAboutConfig, getSiteConfig } from "@/lib/site-config";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import Avatar from "@/components/astro/Avatar.astro";
 import { ProfileSummary } from "@/components/react/profile/ProfileSummary";
 import { SkillList } from "@/components/react/profile/SkillList";
 
-interface Props {
-  lang: Language;
-}
 
-const { lang } = Astro.props;
 const site = await getSiteConfig();
-const about = (await getAboutConfig())[lang];
-const profile = site.profile[lang];
-const other = otherLanguage(lang);
-const t = getTranslations(lang);
-const alternates = (["zh", "en"] as const).map((language) => ({
-  lang: language,
-  href: routePath(language, "about"),
-}));
+const about = await getAboutConfig();
+const profile = site.profile;
 ---
 
 <SidebarLayout
   activeNavId="about"
   title={`${about.title} — ${site.name}`}
   description={about.description}
-  languageLink={{
-    lang: other,
-    href: routePath(other, "about"),
-    label: languages[other],
-  }}
-  alternates={alternates}
 >
-  <main class="about-page" lang={lang}>
+  <main class="about-page">
     <ProfileSummary
       name={site.name}
       heading={about.title}

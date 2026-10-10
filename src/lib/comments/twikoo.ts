@@ -12,7 +12,7 @@ export async function mountTwikoo(options: CommentMountOptions) {
     el: options.container,
     envId: options.config.envId,
     path: options.path,
-    lang: options.lang === "zh" ? "zh-CN" : "en",
+    lang: "zh-CN",
     region: options.config.region,
   });
 }

@@ -22,21 +22,11 @@ describe("cover configuration", () => {
       src: "https://example.com/post.png",
       alt: "Post",
     };
-    const original: Cover = {
-      type: "image",
-      src: "https://example.com/original.png",
-      alt: "Original",
-    };
     const collection: Cover = { type: "topographic", palette: "teal" };
     const global: Cover = { type: "topographic", palette: "neutral" };
-    expect(resolveCover(article, original, collection, global)).toBe(article);
-    expect(resolveCover(undefined, original, collection, global)).toBe(
-      original,
-    );
-    expect(resolveCover(undefined, undefined, collection, global)).toBe(
-      collection,
-    );
-    expect(resolveCover(undefined, undefined, undefined, global)).toBe(global);
+    expect(resolveCover(article, collection, global)).toBe(article);
+    expect(resolveCover(undefined, collection, global)).toBe(collection);
+    expect(resolveCover(undefined, undefined, global)).toBe(global);
     expect(resolveCover({ type: "none" }, article)).toEqual({ type: "none" });
     expect(resolveCover()).toEqual({ type: "topographic" });
   });
@@ -79,38 +69,43 @@ describe("strict content schemas", () => {
   const blog = {
     title: "Title",
     description: "Description",
-    lang: "en",
-    translationKey: "article",
-    isOriginal: true,
+    slug: "article",
     pubDate: "2026-01-01",
   };
   it("rejects misspelled cover fields, empty content and invalid dates", () => {
+    const { slug: _slug, ...withoutSlug } = blog;
+    expect(blogSchema(image).safeParse(withoutSlug).success).toBe(false);
     const parsed = blogSchema(image).parse(blog);
     expect(parsed.pubDate).toBeInstanceOf(Date);
     expect(parsed.toc).toBe(true);
     expect(parsed.comments).toBe(true);
     for (const value of [
       { ...blog, corver: {} },
+      { ...blog, lang: "zh" },
+      { ...blog, translationKey: "article" },
+      { ...blog, isOriginal: true },
       { ...blog, title: " " },
       { ...blog, pubDate: "not a date" },
-      { ...blog, translationKey: "../escape" },
-      { ...blog, translationKey: "search" },
-      { ...blog, translationKey: "tags" },
-      { ...blog, translationKey: "page" },
+      { ...blog, slug: "../escape" },
+      { ...blog, slug: "search" },
+      { ...blog, slug: "tags" },
+      { ...blog, slug: "page" },
     ])
       expect(blogSchema(image).safeParse(value).success).toBe(false);
   });
-  it("requires the project's original translation and valid links", () => {
+  it("requires project content and valid links", () => {
     const project = {
       id: "demo",
-      originalLang: "en",
-      translations: { en: { title: "Demo", description: "Demo" } },
+      title: "项目",
+      description: "简介",
       href: "https://example.com",
       year: 2026,
     };
     expect(projectSchema(image).parse(project).featured).toBe(false);
+    for (const legacy of [{ originalLang: "zh" }, { translations: { zh: { title: "项目", description: "简介" } } }])
+      expect(projectSchema(image).safeParse({ ...project, ...legacy }).success).toBe(false);
     expect(
-      projectSchema(image).safeParse({ ...project, originalLang: "zh" })
+      projectSchema(image).safeParse({ ...project, title: " " })
         .success,
     ).toBe(false);
     expect(
@@ -132,9 +127,15 @@ describe("strict content schemas", () => {
       avatar: "https://example.com/avatar.png",
       email: "me@example.com",
       social: [],
-      profile: { zh: profile, en: profile },
+      profile,
       skills: [],
     };
+    expect(
+      siteSchema(image).safeParse({ ...site, profile: { ...profile, zh: profile } }).success,
+    ).toBe(false);
+    expect(
+      siteSchema(image).safeParse({ ...site, profile: { ...profile, en: profile } }).success,
+    ).toBe(false);
     const parsed = siteSchema(image).parse(site);
     expect(parsed.listing.blog.pageSize).toBe(6);
     expect(parsed.navigation).toEqual(["home", "projects", "blog", "about"]);

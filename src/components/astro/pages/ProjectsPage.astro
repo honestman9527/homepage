@@ -1,10 +1,9 @@
 ---
-import type { Language } from "@/i18n/ui";
 import type { ProjectItem } from "@/lib/content/projects";
 import { getProjectPage } from "@/lib/content/projects";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import { getSiteConfig } from "@/lib/site-config";
-import { getTranslations } from "@/i18n/utils";
+import { uiText as t } from "@/lib/ui";
 import { resolveCover } from "@/lib/content/cover";
 import { ProjectCard } from "@/components/react/content/ProjectCard";
 import Cover from "@/components/astro/content/Cover.astro";
@@ -12,7 +11,6 @@ import ListingFooter from "@/components/astro/content/ListingFooter.astro";
 import { ListingEmpty } from "@/components/react/content/ListingEmpty";
 
 interface Props {
-  lang: Language;
   page?: {
     items: ProjectItem[];
     currentPage: number;
@@ -20,10 +18,8 @@ interface Props {
   };
 }
 
-const { lang } = Astro.props;
-const page = Astro.props.page ?? (await getProjectPage(lang));
+const page = Astro.props.page ?? (await getProjectPage());
 const site = await getSiteConfig();
-const t = getTranslations(lang);
 const suffix = page.currentPage > 1
   ? ` · ${t("pagination.page", { page: page.currentPage })}`
   : "";
@@ -53,11 +49,9 @@ const suffix = page.currentPage > 1
               description={project.description}
               href={project.data.href}
               demoHref={project.data.demoHref}
-              contentLang={project.contentLang}
               year={project.data.year}
               tags={project.data.tags}
               featured={project.data.featured}
-              originalLabel={project.originalLabel}
               featuredLabel={t("projects.featured")}
               visitLabel={t("projects.visit")}
               demoLabel={t("projects.liveDemo")}
@@ -84,7 +78,6 @@ const suffix = page.currentPage > 1
     <ListingFooter
       currentPage={page.currentPage}
       totalPages={page.totalPages}
-      lang={lang}
       kind="projects"
     />
   </main>

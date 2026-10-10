@@ -10,7 +10,6 @@ import {
 import { Badge } from "@/components/react/ui/badge";
 import { Button } from "@/components/react/ui/button";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
-import type { Language } from "@/i18n/ui";
 import { ContentTags } from "./ContentTags";
 interface Props {
   title: string;
@@ -23,8 +22,6 @@ interface Props {
   featuredLabel: string;
   visitLabel: string;
   demoLabel: string;
-  contentLang: Language;
-  originalLabel?: string;
   cover?: ReactNode;
   hasCover: boolean;
 }
@@ -39,8 +36,6 @@ export function ProjectCard({
   featuredLabel,
   visitLabel,
   demoLabel,
-  contentLang,
-  originalLabel,
   cover,
   hasCover,
 }: Props) {
@@ -52,10 +47,9 @@ export function ProjectCard({
           <div className="card-meta">
             <span>{year}</span>
             {featured && <Badge variant="secondary">{featuredLabel}</Badge>}
-            {originalLabel && <Badge variant="outline">{originalLabel}</Badge>}
           </div>
           <CardTitle>
-            <h2 lang={contentLang}>
+            <h2>
               <a
                 className="card-title-link"
                 href={href}
@@ -67,7 +61,7 @@ export function ProjectCard({
             </h2>
           </CardTitle>
           <CardDescription>
-            <p lang={contentLang}>{description}</p>
+            <p>{description}</p>
           </CardDescription>
         </CardHeader>
         <CardContent>

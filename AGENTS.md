@@ -31,7 +31,7 @@ pn dev stop
 - 页面与静态内容由 Astro 组织；只有需要持久交互状态的功能使用 React 岛。
 - 没有交互的 React 组件不添加 `client:*`，博客搜索只在搜索页水合。
 - `src/content/` 仅存放博客 Markdown/MDX；站点、About 与项目配置放在 `src/data/`，统一通过 Content Collections 和 Zod schema 加载。
-- 中文使用无前缀路由，英文使用 `/en`；路径通过 `src/i18n/routes.ts` 生成，不在组件中拼接重复路由规则。
+- 站点仅提供中文、使用无前缀路由；路径通过 `src/config/routes.ts` 生成，不在组件中拼接重复路由规则。
 - 博客和项目逻辑分别维护在 `src/lib/content/` 对应模块中，共享逻辑才提取为独立模块。
 - 使用现有 shadcn/ui 基础组件及项目 token，不裁剪其公共 API，不为静态展示增加新的客户端状态。
 
@@ -42,7 +42,7 @@ pn dev stop
 - 使用 TypeScript 严格模式和 `@/` 路径别名。
 - 优先直接导入实际模块，避免仅做转发的入口和单用途抽象。
 - 新增配置必须同步更新 schema、示例数据和对应文档；未知字段应继续在构建期报错。
-- 新增页面或动态路由时，同时检查中英文入口、canonical、hreflang 和语言切换行为。
+- 新增页面或动态路由时，检查公开入口、canonical 和内部链接；不生成英文路由或 hreflang。
 - 不增加依赖来解决已有平台能力可以完成的问题。
 
 ## 验证
@@ -59,4 +59,3 @@ pn dev stop
 - [框架组件与客户端指令](https://docs.astro.build/en/guides/framework-components/)
 - [Content Collections](https://docs.astro.build/en/guides/content-collections/)
 - [样式](https://docs.astro.build/en/guides/styling/)
-- [国际化](https://docs.astro.build/en/guides/internationalization/)

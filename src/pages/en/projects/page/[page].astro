@@ -1,8 +1,0 @@
----
-import type { InferGetStaticPropsType } from "astro";
-import Page from "@/components/astro/pages/ProjectsPage.astro";
-import { getProjectListingPaths } from "@/lib/content/projects";
-export async function getStaticPaths() { return getProjectListingPaths("en"); }
-type Props = InferGetStaticPropsType<typeof getStaticPaths>;
----
-<Page lang="en" page={Astro.props.page} />

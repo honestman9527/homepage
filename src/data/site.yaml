@@ -37,16 +37,11 @@ site:
       label: X
       url: https://x.com
 
-  # zh 和 en 都是必填项，每种语言都需要三个字段。
+  # 中文资料。
   profile:
-    zh:
-      availability: 接受新项目委托
-      bio: 开发者，构建界面、工具与偶尔的实验。
-      location: 互联网 · 远程
-    en:
-      availability: Available for new projects
-      bio: A developer crafting interfaces, tools, and the occasional experiment.
-      location: The internet · Remote
+    availability: 接受新项目委托
+    bio: 开发者，构建界面、工具与偶尔的实验。
+    location: 互联网 · 远程
 
   # 技能按数组顺序显示。
   skills: [TypeScript, React, Astro, Tailwind CSS, Node.js, Rust, Python, PostgreSQL, Docker, GraphQL]

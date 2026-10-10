@@ -1,4 +1,3 @@
-import type { Language } from "@/i18n/ui";
 import { mountComments } from "./runtime";
 import type {
   ActiveCommentsConfig,
@@ -34,7 +33,6 @@ function initializeCommentsRoot(root: HTMLElement): (() => void) | undefined {
 
   const { target, loading, error, retry } = elements;
   const path = root.dataset.commentsPath ?? window.location.pathname;
-  const lang = (root.dataset.commentsLang ?? "zh") as Language;
   let state: CommentsState = "idle";
   let observer: IntersectionObserver | undefined;
   let providerCleanup: CommentCleanup;
@@ -63,7 +61,6 @@ function initializeCommentsRoot(root: HTMLElement): (() => void) | undefined {
       providerCleanup = await mountComments({
         container: target,
         path,
-        lang,
         config,
       });
 

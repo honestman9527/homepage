@@ -1,31 +1,64 @@
 ---
-lang: en
-isOriginal: true
-translationKey: designing-this-homepage
-title: "Designing this homepage, take one"
-description: "Placeholder post about the making of this site — the stack, the layout, and what I want it to become."
+slug: designing-this-homepage
+title: "设计这个个人主页：第一版"
+description: "从 Astro 与 React 的边界出发，记录这个个人站如何组织内容、交互和路由。"
 pubDate: 2026-08-24
-tags: ["meta", "design"]
+updatedDate: 2026-09-13
+toc: true
+comments: true
+tags: [Astro, React, 设计]
 ---
 
-This is a placeholder post. Replace it with real writing about how this
-homepage came together.
+个人主页最难处理的部分通常不是首页，而是不断增长之后仍然保持清楚。文章、项目和交互状态会逐渐叠在一起；如果它们没有明确边界，一次普通的改版也会牵动整个站点。
 
-## Why a sidebar layout
+## 为什么保留侧栏
 
-A short paragraph explaining the choice: navigation stays in one place, the
-content column stays narrow and readable, and every page shares the same
-frame. The sidebar collapses to icons on desktop and becomes a sheet on
-mobile.
+这个站点把侧栏当作稳定坐标。导航始终位于同一个位置，正文则保持适合阅读的宽度。进入文章后，右侧大纲成为第二条坐标轴：左边回答“我在哪里”，右边回答“我读到哪里”。
 
-## The stack
+### 阅读轨迹应该固定在内容旁边
 
-- Astro for static output and zero-JS-by-default pages
-- React islands for the interactive shell — sidebar, theme toggle, motion
-- Tailwind CSS v4 with a small set of custom tokens
+目录不是装饰，也不需要跟随正文一起消失。桌面端让它停留在视口内，可以快速判断文章结构；移动端空间有限，同一份标题数据会折叠到原生 `<details>` 中。即使关闭 JavaScript，目录链接仍然可以跳到对应章节。
 
-## What's next
+## Astro 与 React 的边界
 
-Another short paragraph. Maybe a list of things you plan to add: more
-writing, real project write-ups, an RSS feed. This section exists so the
-post has enough body to test typography and spacing.
+我采用的规则很简单：构建期能够确定的内容交给 Astro，需要持续交互状态的部分才交给 React。
+
+| 职责 | 实现位置 | 原因 |
+| --- | --- | --- |
+| Markdown 正文与大纲 | Astro | 构建期即可生成，禁用 JavaScript 仍可阅读 |
+| 路由、排序和相邻文章 | Astro | 数据来自 Content Collections |
+| 侧栏、移动菜单和主题 | React | 需要共享和恢复客户端状态 |
+| 评论客户端 | 原生动态模块 | 仅在接近评论区时加载 |
+
+这种拆分让文章页面只保留一个 React 水合根。Card、Badge 和分页可以继续使用 shadcn 的组合方式，但只输出静态 HTML。
+
+### 一个稳定的数据入口
+
+页面不直接读取 YAML，也不自己查询集合。配置先经过 schema，内容再经过草稿过滤与排序，最后才成为组件 props：
+
+```ts title="src/lib/content/example.ts" showLineNumbers {3}
+const items = selectBlog(posts)
+const published = items.map(({ post }) => post)
+const page = pageSlice(published, 6)
+```
+
+这样做带来几个可以检查的约束：
+
+- [x] 每篇文章有唯一且稳定的 slug
+- [x] 列表只收录已发布的文章
+- [x] 文章自身的发布日期决定列表顺序
+- [ ] 为每篇正式文章补齐经过审校的正文
+
+## 稳定标识连接页面与讨论
+
+文章使用必填 `slug` 生成公开地址，文件名可以自由调整。列表、标签页、搜索和相邻文章使用同一份已发布内容，草稿不会出现在这些入口中。
+
+评论使用 `/blog/{slug}` 作为稳定路径，因此整理内容文件时可以保留已有讨论。评论界面统一使用中文。[^comment-language]
+
+> 路由表达内容关系，组件只负责把已经确定的关系展示出来。
+
+## 接下来
+
+第一版先把信息架构固定下来：导航负责站点位置，大纲负责文章位置，内容集合负责内容关系。以后增加 RSS、系列文章或搜索时，都可以继续沿用这条单向数据流，而不必重新拆分页面。
+
+[^comment-language]: Waline 和 Twikoo 的客户端语言都固定为 `zh-CN`。

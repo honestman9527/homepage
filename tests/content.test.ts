@@ -1,149 +1,66 @@
-import { describe, expect, it } from "vitest";
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getCollection } from "astro:content";
-
 vi.mock("astro:content", () => ({ getCollection: vi.fn() }));
-vi.mock("astro:i18n", () => ({
-  getRelativeLocaleUrl: (lang: "zh" | "en", path = "") => {
-    const suffix = path ? `/${path}` : "";
-    return lang === "zh" ? suffix || "/" : `/en${suffix}`;
-  },
+vi.mock("../src/lib/site-config", () => ({
+  getSiteConfig: async () => ({ listing: { blog: { pageSize: 2 } } }),
 }));
 import {
-  groupBlog,
-  getBlogPaths,
-  getAdjacentItems,
-  normalizeTags,
-  selectBlog,
-  type BlogEntry,
+  getBlogPaths, getBlogListingPaths, getBlogTagPaths, getBlogTags, getBlogItems,
+  getAdjacentItems, normalizeTags, selectBlog, type BlogEntry,
 } from "../src/lib/content/blog";
-import {
-  selectProjects,
-  type ProjectEntry,
-} from "../src/lib/content/projects";
+import { selectProjects, type ProjectEntry } from "../src/lib/content/projects";
 import { pageSlice, pageNumbers } from "../src/lib/content/pagination";
 import { estimateReadingMinutes } from "../src/lib/content/reading";
 import { searchBlogItems } from "../src/lib/content/search";
-import {
-  formatDate,
-  getLangFromUrl,
-  getTranslations,
-  normalizePath,
-} from "../src/i18n/utils";
+import { formatDate, uiText } from "../src/lib/ui";
 import { commentPath } from "../src/lib/comments/runtime";
-function post(
-  key: string,
-  lang: "zh" | "en" = "en",
-  original = true,
-  draft = false,
-  date = "2026-01-01",
-): BlogEntry {
-  return {
-    id: `${key}-${lang}`,
-    collection: "blog",
-    data: {
-      translationKey: key,
-      lang,
-      isOriginal: original,
-      draft,
-      title: key,
-      description: key,
-      pubDate: new Date(date),
-      tags: [],
-      toc: true,
-      comments: true,
-    },
-  };
+function post(key: string, draft = false, date = "2026-01-01", tags: string[] = []): BlogEntry {
+  return { id: key, collection: "blog", data: {
+    slug: key, draft, title: key, description: key, pubDate: new Date(date),
+    tags, toc: true, comments: true,
+  } };
 }
 
-describe("translation groups", () => {
-  it("lists only published posts in the requested language, with original date ordering", () => {
-    const groups = groupBlog([
-      post("b"),
-      post("a"),
-      post("a", "zh", false, false, "2026-09-01"),
-    ]);
-    expect(
-      selectBlog(groups, "zh").map((item) => [item.key, item.post.data.lang]),
-    ).toEqual([["a", "zh"]]);
-    expect(selectBlog(groups, "en").map((item) => item.key)).toEqual([
-      "a",
-      "b",
-    ]);
+describe("Chinese blog content", () => {
+  it("filters drafts and sorts by each post's date, then slug", () => {
+    const source = [post("b"), post("a"), post("newest", false, "2026-09-01"), post("private", true)];
+    expect(selectBlog(source).map(({ key }) => key)).toEqual(["newest", "a", "b"]);
+    expect(source.map(({ id }) => id)).toEqual(["b", "a", "newest", "private"]);
   });
-  it("omits draft translations and entire groups with draft originals", () => {
-    const groups = groupBlog([
-      post("published"),
-      post("published", "zh", false, true),
-      post("private", "en", true, true),
-      post("private", "zh", false),
-    ]);
-    expect(selectBlog(groups, "zh")).toEqual([]);
-    expect(selectBlog(groups, "en").map((item) => item.key)).toEqual([
-      "published",
-    ]);
+  it("rejects duplicate slugs including drafts", () => {
+    expect(() => selectBlog([post("a"), post("a", true)])).toThrow("Duplicate blog slug");
   });
-  it("rejects duplicate locales and invalid original associations", () => {
-    expect(() => groupBlog([post("a"), post("a")])).toThrow("Duplicate");
-    expect(() => groupBlog([post("a"), post("a", "zh")])).toThrow(
-      "exactly one original",
-    );
-    expect(() => groupBlog([post("a", "zh", false)])).toThrow(
-      "exactly one original",
-    );
+  it("generates only published article paths and correct adjacent links", async () => {
+    vi.mocked(getCollection).mockResolvedValue([post("older"), post("newer", false, "2026-02-01"), post("draft", true)]);
+    const paths = await getBlogPaths();
+    expect(paths.map(({ params }) => params.id)).toEqual(["newer", "older"]);
+    expect(paths[0].props.navigation).toEqual({ older: { href: "/blog/older", title: "older" }, newer: undefined });
+    expect(Object.keys(paths[0].props).sort()).toEqual(["navigation", "post"]);
+    expect(getAdjacentItems([{ key: "only" }], "only")).toEqual({ older: undefined, newer: undefined });
+    expect(() => getAdjacentItems([], "missing")).toThrow("Missing current item");
   });
-  it("generates article routes and alternates only for published languages", async () => {
+  it("counts published tags and generates only nonempty later pages", async () => {
     vi.mocked(getCollection).mockResolvedValue([
-      post("english-only"),
-      post("paired"),
-      post("paired", "zh", false),
+      post("a", false, "2026-01-01", ["C++", "C++"]), post("b", false, "2026-01-02", ["C++"]),
+      post("c", false, "2026-01-03", ["C++", "中文"]), post("draft", true, "2026-01-04", ["private"]),
     ]);
-
-    const chinesePaths = await getBlogPaths("zh");
-    expect(chinesePaths.map(({ params }) => params.id)).toEqual(["paired"]);
-    expect(chinesePaths[0].props.languageLink.href).toBe("/en/blog/paired");
-
-    const englishPaths = await getBlogPaths("en");
-    expect(englishPaths.map(({ params }) => params.id)).toEqual([
-      "english-only",
-      "paired",
-    ]);
-    expect(englishPaths[0].props.languageLink.href).toBeUndefined();
-    expect(englishPaths[0].props.alternates).toEqual([
-      { lang: "en", href: "/en/blog/english-only" },
-    ]);
+    expect(await getBlogListingPaths()).toMatchObject([{ params: { page: "2" }, props: { page: { currentPage: 2, totalPages: 2 } } }]);
+    const tags = getBlogTags(await getBlogItems());
+    expect(tags.find(({ name }) => name === "C++")).toEqual({ name: "C++", count: 3, href: "/blog/tags/C%2B%2B" });
+    expect(tags.map(({ name }) => name)).not.toContain("private");
+    expect(await getBlogTagPaths(true)).toMatchObject([{ params: { tag: "C++", page: "2" }, props: { page: { items: [{ key: "a" }] } } }]);
+    vi.mocked(getCollection).mockResolvedValue([]);
+    expect(await getBlogListingPaths()).toEqual([]);
+    expect(await getBlogTagPaths()).toEqual([]);
   });
-  it("selects project translations while retaining shared links", () => {
-    const project: ProjectEntry = {
-      id: "a",
-      collection: "projects",
-      data: {
-        id: "a",
-        originalLang: "en",
-        translations: {
-          en: { title: "Original", description: "English" },
-          zh: { title: "译文", description: "中文" },
-        },
-        href: "https://example.com/repo",
-        demoHref: "https://example.com/demo",
-        year: 2026,
-        featured: false,
-        tags: [],
-      },
-    };
-    expect(selectProjects([project], "zh")[0]).toMatchObject({
-      title: "译文",
-      contentLang: "zh",
-      data: {
-        href: "https://example.com/repo",
-        demoHref: "https://example.com/demo",
-      },
-    });
-    delete project.data.translations.zh;
-    expect(selectProjects([project], "zh")[0]).toMatchObject({
-      title: "Original",
-      contentLang: "en",
-    });
+  it("sorts projects while retaining Chinese content and shared links", () => {
+    const project: ProjectEntry = { id: "a", collection: "projects", data: {
+      id: "a", title: "项目", description: "中文简介", href: "https://example.com/repo",
+      demoHref: "https://example.com/demo", year: 2026, featured: false, tags: [],
+    } };
+    const older: ProjectEntry = { ...project, id: "b", data: { ...project.data, id: "b", year: 2025 } };
+    expect(selectProjects([older, project]).map(({ id }) => id)).toEqual(["a", "b"]);
+    expect(selectProjects([project])[0]).toMatchObject({ title: "项目", description: "中文简介", data: { href: "https://example.com/repo", demoHref: "https://example.com/demo" } });
   });
 });
 
@@ -217,42 +134,6 @@ describe("pagination", () => {
 });
 
 describe("article reading model", () => {
-  it("returns newer and older entries from the shared stable order", () => {
-    const selected = selectBlog(
-      groupBlog([
-        post("older", "en", true, false, "2026-01-01"),
-        post("middle", "en", true, false, "2026-02-01"),
-        post("middle", "zh", false, false, "2026-02-02"),
-        post("newer", "en", true, false, "2026-03-01"),
-      ]),
-      "en",
-    );
-    expect(selected.map(({ key }) => key)).toEqual(["newer", "middle", "older"]);
-    expect(getAdjacentItems(selected, "middle")).toMatchObject({
-      newer: { key: "newer", post: { data: { lang: "en" } } },
-      older: { key: "older", post: { data: { lang: "en" } } },
-    });
-    expect(getAdjacentItems(selected, "newer").newer).toBeUndefined();
-    expect(getAdjacentItems(selected, "older").older).toBeUndefined();
-    expect(
-      selectBlog(
-        groupBlog([
-          post("older", "en", true, false, "2026-01-01"),
-          post("middle", "en", true, false, "2026-02-01"),
-          post("middle", "zh", false, false, "2026-02-02"),
-        ]),
-        "zh",
-      ).map(({ key }) => key),
-    ).toEqual(["middle"]);
-    expect(getAdjacentItems([{ key: "only" }], "only")).toEqual({
-      newer: undefined,
-      older: undefined,
-    });
-    expect(() => getAdjacentItems(selected, "missing")).toThrow(
-      "Missing current item",
-    );
-  });
-
   it("estimates Chinese, English and mixed reading time without fenced code", () => {
     expect(estimateReadingMinutes("")).toBe(1);
     expect(estimateReadingMinutes("字".repeat(300))).toBe(1);
@@ -271,25 +152,15 @@ describe("article reading model", () => {
     ).toBe(1);
   });
 
-  it("uses one stable comment identifier for every translation", () => {
+  it("uses one stable comment identifier for the article slug", () => {
     expect(commentPath("same-article")).toBe("/blog/same-article");
   });
 });
 
-describe("locale utilities", () => {
-  it("normalizes slash differences and only recognizes a complete language segment", () => {
-    expect(normalizePath("/en/")).toBe("/en");
-    expect(normalizePath("/")).toBe("/");
-    for (const path of ["/en", "/en/", "/en/blog/page/2"])
-      expect(getLangFromUrl(new URL(path, "https://example.com"))).toBe("en");
-    expect(getLangFromUrl(new URL("https://example.com/english"))).toBe("zh");
-  });
-  it("localizes pagination and fixes dates to UTC", () => {
-    expect(
-      getTranslations("zh")("pagination.summary", { page: 2, total: 3 }),
-    ).toBe("第 2 / 3 页");
-    expect(formatDate(new Date("2026-01-01T00:00:00Z"), "en")).toBe(
-      "January 1, 2026",
-    );
+
+describe("Chinese UI text", () => {
+  it("interpolates pagination and formats Chinese dates in UTC", () => {
+    expect(uiText("pagination.summary", { page: 2, total: 3 })).toBe("第 2 / 3 页");
+    expect(formatDate(new Date("2026-01-01T00:00:00Z"))).toBe("2026年1月1日");
   });
 });

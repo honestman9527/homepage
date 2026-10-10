@@ -13,7 +13,7 @@ export async function mountWaline(options: CommentMountOptions) {
     el: options.container,
     serverURL: options.config.serverURL,
     path: options.path,
-    lang: options.lang === "zh" ? "zh-CN" : "en-US",
+    lang: "zh-CN",
     dark: "html.dark",
     pageSize: options.config.pageSize,
     login: options.config.login,

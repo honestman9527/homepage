@@ -1,8 +1,6 @@
 ---
 import { render } from "astro:content";
 import type { BlogEntry, ArticleNavigation } from "@/lib/content/blog";
-import type { LanguageLink } from "@/i18n/types";
-import type { Language } from "@/i18n/ui";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
 import { ArticleHeader } from "@/components/react/content/ArticleHeader";
 import Cover from "@/components/astro/content/Cover.astro";
@@ -11,28 +9,21 @@ import ArticleAfterword from "@/components/astro/blog/ArticleAfterword.astro";
 import { resolveCover } from "@/lib/content/cover";
 import { estimateReadingMinutes } from "@/lib/content/reading";
 import { normalizeTags } from "@/lib/content/blog";
-import { tagPath } from "@/i18n/routes";
+import { tagPath } from "@/config/routes";
 import { getSiteConfig } from "@/lib/site-config";
 import { commentPath, resolveCommentsConfig } from "@/lib/comments/runtime";
-import { formatDate, getTranslations } from "@/i18n/utils";
+import { formatDate, uiText as t } from "@/lib/ui";
 
 interface Props {
   post: BlogEntry;
-  original: BlogEntry;
-  lang: Language;
-  languageLink: LanguageLink;
-  alternates: { lang: Language; href: string }[];
   navigation: ArticleNavigation;
 }
 
-const { post, original, lang, languageLink, alternates, navigation } =
-  Astro.props;
+const { post, navigation } = Astro.props;
 const { Content, headings } = await render(post);
 const site = await getSiteConfig();
-const t = getTranslations(lang);
 const cover = resolveCover(
   post.data.cover,
-  original.data.cover,
   site.listing.blog.defaultCover,
   site.covers.default,
 );
@@ -45,36 +36,32 @@ const tags = normalizeTags(post.data.tags);
   activeNavId="blog"
   title={`${post.data.title} — ${site.name}`}
   description={post.data.description}
-  languageLink={languageLink}
-  alternates={alternates}
   article={{
-    published: original.data.pubDate,
+    published: post.data.pubDate,
     updated: post.data.updatedDate,
   }}
 >
   <MarkdownDocument
     headings={headings}
-    lang={post.data.lang}
     toc={post.data.toc}
     tocLabel={t("blog.toc")}
     showProgress
   >
     <ArticleHeader
       slot="header"
-      lang={post.data.lang}
       title={post.data.title}
       description={post.data.description}
       tags={tags}
-      tagHrefs={tags.map((tag) => tagPath(post.data.lang, tag))}
+      tagHrefs={tags.map((tag) => tagPath(tag))}
       published={{
-        label: formatDate(original.data.pubDate, lang),
-        dateTime: original.data.pubDate.toISOString(),
+        label: formatDate(post.data.pubDate),
+        dateTime: post.data.pubDate.toISOString(),
       }}
       readingTime={t("blog.readingTime", { minutes: readingMinutes })}
       updated={post.data.updatedDate
         ? {
             prefix: t("common.updated"),
-            label: formatDate(post.data.updatedDate, lang),
+            label: formatDate(post.data.updatedDate),
             dateTime: post.data.updatedDate.toISOString(),
           }
         : undefined}
@@ -83,7 +70,7 @@ const tags = normalizeTags(post.data.tags);
     <Cover
       slot="cover"
       cover={cover}
-      contentKey={post.data.translationKey}
+      contentKey={post.data.slug}
       options={site.covers.topographic}
       aspectRatio={site.covers.aspectRatio}
       eager
@@ -95,8 +82,7 @@ const tags = normalizeTags(post.data.tags);
       slot="afterword"
       navigation={navigation}
       commentsConfig={commentsConfig}
-      commentsPath={commentPath(post.data.translationKey)}
-      lang={post.data.lang}
+      commentsPath={commentPath(post.data.slug)}
       labels={{
         older: t("blog.olderPost"),
         newer: t("blog.newerPost"),

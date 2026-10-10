@@ -8,7 +8,6 @@ import {
   CardFooter,
 } from "@/components/react/ui/card";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
-import type { Language } from "@/i18n/ui";
 import { ContentTags } from "./ContentTags";
 interface Props {
   title: string;
@@ -18,7 +17,6 @@ interface Props {
   dateTime: string;
   tags: readonly string[];
   tagHrefs?: readonly string[];
-  contentLang: Language;
   readLabel: string;
   cover?: ReactNode;
   hasCover: boolean;
@@ -31,7 +29,6 @@ export function BlogCard({
   dateTime,
   tags,
   tagHrefs,
-  contentLang,
   readLabel,
   cover,
   hasCover,
@@ -42,14 +39,14 @@ export function BlogCard({
         {cover}
         <CardHeader>
           <CardTitle>
-            <h2 lang={contentLang}>
+            <h2>
               <a className="card-title-link" href={href}>
                 {title}
               </a>
             </h2>
           </CardTitle>
           <CardDescription>
-            <p lang={contentLang}>{description}</p>
+            <p>{description}</p>
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -1,27 +1,13 @@
 import { getCollection, type CollectionEntry } from "astro:content";
-import type { Language } from "../../i18n/types";
-import {
-  blogPath,
-  tagListingPath,
-  tagPath,
-  tagsPath,
-} from "../../i18n/routes";
-import { getTranslations, otherLanguage } from "../../i18n/utils";
+import { blogPath, tagPath } from "../../config/routes";
 import { getSiteConfig } from "../site-config";
 import { pageSlice } from "./pagination";
 
 export type BlogEntry = CollectionEntry<"blog">;
 
-export interface BlogGroup {
-  key: string;
-  original: BlogEntry;
-  variants: BlogEntry[];
-}
-
 export interface ArticleNavigationItem {
   href: string;
   title: string;
-  lang: Language;
 }
 
 export interface ArticleNavigation {
@@ -34,7 +20,6 @@ export interface BlogSearchItem {
   title: string;
   description: string;
   href: string;
-  lang: Language;
   date: string;
   dateTime: string;
   tags: { label: string; href: string }[];
@@ -44,40 +29,21 @@ export function normalizeTags(tags: readonly string[]): string[] {
   return [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))];
 }
 
-export function groupBlog(posts: BlogEntry[]): BlogGroup[] {
-  const groups = new Map<string, BlogEntry[]>();
+export function selectBlog(posts: BlogEntry[]) {
+  const keys = new Set<string>();
   for (const post of posts) {
-    const group = groups.get(post.data.translationKey) ?? [];
-    if (group.some((entry) => entry.data.lang === post.data.lang))
-      throw new Error(
-        `Duplicate blog translation: ${post.data.translationKey}/${post.data.lang}`,
-      );
-    group.push(post);
-    groups.set(post.data.translationKey, group);
+    if (keys.has(post.data.slug))
+      throw new Error(`Duplicate blog slug: ${post.data.slug}`);
+    keys.add(post.data.slug);
   }
-
-  return [...groups]
-    .map(([key, variants]) => {
-      const originals = variants.filter((post) => post.data.isOriginal);
-      if (originals.length !== 1)
-        throw new Error(`Blog group ${key} must have exactly one original`);
-      return { key, original: originals[0], variants };
-    })
-    .filter((group) => !group.original.data.draft)
+  return posts
+    .filter((post) => !post.data.draft)
     .sort(
       (a, b) =>
-        b.original.data.pubDate.getTime() - a.original.data.pubDate.getTime() ||
-        compareId(a.key, b.key),
-    );
-}
-
-export function selectBlog(groups: BlogGroup[], lang: Language) {
-  return groups.flatMap((group) => {
-    const post = group.variants.find(
-      (variant) => variant.data.lang === lang && !variant.data.draft,
-    );
-    return post ? [{ ...group, post }] : [];
-  });
+        b.data.pubDate.getTime() - a.data.pubDate.getTime() ||
+        compareId(a.data.slug, b.data.slug),
+    )
+    .map((post) => ({ key: post.data.slug, post }));
 }
 
 export function getAdjacentItems<T extends { key: string }>(
@@ -92,134 +58,84 @@ export function getAdjacentItems<T extends { key: string }>(
   };
 }
 
-export async function getBlogItems(lang: Language) {
-  return selectBlog(groupBlog(await getCollection("blog")), lang).map((item) => ({
+export async function getBlogItems() {
+  return selectBlog(await getCollection("blog")).map((item) => ({
     ...item,
-    href: blogPath(lang, item.key),
+    href: blogPath(item.key),
     tags: normalizeTags(item.post.data.tags),
   }));
 }
 
 export type BlogItem = Awaited<ReturnType<typeof getBlogItems>>[number];
 
-export async function getBlogPage(lang: Language, currentPage = 1) {
+export async function getBlogPage(currentPage = 1) {
   const site = await getSiteConfig();
-  return pageSlice(await getBlogItems(lang), site.listing.blog.pageSize, currentPage);
+  return pageSlice(await getBlogItems(), site.listing.blog.pageSize, currentPage);
 }
 
-export async function getBlogListingPaths(lang: Language) {
+export async function getBlogListingPaths() {
   const site = await getSiteConfig();
-  const items = await getBlogItems(lang);
+  const items = await getBlogItems();
   const first = pageSlice(items, site.listing.blog.pageSize);
   return Array.from(
     { length: first.totalPages - 1 },
     (_, index) => index + 2,
   ).map((currentPage) => ({
-        params: { page: String(currentPage) },
-        props: {
-          page: pageSlice(items, site.listing.blog.pageSize, currentPage),
-        },
-      }));
+    params: { page: String(currentPage) },
+    props: {
+      page: pageSlice(items, site.listing.blog.pageSize, currentPage),
+    },
+  }));
 }
 
-export function getBlogTags(items: BlogItem[], lang: Language) {
+export function getBlogTags(items: BlogItem[]) {
   const counts = new Map<string, number>();
   for (const item of items)
     for (const tag of item.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
   return [...counts]
-    .sort(([a], [b]) => a.localeCompare(b, lang))
-    .map(([name, count]) => ({ name, count, href: tagPath(lang, name) }));
+    .sort(([a], [b]) => a.localeCompare(b, "zh-CN"))
+    .map(([name, count]) => ({ name, count, href: tagPath(name) }));
 }
 
 export function filterBlogByTag(items: BlogItem[], tag: string): BlogItem[] {
   return items.filter((item) => item.tags.includes(tag));
 }
 
-export async function getBlogTagPaths(lang: Language, paginated = false) {
+export async function getBlogTagPaths(paginated = false) {
   const site = await getSiteConfig();
-  const items = await getBlogItems(lang);
-  const other = otherLanguage(lang);
-  const otherItems = await getBlogItems(other);
-  const tags = getBlogTags(items, lang);
-  const paths = tags.flatMap(({ name }) => {
-    const totalPages = pageSlice(
-      filterBlogByTag(items, name),
-      site.listing.blog.pageSize,
-    ).totalPages;
+  const items = await getBlogItems();
+  return getBlogTags(items).flatMap(({ name }) => {
+    const matches = filterBlogByTag(items, name);
+    const totalPages = pageSlice(matches, site.listing.blog.pageSize).totalPages;
     const pages = paginated
       ? Array.from({ length: totalPages - 1 }, (_, index) => index + 2)
       : [1];
-    const matches = filterBlogByTag(items, name);
-    const otherMatches = filterBlogByTag(otherItems, name);
-    const otherTotalPages = otherMatches.length
-      ? pageSlice(otherMatches, site.listing.blog.pageSize).totalPages
-      : 0;
     return pages.map((currentPage) => ({
-        params: {
-          tag: name,
-          ...(paginated ? { page: String(currentPage) } : {}),
-        },
-        props: {
-          tag: name,
-          page: pageSlice(matches, site.listing.blog.pageSize, currentPage),
-          languageHref: otherMatches.length
-            ? tagListingPath(other, name, Math.min(currentPage, otherTotalPages))
-            : tagsPath(other),
-        },
-      }));
+      params: { tag: name, ...(paginated ? { page: String(currentPage) } : {}) },
+      props: {
+        tag: name,
+        page: pageSlice(matches, site.listing.blog.pageSize, currentPage),
+      },
+    }));
   });
-  return paths;
 }
 
 function compareId(a: string, b: string) {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export async function getBlogPaths(lang: Language) {
-  const t = getTranslations(lang);
-  const selected = selectBlog(groupBlog(await getCollection("blog")), lang);
-  const navigationItems = selected.map((item) => ({
-    ...item,
-    href: blogPath(lang, item.key),
-  }));
+export async function getBlogPaths() {
+  const items = await getBlogItems();
   const toNavigationItem = (
-    item: (typeof navigationItems)[number] | undefined,
+    item: BlogItem | undefined,
   ): ArticleNavigationItem | undefined =>
-    item
-      ? {
-          href: item.href,
-          title: item.post.data.title,
-          lang: item.post.data.lang,
-        }
-      : undefined;
-
-  return selected.map((item) => {
-    const other = otherLanguage(lang);
-    const translation = item.variants.find(
-      (entry) => entry.data.lang === other && !entry.data.draft,
-    );
-    const adjacent = getAdjacentItems(navigationItems, item.key);
+    item ? { href: item.href, title: item.post.data.title } : undefined;
+  return items.map((item) => {
+    const adjacent = getAdjacentItems(items, item.key);
     return {
       params: { id: item.key },
       props: {
         post: item.post,
-        original: item.original,
-        lang,
-        languageLink: {
-          lang: other,
-          href: translation ? blogPath(other, item.key) : undefined,
-          label: translation
-            ? other === "en"
-              ? "English"
-              : "中文"
-            : t(`missing.${other}`),
-        },
-        alternates: item.variants
-          .filter((entry) => !entry.data.draft)
-          .map((entry) => ({
-            lang: entry.data.lang,
-            href: blogPath(entry.data.lang, item.key),
-          })),
         navigation: {
           older: toNavigationItem(adjacent.older),
           newer: toNavigationItem(adjacent.newer),

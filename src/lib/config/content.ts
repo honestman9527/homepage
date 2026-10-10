@@ -1,7 +1,7 @@
 import type { ImageMetadata } from "astro";
 import { z } from "zod";
 import { coverSchema } from "./cover";
-import { httpUrlSchema, languageSchema, textSchema } from "./shared";
+import { httpUrlSchema, textSchema } from "./shared";
 
 const reservedBlogKeys = new Set(["page", "search", "tags"]);
 
@@ -14,8 +14,7 @@ export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
       updatedDate: z.coerce.date().optional(),
       tags: z.array(textSchema).default([]),
       draft: z.boolean().default(false),
-      lang: languageSchema,
-      translationKey: z
+      slug: z
         .string()
         .regex(
           /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
@@ -25,7 +24,6 @@ export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
           (key) => !reservedBlogKeys.has(key),
           "This blog key is reserved by a blog route",
         ),
-      isOriginal: z.boolean(),
       toc: z.boolean().default(true),
       comments: z.boolean().default(true),
       cover: coverSchema(image).optional(),
@@ -34,18 +32,12 @@ export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
 }
 
 export function projectSchema(image: () => z.ZodType<ImageMetadata>) {
-  const translation = z
-    .object({ title: textSchema, description: textSchema })
-    .strict();
-
   return z
     .object({
       // file() keeps the source id in data as well as CollectionEntry.id.
       id: textSchema,
-      originalLang: languageSchema,
-      translations: z
-        .object({ zh: translation.optional(), en: translation.optional() })
-        .strict(),
+      title: textSchema,
+      description: textSchema,
       tags: z.array(textSchema).default([]),
       href: httpUrlSchema,
       demoHref: httpUrlSchema.optional(),
@@ -53,9 +45,5 @@ export function projectSchema(image: () => z.ZodType<ImageMetadata>) {
       featured: z.boolean().default(false),
       cover: coverSchema(image).optional(),
     })
-    .strict()
-    .refine((project) => !!project.translations[project.originalLang], {
-      message: "The project's original language must have a translation",
-      path: ["translations"],
-    });
+    .strict();
 }
