@@ -45,8 +45,8 @@ export class MusicPlayer {
     random: () => number = Math.random,
   ) {
     if (!tracks.length) throw new Error("Music needs at least one track");
-    this.state = this.restore(initialMusicState(tracks[0].id));
-    this.queue = new Playlist(tracks.map(({ id }) => id), this.state.trackId, this.state.mode, random);
+    this.state = this.restore(initialMusicState(tracks[0].src));
+    this.queue = new Playlist(tracks.map(({ src }) => src), this.state.trackId, this.state.mode, random);
     this.applyVolume(this.state.volume);
     for (const [name, handler] of this.events) audio.addEventListener(name, handler);
     lifecycle?.addEventListener("pagehide", this.save);
@@ -69,7 +69,7 @@ export class MusicPlayer {
       const value: unknown = JSON.parse(this.storage?.getItem(MUSIC_STORAGE_KEY) ?? "null");
       if (!value || typeof value !== "object") return fallback;
       const saved = value as Record<string, unknown>;
-      const known = this.tracks.some(({ id }) => id === saved.trackId);
+      const known = this.tracks.some(({ src }) => src === saved.trackId);
       return { ...fallback,
         trackId: known ? saved.trackId as string : fallback.trackId,
         currentTime: known && typeof saved.currentTime === "number" && Number.isFinite(saved.currentTime)
@@ -144,10 +144,10 @@ export class MusicPlayer {
   private start(reload = false): void {
     const token = ++this.request;
     this.wantsPlayback = true;
-    const track = this.tracks.find(({ id }) => id === this.state.trackId)!;
+    const track = this.tracks.find(({ src }) => src === this.state.trackId)!;
     this.update({ status: "loading" });
-    if (this.loadedId !== track.id || reload) {
-      this.loadedId = track.id;
+    if (this.loadedId !== track.src || reload) {
+      this.loadedId = track.src;
       this.pendingSeek = this.state.currentTime;
       this.audio.src = track.src;
       this.audio.load();
@@ -190,7 +190,7 @@ export class MusicPlayer {
   }
 
   select = (id: string): void => {
-    if (!this.tracks.some((track) => track.id === id)) return;
+    if (!this.tracks.some((track) => track.src === id)) return;
     this.cancelSkip();
     this.failed.clear();
     this.switchTrack(this.queue.select(id), true);

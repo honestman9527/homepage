@@ -5,7 +5,7 @@ import { siteSchema } from "../src/lib/config/site";
 import { Playlist } from "../src/lib/music/playlist";
 import { MUSIC_STORAGE_KEY, MusicPlayer, type AudioPort } from "../src/lib/music/player";
 
-const tracks: MusicTrack[] = ["one", "two", "three"].map((id) => ({ id, title: id, artist: "作者", src: `/music/${id}.mp3` }));
+const tracks: MusicTrack[] = ["one", "two", "three"].map((name) => ({ title: name, artist: "作者", src: `/music/${name}.mp3` }));
 class AudioStub extends EventTarget implements AudioPort {
   src = "";
   currentTime = 0;
@@ -59,10 +59,10 @@ describe("music configuration", () => {
     expect(musicSchema.parse({ enabled: true, tracks: [{ ...tracks[0], cover: "https://example.com/cover.webp" }] }).tracks).toHaveLength(1);
     expect(musicSchema.parse({ tracks: [{ ...tracks[0], src: "https://example.com/audio?id=1" }] }).tracks[0].src).toContain("https:");
   });
-  it("rejects enabled empty lists, duplicate IDs, unknown fields and invalid assets", () => {
+  it("rejects enabled empty lists, duplicate sources, unknown fields and invalid assets", () => {
     for (const value of [
-      { enabled: true, tracks: [] }, { tracks: [tracks[0], tracks[0]] }, { autoplay: true },
-      { tracks: [{ ...tracks[0], lyrics: "/a.lrc" }] }, { tracks: [{ ...tracks[0], id: "Invalid ID" }] },
+      { enabled: true, tracks: [] }, { tracks: [tracks[0], { ...tracks[0], title: "另一首同源歌曲" }] }, { autoplay: true },
+      { tracks: [{ ...tracks[0], lyrics: "/a.lrc" }] }, { tracks: [{ ...tracks[0], id: "one" }] },
       { tracks: [{ ...tracks[0], title: " " }] }, { tracks: [{ ...tracks[0], artist: " " }] },
       ...["http://example.com/a.mp3", "//example.com/a.mp3", "./a.mp3", "javascript:alert(1)", "/\\example.com/a.mp3", "/a b.mp3"].map((src) => ({ tracks: [{ ...tracks[0], src }] })),
     ]) expect(musicSchema.safeParse(value).success).toBe(false);
@@ -106,12 +106,12 @@ describe("music playback", () => {
     expect(audio.play).not.toHaveBeenCalled();
     expect(player.getSnapshot()).toMatchObject({ volume: 0.3, status: "idle", mode: "sequential" });
     player.next();
-    expect(player.getSnapshot().trackId).toBe("two");
+    expect(player.getSnapshot().trackId).toBe("/music/two.mp3");
     expect(audio.load).not.toHaveBeenCalled();
   });
   it("restores preferences paused, waits for metadata before seeking and clamps the position", () => {
-    const { player, audio } = setup({ trackId: "two", currentTime: 999, volume: 0.5, mode: "shuffle", playing: true });
-    expect(player.getSnapshot()).toMatchObject({ trackId: "two", status: "idle", volume: 0.5, mode: "shuffle" });
+    const { player, audio } = setup({ trackId: "/music/two.mp3", currentTime: 999, volume: 0.5, mode: "shuffle", playing: true });
+    expect(player.getSnapshot()).toMatchObject({ trackId: "/music/two.mp3", status: "idle", volume: 0.5, mode: "shuffle" });
     expect(audio.play).not.toHaveBeenCalled();
     player.play();
     expect(audio.src).toBe("/music/two.mp3");
@@ -125,10 +125,24 @@ describe("music playback", () => {
   });
   it("ignores removed songs, invalid settings and unavailable storage", () => {
     const { player } = setup({ trackId: "removed", currentTime: 40, volume: 2, mode: "unknown" });
-    expect(player.getSnapshot()).toMatchObject({ trackId: "one", currentTime: 0, volume: 0.3, mode: "sequential" });
+    expect(player.getSnapshot()).toMatchObject({ trackId: "/music/one.mp3", currentTime: 0, volume: 0.3, mode: "sequential" });
     const broken = new MusicPlayer(new AudioStub(), tracks, { getItem() { throw Error(); }, setItem() { throw Error(); } });
     players.push(broken);
     expect(() => { broken.play(); broken.setVolume(0.4); broken.pause(); }).not.toThrow();
+  });
+  it("restores the same source after reordering or renaming songs and resets after replacing it", () => {
+    const saved = { trackId: tracks[1].src, currentTime: 42, volume: 0.4, mode: "shuffle" };
+    const reordered = [{ ...tracks[1], title: "新歌名", artist: "新歌手" }, tracks[0]];
+    const { player, audio } = setup(saved, reordered);
+    expect(player.getSnapshot()).toMatchObject({ trackId: tracks[1].src, currentTime: 42, status: "idle" });
+    expect(audio.load).not.toHaveBeenCalled();
+    player.play(); audio.metadata();
+    expect(audio.src).toBe(tracks[1].src);
+    expect(audio.currentTime).toBe(42);
+    const replaced = setup(saved, [{ ...tracks[1], src: "/music/replacement.mp3" }]);
+    expect(replaced.player.getSnapshot()).toMatchObject({
+      trackId: "/music/replacement.mp3", currentTime: 0, volume: 0.4, mode: "shuffle",
+    });
   });
   it("keeps playing when page controls unsubscribe and remount without resetting source/time", () => {
     const { player, audio } = setup();
@@ -149,7 +163,7 @@ describe("music playback", () => {
   it("automatically advances on native pause-before-ended and replays a single song from zero", () => {
     const { player, audio } = setup();
     player.play(); audio.metadata(); audio.finish();
-    expect(player.getSnapshot()).toMatchObject({ trackId: "two", status: "playing" });
+    expect(player.getSnapshot()).toMatchObject({ trackId: "/music/two.mp3", status: "playing" });
     const single = setup(undefined, [tracks[0]]);
     single.player.play(); single.audio.metadata(); single.audio.finish();
     expect(single.audio.currentTime).toBe(0);
@@ -167,7 +181,7 @@ describe("music playback", () => {
     player.setMode("shuffle"); player.setVolume(0.4); player.play(); audio.metadata();
     audio.currentTime = 12; audio.emit("timeupdate"); lifecycle.dispatchEvent(new Event("pagehide"));
     expect(storage.setItem).toHaveBeenLastCalledWith(MUSIC_STORAGE_KEY,
-      JSON.stringify({ trackId: "one", currentTime: 12, volume: 0.4, mode: "shuffle" }));
+      JSON.stringify({ trackId: "/music/one.mp3", currentTime: 12, volume: 0.4, mode: "shuffle" }));
   });
   it("exposes system volume fallback when a browser ignores volume writes", () => {
     const audio = new AudioStub();
@@ -180,19 +194,19 @@ describe("music playback", () => {
     const { player, audio } = setup();
     player.play(); audio.emit("waiting"); audio.emit("stalled");
     vi.advanceTimersByTime(10000);
-    expect(player.getSnapshot().trackId).toBe("one");
+    expect(player.getSnapshot().trackId).toBe("/music/one.mp3");
     audio.emit("error"); audio.emit("error");
     expect(player.getSnapshot()).toMatchObject({ status: "error", skipIn: 3 });
     vi.advanceTimersByTime(2999);
-    expect(player.getSnapshot().trackId).toBe("one");
+    expect(player.getSnapshot().trackId).toBe("/music/one.mp3");
     vi.advanceTimersByTime(1);
-    expect(player.getSnapshot().trackId).toBe("two");
+    expect(player.getSnapshot().trackId).toBe("/music/two.mp3");
   });
   it.each(["pause", "next", "previous", "play", "select"] as const)("cancels failure timers on %s", (action) => {
     vi.useFakeTimers();
     const { player, audio } = setup();
     player.play(); audio.emit("error");
-    if (action === "select") player.select("three"); else player[action]();
+    if (action === "select") player.select("/music/three.mp3"); else player[action]();
     const track = player.getSnapshot().trackId;
     vi.advanceTimersByTime(4000);
     expect(player.getSnapshot().trackId).toBe(track);
@@ -217,7 +231,7 @@ describe("music playback", () => {
     player.play(); await Promise.resolve();
     expect(player.getSnapshot().status).toBe("blocked");
     vi.advanceTimersByTime(10000);
-    expect(player.getSnapshot().trackId).toBe("one");
+    expect(player.getSnapshot().trackId).toBe("/music/one.mp3");
     audio.rejection = undefined; player.play();
     expect(player.getSnapshot().status).toBe("playing");
   });
@@ -234,14 +248,14 @@ describe("music playback", () => {
     player.play(); player.next();
     reject(new DOMException("Old source failed", "NotSupportedError"));
     await Promise.resolve();
-    expect(player.getSnapshot()).toMatchObject({ trackId: "two", status: "playing", skipIn: null });
+    expect(player.getSnapshot()).toMatchObject({ trackId: "/music/two.mp3", status: "playing", skipIn: null });
   });
   it("reloads the source when retrying a failed song through its playlist entry", () => {
     const { player, audio } = setup();
     player.play(); audio.emit("error");
-    player.select("one");
+    player.select("/music/one.mp3");
     expect(audio.load).toHaveBeenCalledTimes(2);
-    expect(player.getSnapshot()).toMatchObject({ trackId: "one", status: "playing", skipIn: null });
+    expect(player.getSnapshot()).toMatchObject({ trackId: "/music/one.mp3", status: "playing", skipIn: null });
   });
   it("treats a synchronous browser permission exception as a request for manual playback", () => {
     const { player, audio } = setup();

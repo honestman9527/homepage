@@ -7,7 +7,6 @@ const assetSchema = z.union([
 ]);
 
 export const musicTrackSchema = z.object({
-  id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use a stable lowercase track ID"),
   title: textSchema,
   artist: textSchema,
   src: assetSchema,
@@ -20,11 +19,11 @@ export const musicSchema = z.object({
 }).strict().superRefine(({ enabled, tracks }, ctx) => {
   if (enabled && !tracks.length)
     ctx.addIssue({ code: "custom", path: ["tracks"], message: "Enabled music needs at least one track" });
-  const ids = new Set<string>();
+  const sources = new Set<string>();
   tracks.forEach((track, index) => {
-    if (ids.has(track.id))
-      ctx.addIssue({ code: "custom", path: ["tracks", index, "id"], message: "Track IDs must be unique" });
-    ids.add(track.id);
+    if (sources.has(track.src))
+      ctx.addIssue({ code: "custom", path: ["tracks", index, "src"], message: "Track sources must be unique" });
+    sources.add(track.src);
   });
 });
 

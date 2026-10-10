@@ -47,7 +47,7 @@ function PlayerControls({ tracks, state, player }: {
   tracks: readonly MusicTrack[]; state: MusicState; player: MusicPlayer | null;
 }) {
   const id = useId();
-  const track = tracks.find(({ id }) => id === state.trackId) ?? tracks[0];
+  const track = tracks.find(({ src }) => src === state.trackId) ?? tracks[0];
   const error = state.status === "error" || state.status === "exhausted";
   const message = state.status === "loading" ? t("music.loading")
     : state.status === "blocked" ? t("music.blocked")
@@ -106,10 +106,10 @@ function PlayerControls({ tracks, state, player }: {
         <h3 className="text-muted-foreground mb-2 text-xs">{t("music.playlist")}</h3>
         <ul className="flex flex-col gap-1" aria-label={t("music.playlist")}>
           {tracks.map((item, index) => (
-            <li key={item.id}>
-              <Button variant={item.id === state.trackId ? "secondary" : "ghost"}
+            <li key={item.src}>
+              <Button variant={item.src === state.trackId ? "secondary" : "ghost"}
                 className="h-auto w-full justify-start gap-3 py-2 text-left" disabled={!player}
-                aria-current={item.id === state.trackId ? "true" : undefined} onClick={() => player?.select(item.id)}>
+                aria-current={item.src === state.trackId ? "true" : undefined} onClick={() => player?.select(item.src)}>
                 <span className="text-muted-foreground w-4 shrink-0 text-xs tabular-nums">{index + 1}</span>
                 <span className="min-w-0 flex-1"><span className="block truncate">{item.title}</span>
                   <span className="text-muted-foreground block truncate text-xs">{item.artist}</span></span>
@@ -126,9 +126,9 @@ export function MusicCapsule({ tracks }: { tracks: readonly MusicTrack[] }) {
   const [player, setPlayer] = useState<MusicPlayer | null>(null);
   const [open, setOpen] = useState(false);
   const mobile = useIsMobile();
-  const initial = useMemo(() => initialMusicState(tracks[0].id), [tracks]);
+  const initial = useMemo(() => initialMusicState(tracks[0].src), [tracks]);
   const state = useSyncExternalStore(player?.subscribe ?? noSubscription, player?.getSnapshot ?? (() => initial), () => initial);
-  const track = tracks.find(({ id }) => id === state.trackId) ?? tracks[0];
+  const track = tracks.find(({ src }) => src === state.trackId) ?? tracks[0];
   useEffect(() => { setPlayer(getBrowserMusicPlayer(tracks) ?? null); }, [tracks]);
 
   const trigger = (
