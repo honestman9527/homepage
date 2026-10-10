@@ -268,3 +268,5 @@ about:
 | `cover` | 否 | 格式与站点封面相同 |
 
 配置只接受单语结构。旧 `zh`、`en` 分组和项目的 `originalLang`、`translations` 字段会作为未知字段在构建期报错。
+
+项目可另行关联 Markdown/MDX 案例，规则参见[作品案例](portfolio.md)。关联关系在案例的 `projectId` 中声明，项目 YAML 不增加正文或案例 URL 字段。

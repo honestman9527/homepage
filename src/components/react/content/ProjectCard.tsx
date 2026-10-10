@@ -15,6 +15,7 @@ interface Props {
   title: string;
   description: string;
   href: string;
+  caseHref?: string;
   demoHref?: string;
   year: number;
   tags: readonly string[];
@@ -29,6 +30,7 @@ export function ProjectCard({
   title,
   description,
   href,
+  caseHref,
   demoHref,
   year,
   tags,
@@ -52,9 +54,9 @@ export function ProjectCard({
             <h2>
               <a
                 className="card-title-link"
-                href={href}
-                target="_blank"
-                rel="noreferrer"
+                href={caseHref ?? href}
+                target={caseHref ? undefined : "_blank"}
+                rel={caseHref ? undefined : "noreferrer"}
               >
                 {title}
               </a>

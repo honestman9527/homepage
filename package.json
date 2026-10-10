@@ -9,6 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "preview:workers": "wrangler dev --local",
+    "deploy:workers": "wrangler deploy",
     "astro": "astro",
     "check": "astro check",
     "test": "vitest run"
@@ -45,7 +47,8 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.149.0"
   },
   "packageManager": "pnpm@12.1.0"
 }

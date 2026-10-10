@@ -1,2 +1,6 @@
 import { defineConfig } from "vitest/config";
-export default defineConfig({ test: { include: ["tests/**/*.test.{ts,mjs}"] } });
+
+export default defineConfig({
+  resolve: { tsconfigPaths: true },
+  test: { include: ["tests/**/*.test.{ts,mjs}"] },
+});

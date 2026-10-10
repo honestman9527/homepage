@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import { getSiteConfig } from "../site-config";
 import { pageSlice } from "./pagination";
+import { selectProjectCases } from "./cases";
 
 export type ProjectEntry = CollectionEntry<"projects">;
 
@@ -15,7 +16,17 @@ export function selectProjects(projects: ProjectEntry[]) {
 }
 
 export async function getProjectItems() {
-  return selectProjects(await getCollection("projects"));
+  const [projects, cases] = await Promise.all([
+    getCollection("projects"),
+    getCollection("cases"),
+  ]);
+  const caseHrefs = new Map(
+    selectProjectCases(cases, projects).map(({ entry, href }) => [entry.data.projectId, href]),
+  );
+  return selectProjects(projects).map((project) => ({
+    ...project,
+    caseHref: caseHrefs.get(project.id),
+  }));
 }
 
 export type ProjectItem = Awaited<ReturnType<typeof getProjectItems>>[number];

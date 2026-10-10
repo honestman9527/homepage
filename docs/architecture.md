@@ -7,7 +7,7 @@
 ```mermaid
 flowchart LR
   A["src/data/*.yaml"] --> C["Astro Content Collections"]
-  B["src/content/blog/*.{md,mdx}"] --> C
+  B["src/content/{blog,cases}/*.{md,mdx}"] --> C
   C --> D["Zod schema 校验"]
   D --> E["src/lib 内容选择与派生"]
   E --> F["src/pages 薄路由"]
@@ -23,9 +23,10 @@ flowchart LR
 | 目录 | 职责 |
 | --- | --- |
 | `src/data/` | 站点、音乐、About 和项目 YAML 配置 |
-| `src/content/blog/` | 博客 Markdown 与 MDX，`src/content/` 下唯一的正文集合 |
+| `src/content/blog/` | 博客 Markdown 与 MDX |
+| `src/content/cases/` | 与项目一对一关联的案例 Markdown 与 MDX |
 | `src/lib/config/` | Content Collections 使用的 Zod schema |
-| `src/lib/content/` | 博客、项目、封面、分页、搜索和阅读时间逻辑 |
+| `src/lib/content/` | 博客、项目、案例关联、封面、分页、搜索和阅读时间逻辑 |
 | `src/pages/` | 薄路由入口和静态路径生成 |
 | `src/layouts/` | HTML 文档、侧栏壳和文章壳 |
 | `src/components/astro/` | 页面级组合与静态内容组件 |
@@ -47,6 +48,16 @@ Astro 文件中没有 `client:*` 的 React 组件只生成静态 HTML。当前�
 
 列表、卡片、标签、分页、个人资料和 About 正文不应新增独立水合根。
 
+博客与案例共用 `components/astro/content/` 中的正文、目录和阅读进度组件。博客文章壳负责发布日期、博客标签导航、评论与相邻文章；案例页面组合项目头部、外链和正文，不依赖博客文章壳，不新增水合根。首页保持介绍型布局。
+
+## 未来交互模块
+
+主站先在同一仓库和静态构建中维护模块边界。Astro 组织页面与静态内容，React 岛只承担需要浏览器状态的交互。模块自己管理状态、样式、资源和初始化／销毁过程，依赖在所在页面加载；完整工具与游戏进入独立功能页，首页只按实际需求加入轻组件。
+
+AppShell 继续只管理侧栏、主题和音乐控制，业务状态留在所属功能。未来工具和游戏默认离页停止运行并释放 rAF、计时器、监听、音效和异步任务；必要进度保存在本地，返回后恢复暂停并由访客手动继续。只有明确需要跨页持续运行的功能才单独设计持久化节点，不持久化正文或整个 AppShell。
+
+新功能同时兼容音乐开启时的客户端导航与关闭时的整页导航，复用页面生命周期工具。出现实际联网需求后再加入 Workers API；需要独立发布、独立账号或复杂持续会话的应用，再拆分应用与部署。当前不预建游戏引擎、全局业务 store、插件注册器、空 API 或数据库。
+
 ## 音乐与站内导航
 
 音乐独立配置在 `src/data/music.yaml`，通过 `music` Content Collection 校验和加载，默认关闭。启用并配置有效歌单后，公共布局启用 Astro `ClientRouter`；只在 AppShell 外持久化一个无初始 `src`、`preload="none"` 的原生 `<audio transition:persist="site-music">`。页头控件复用 AppShell，通过浏览器端音乐控制模块订阅音频状态，组件卸载不停止音频。AppShell、正文和搜索岛在换页时正常更新，避免将页面 slot 一同持久化。
@@ -60,6 +71,16 @@ Astro 文件中没有 `client:*` 的 React 组件只生成静态 HTML。当前�
 站点只提供中文页面，所有路径均不带语言前缀。公开路径统一通过 `src/config/routes.ts` 生成。HTML 和评论客户端使用 `zh-CN`，日期使用中文格式并固定为 UTC。
 
 博客使用必填 `slug` 作为稳定标识，由 Astro 原生 glob loader 设置条目 ID。标识重复时构建失败，草稿不进入路由、列表、搜索或标签。文章按自身发布日期降序排列，同日按 slug 排序。项目直接保存标题与简介，按年份降序、同年按 ID 排序。
+
+案例通过 `projectId` 关联项目 YAML，每个项目至多一个案例。案例只维护稳定 slug、发布状态、目录开关和正文，标题、摘要、年份、标签、封面与外链来自项目。包括草稿在内的重复 slug、重复关联和缺失项目均在构建期报错。只有已发布案例生成 `/projects/{slug}` 和项目卡片的 `caseHref`；原有项目外链不被替换，案例不进入博客列表、标签或搜索。
+
+案例的写作与发布规则参见[作品案例](portfolio.md)。
+
+## 部署边界
+
+主要部署入口是 Workers Static Assets：Wrangler 构建并发布 `dist/`，请求直接读取静态资源，未知路径返回 404，HTML 地址统一不带末尾斜杠。当前没有 Worker 服务端入口、运行时绑定或 Cloudflare adapter。canonical 与 Open Graph 沿用 Astro 的站点地址，不根据访问域名临时改写。
+
+未来需要 API 时可加入按路径处理的 Worker 服务；只有 Astro 自身需要按需服务端渲染时才引入适配器。
 
 中文文章 URL 和评论标识均使用 `/blog/{slug}`。旧 `/en` 地址不生成页面或跳转。页面保留 canonical 与 Open Graph URL，不输出 hreflang。
 

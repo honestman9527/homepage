@@ -1,0 +1,56 @@
+---
+import { render } from "astro:content";
+import type { CaseEntry } from "@/lib/content/cases";
+import type { ProjectEntry } from "@/lib/content/projects";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import MarkdownDocument from "@/components/astro/content/MarkdownDocument.astro";
+import Cover from "@/components/astro/content/Cover.astro";
+import { ContentTags } from "@/components/react/content/ContentTags";
+import { buttonVariants } from "@/components/react/ui/button";
+import { ArrowLeftIcon, ArrowUpRightIcon } from "@phosphor-icons/react";
+import { resolveCover } from "@/lib/content/cover";
+import { listingPath } from "@/config/routes";
+import { getSiteConfig } from "@/lib/site-config";
+import { uiText as t } from "@/lib/ui";
+
+interface Props {
+  caseEntry: CaseEntry;
+  project: ProjectEntry;
+}
+
+const { caseEntry, project } = Astro.props;
+const { Content, headings } = await render(caseEntry);
+const site = await getSiteConfig();
+const { title, description, year, tags, href, demoHref } = project.data;
+const cover = resolveCover(
+  project.data.cover,
+  site.listing.projects.defaultCover,
+  site.covers.default,
+);
+---
+
+<SidebarLayout activeNavId="projects" title={`${title} — ${site.name}`} description={description}>
+  <MarkdownDocument headings={headings} toc={caseEntry.data.toc} tocLabel={t("projects.toc")} showProgress>
+    <header slot="header" class="post-header">
+      <div class="post-meta"><span>{t("projects.case")}</span><span>{year}</span></div>
+      <h1>{title}</h1>
+      <p class="post-description">{description}</p>
+      <ContentTags tags={tags} className="post-tags" />
+      <div class="flex flex-wrap items-center gap-2">
+        <a class={buttonVariants({ variant: "ghost", size: "sm" })} data-slot="button" href={listingPath("projects")}>
+          <ArrowLeftIcon data-icon="inline-start" />{t("projects.back")}
+        </a>
+        <a class={buttonVariants({ variant: "outline", size: "sm" })} data-slot="button" href={href} target="_blank" rel="noreferrer">
+          {t("projects.visit")}<ArrowUpRightIcon data-icon="inline-end" />
+        </a>
+        {demoHref && (
+          <a class={buttonVariants({ variant: "outline", size: "sm" })} data-slot="button" href={demoHref} target="_blank" rel="noreferrer">
+            {t("projects.liveDemo")}<ArrowUpRightIcon data-icon="inline-end" />
+          </a>
+        )}
+      </div>
+    </header>
+    <Cover slot="cover" cover={cover} contentKey={project.id} options={site.covers.topographic} aspectRatio={site.covers.aspectRatio} eager />
+    <Content />
+  </MarkdownDocument>
+</SidebarLayout>

@@ -1,0 +1,10 @@
+---
+import type { InferGetStaticPropsType } from "astro";
+import ProjectCasePage from "@/components/astro/pages/ProjectCasePage.astro";
+import { getProjectCasePaths } from "@/lib/content/cases";
+
+export async function getStaticPaths() { return getProjectCasePaths(); }
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+---
+
+<ProjectCasePage {...Astro.props} />

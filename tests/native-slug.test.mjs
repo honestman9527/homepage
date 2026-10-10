@@ -5,17 +5,19 @@ import { pathToFileURL } from "node:url";
 import { glob } from "astro/loaders";
 import { expect, it, vi } from "vitest";
 import { z } from "zod";
-import { blogSchema } from "../src/lib/config/content";
+import { blogSchema, caseSchema } from "../src/lib/config/content";
 
-it("uses native slugs independently of filenames and rejects collisions", async () => {
+it.each([
+  ["blog", blogSchema(() => z.never()), { slug: "stable-article", title: "文章", description: "简介", pubDate: "2026-01-01" }],
+  ["cases", caseSchema, { slug: "stable-article", projectId: "existing" }],
+])("%s uses native slugs independently of filenames and rejects collisions", async (collection, schema, article) => {
   const directory = await mkdtemp(join(tmpdir(), "homepage-slug-"));
   const root = pathToFileURL(`${directory}${sep}`);
-  const schema = blogSchema(() => z.never());
   const entries = new Map();
   // The native glob loader receives parsed entry data from Astro's entry type.
   // JSON keeps this integration test focused on identity and schema validation.
   const context = {
-    collection: "blog",
+    collection,
     config: { root, srcDir: new URL("src/", root), prerenderConflictBehavior: "error" },
     store: {
       keys: () => [...entries.keys()],
@@ -30,14 +32,13 @@ it("uses native slugs independently of filenames and rejects collisions", async 
       [".json", { getEntryInfo: ({ contents }) => ({ data: JSON.parse(contents) }) }],
     ]),
   };
-  const article = { slug: "stable-article", title: "文章", description: "简介", pubDate: "2026-01-01" };
 
   try {
     await writeFile(join(directory, "arbitrary-filename.json"), JSON.stringify(article));
     await glob({ pattern: "*.json", base: "./" }).load(context);
     expect([...entries.keys()]).toEqual(["stable-article"]);
 
-    await writeFile(join(directory, "another-filename.json"), JSON.stringify({ ...article, title: "重复文章", draft: true }));
+    await writeFile(join(directory, "another-filename.json"), JSON.stringify({ ...article, draft: true }));
     await expect(glob({ pattern: "*.json", base: "./" }).load(context)).rejects.toThrow(/same slug/);
   } finally {
     await rm(directory, { recursive: true, force: true });

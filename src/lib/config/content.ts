@@ -4,6 +4,20 @@ import { coverSchema } from "./cover";
 import { httpUrlSchema, textSchema } from "./shared";
 
 const reservedBlogKeys = new Set(["page", "search", "tags"]);
+const stableSlugSchema = z.string().regex(
+  /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  "Use a stable lowercase hyphenated slug",
+);
+
+export const caseSchema = z.object({
+  projectId: textSchema,
+  slug: stableSlugSchema.refine(
+    (slug) => slug !== "page",
+    "This case slug is reserved by a project route",
+  ),
+  draft: z.boolean().default(true),
+  toc: z.boolean().default(true),
+}).strict();
 
 export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
   return z
@@ -14,16 +28,10 @@ export function blogSchema(image: () => z.ZodType<ImageMetadata>) {
       updatedDate: z.coerce.date().optional(),
       tags: z.array(textSchema).default([]),
       draft: z.boolean().default(false),
-      slug: z
-        .string()
-        .regex(
-          /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-          "Use a stable lowercase hyphenated slug",
-        )
-        .refine(
-          (key) => !reservedBlogKeys.has(key),
-          "This blog key is reserved by a blog route",
-        ),
+      slug: stableSlugSchema.refine(
+        (key) => !reservedBlogKeys.has(key),
+        "This blog key is reserved by a blog route",
+      ),
       toc: z.boolean().default(true),
       comments: z.boolean().default(true),
       cover: coverSchema(image).optional(),

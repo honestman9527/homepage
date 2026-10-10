@@ -56,6 +56,10 @@ export function blogPath(key: string): string {
   return normalizePath(`${routeConfig.blog.segment}/${key}`);
 }
 
+export function projectPath(slug: string): string {
+  return normalizePath(`${routeConfig.projects.segment}/${slug}`);
+}
+
 export function searchPath(): string {
   return normalizePath(`${routeConfig.blog.segment}/search`);
 }
