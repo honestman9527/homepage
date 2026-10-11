@@ -3,4 +3,13 @@
 # 本地 src/thumbnail 相对于本文件；远程图片使用 HTTPS，无需填写宽高。
 # 完整示例和发布规则见 docs/configuration.md 的“相册配置”。
 albums:
-  items: []
+  items:
+    - id: autumn-walk
+      title: 秋日散步
+      description: 记录秋天的街道与河岸。
+      draft: false
+      coverPhotoId: 1s
+      photos:
+        - id: 1s
+          src: https://raw.7s.nz/file/images/carton/TWZ5so4a.webp
+          alt: 女蜘蛛侠
