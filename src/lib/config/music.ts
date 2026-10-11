@@ -13,8 +13,14 @@ export const musicTrackSchema = z.object({
   cover: assetSchema.optional(),
 }).strict();
 
+const musicDesktopSchema = z.object({
+  position: z.enum(["bottom-left", "bottom-right"]).default("bottom-right"),
+  defaultCollapsed: z.boolean().default(false),
+}).strict();
+
 export const musicSchema = z.object({
   enabled: z.boolean().default(false),
+  desktop: musicDesktopSchema.prefault({}),
   tracks: z.array(musicTrackSchema).default([]),
 }).strict().superRefine(({ enabled, tracks }, ctx) => {
   if (enabled && !tracks.length)
@@ -29,3 +35,4 @@ export const musicSchema = z.object({
 
 export type MusicTrack = z.infer<typeof musicTrackSchema>;
 export type MusicConfig = z.infer<typeof musicSchema>;
+export type MusicDesktopConfig = MusicConfig["desktop"];

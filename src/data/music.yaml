@@ -4,6 +4,10 @@
 # 建议精选 3–10 首；每首包含 title、artist、src，可选 cover；src 不可重复。
 music:
   enabled: true
+  # 电脑端默认位于内容区域右下；访客可切换位置并收起，偏好保存在本机。
+  desktop:
+    position: bottom-right
+    defaultCollapsed: false
   tracks:
     - title: 枫
       artist: 周杰伦

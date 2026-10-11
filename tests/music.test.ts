@@ -46,7 +46,21 @@ afterEach(() => { players.splice(0).forEach((player) => player.dispose()); vi.us
 
 describe("music configuration", () => {
   it("defaults to disabled with no placeholder tracks", () => {
-    expect(musicSchema.parse({})).toEqual({ enabled: false, tracks: [] });
+    expect(musicSchema.parse({})).toEqual({
+      enabled: false, desktop: { position: "bottom-right", defaultCollapsed: false }, tracks: [],
+    });
+  });
+  it("defaults omitted or empty desktop options and accepts both positions", () => {
+    expect(musicSchema.parse({ desktop: {} }).desktop).toEqual({ position: "bottom-right", defaultCollapsed: false });
+    for (const position of ["bottom-left", "bottom-right"]) {
+      expect(musicSchema.parse({ desktop: { position, defaultCollapsed: true } }).desktop)
+        .toEqual({ position, defaultCollapsed: true });
+    }
+  });
+  it("rejects invalid desktop options and unknown fields", () => {
+    for (const desktop of [
+      null, { position: "left" }, { position: "top-right" }, { defaultCollapsed: "false" }, { collapsed: true },
+    ]) expect(musicSchema.safeParse({ desktop }).success).toBe(false);
   });
   it("keeps music separate and rejects the old nested site configuration", () => {
     const site = { name: "名字", initials: "N", email: "me@example.com", social: [], skills: [],

@@ -60,9 +60,15 @@ AppShell 继续只管理侧栏、主题和音乐控制，业务状态留在所�
 
 ## 音乐与站内导航
 
-音乐独立配置在 `src/data/music.yaml`，通过 `music` Content Collection 校验和加载，默认关闭。启用并配置有效歌单后，公共布局启用 Astro `ClientRouter`；只在 AppShell 外持久化一个无初始 `src`、`preload="none"` 的原生 `<audio transition:persist="site-music">`。页头控件复用 AppShell，通过浏览器端音乐控制模块订阅音频状态，组件卸载不停止音频。AppShell、正文和搜索岛在换页时正常更新，避免将页面 slot 一同持久化。
+音乐独立配置在 `src/data/music.yaml`，通过 `music` Content Collection 校验和加载，默认关闭。启用并配置有效歌单后，公共布局启用 Astro `ClientRouter`；只在 AppShell 外持久化一个无初始 `src`、`preload="none"` 的原生 `<audio transition:persist="site-music">`。控件复用 AppShell，通过浏览器端音乐控制模块订阅音频状态，组件卸载不停止音频。AppShell、正文和搜索岛在换页时正常更新，避免将页面 slot 一同持久化。
 
-音乐配置只需标题、歌手、音源和可选封面；音源 `src` 不可重复，直接作为内部曲目标识，调整顺序或修改展示信息不影响身份。播放顺序、随机队列、历史及错误跳过由 `src/lib/music/` 管理。首次点击播放才设置音源。浏览器存储仅保存曲目标识（音源地址）、进度、音量和模式，刷新后保持暂停；存储不可用时仍可播放。禁用音乐时不启用客户端导航、不渲染音频节点或胶囊，也不下载播放器控件。
+音乐配置只需标题、歌手、音源和可选封面；音源 `src` 不可重复，直接作为内部曲目标识，调整顺序或修改展示信息不影响身份。播放顺序、随机队列、历史及错误跳过由 `src/lib/music/` 管理。首次点击播放才设置音源。播放存储仅保存曲目标识（音源地址）、进度、音量和模式，刷新后保持暂停；存储不可用时仍可播放。禁用音乐时不启用客户端导航、不渲染音频节点或胶囊，也不下载播放器控件。
+
+桌面配置沿 `music` 集合 → Astro 布局 → AppShell view model → MusicCapsule 传递。宽度至少 768px 时通过 body portal 显示悬浮胶囊，页头不占位，避开页头 `backdrop-filter` 对 fixed 定位的影响。浮层只占自身区域，胶囊层级 30、控制面板 40，低于模态弹层 50。`useMusicDock` 读取 `#main-content` 的实际边界，使用 ResizeObserver 和视口 resize 跟随侧栏与窗口变化，通过 rAF 合并测量；卸载时断开观察、移除监听并取消待执行任务。面板锚定完整胶囊，按左右位置向上对齐。
+
+`src/lib/music/ui-preference.ts` 独立管理 `homepage.music.ui.v1` 的位置与收起偏好，有效记录覆盖站长默认，损坏记录回退默认，初始化只读。浏览器单例在存储不可用时保留当前会话选择，服务端不共享访客状态；不改变 `homepage.music.v1` 的播放记录格式。音乐模块仍挂载后动态导入，确认断点与偏好后才显示桌面浮层，CSS 仍通过 `?inline` 加载，不新增水合根。
+
+收起、展开、左右切换与跨断点只改变 UI，不重建音频或加载音源。手机使用原有页头入口与底部面板，保留但忽略桌面偏好。跨断点关闭面板，焦点原在控件内才转移到新入口；收起后聚焦圆钮，展开后面板保持关闭。面板打开状态不持久化，AppShell 换页重建后默认关闭；播放单例和原生音频继续运行。
 
 页面局部脚本使用 `onPageLifecycle`：首次加载与 `astro:page-load` 初始化，`astro:before-swap` 和 `pagehide` 清理，浏览器恢复缓存页面后重新初始化。文章目录和进度需取消 rAF、移除监听并断开 Observer；评论需调用提供商清理函数，包括处理异步加载期间离开页面的情况。主题、favicon 和侧栏偏好在 `astro:after-swap` 重施。搜索修改查询参数时保留 `history.state`，以兼容路由的后退和滚动恢复。
 

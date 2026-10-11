@@ -40,7 +40,7 @@ const viewModel = {
     title: t(`nav.${activeNavId}`),
     sticky: site.layout.header.sticky,
     sidebarToggleLabel: t("sidebar.toggle"),
-    music: music.enabled ? music.tracks : undefined,
+    music: music.enabled ? { tracks: music.tracks, desktop: music.desktop } : undefined,
   },
   sidebar: {
     activeNavId,

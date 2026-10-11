@@ -10,7 +10,7 @@ interface Props {
 
 export function AppHeader({ viewModel }: Props) {
   const { title, sticky, sidebarToggleLabel, music } = viewModel;
-  const musicEnabled = Boolean(music?.length);
+  const musicEnabled = Boolean(music?.tracks.length);
   const [MusicCapsule, setMusicCapsule] = useState<MusicCapsuleComponent | null>(null);
 
   useEffect(() => {
@@ -29,9 +29,9 @@ export function AppHeader({ viewModel }: Props) {
       <span className="font-display min-w-0 flex-1 truncate text-sm font-semibold">
         {title}
       </span>
-      {music?.length ? (
-        MusicCapsule ? <MusicCapsule tracks={music} />
-          : <span className="w-20 shrink-0" aria-hidden="true" data-music-placeholder />
+      {music?.tracks.length ? (
+        MusicCapsule ? <MusicCapsule tracks={music.tracks} desktop={music.desktop} />
+          : <span className="w-20 shrink-0 md:hidden" aria-hidden="true" data-music-placeholder />
       ) : null}
     </header>
   );

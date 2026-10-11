@@ -1,6 +1,6 @@
 import type { ThemeLabels } from "@/components/react/ThemeToggle";
 import type { NavId } from "@/config/routes";
-import type { MusicTrack } from "@/lib/config/music";
+import type { MusicConfig } from "@/lib/config/music";
 
 export interface NavItem {
   id: NavId;
@@ -50,7 +50,7 @@ export interface AppHeaderViewModel {
   title: string;
   sticky: boolean;
   sidebarToggleLabel: string;
-  music?: readonly MusicTrack[];
+  music?: Pick<MusicConfig, "tracks" | "desktop">;
 }
 
 export interface AppShellViewModel {
