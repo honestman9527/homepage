@@ -51,13 +51,21 @@ taskkill /PID $astroDev.Id /T /F
 
 ## 自动检查与产物
 
-代码或配置变更后运行：
+本地验证按改动风险与影响范围选择：
+
+- 仅文档变更：检查本地链接与 `git diff --check`，无需运行代码测试。
+- 文案、样式或低风险局部修复：执行覆盖受影响行为的定向测试、类型检查或构建检查，不触发无关的全量验证。
+- 涉及架构、schema、路由、共享交互或部署行为的变更：运行完整验证。
+
+完整验证命令：
 
 ```sh
 pnpm verify
 ```
 
-该命令串行运行 `pnpm test`、`pnpm check`、`pnpm build` 和 `pnpm verify:workers`；任何一步失败都会停止。GitHub Actions 对 PR、`master` 推送和手动触发运行相同流程，使用冻结锁文件安装依赖，不需要 Cloudflare 凭据。自动发布流程自身也运行全部检查，不依赖 GitHub 检查是否已完成。
+该命令串行运行 `pnpm test`、`pnpm check`、`pnpm build` 和 `pnpm verify:workers`；任何一步失败都会停止。CI 与正式部署始终运行完整验证。GitHub Actions 对 PR、`master` 推送和手动触发运行相同流程，使用冻结锁文件安装依赖，不需要 Cloudflare 凭据。自动发布流程自身也运行全部检查，不依赖 GitHub 检查是否已完成。
+
+检查通过后，仅在出现新改动、失败或未解决风险时追加验证，避免重复运行无关检查。
 
 检查构建产物：草稿不进入公开页面、列表、标签、搜索和相邻文章；内部链接能够解析，canonical 与 Open Graph URL 对应当前页面，不生成英文页面、旧 `/en` 跳转或 hreflang。新增页面或动态路由时同步检查公开入口和相关路径生成逻辑。
 
