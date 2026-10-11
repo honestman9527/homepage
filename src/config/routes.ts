@@ -2,6 +2,7 @@ export const routeConfig = {
   home: { segment: "", navigation: true },
   projects: { segment: "projects", navigation: true },
   blog: { segment: "blog", navigation: true },
+  albums: { segment: "albums", navigation: true },
   about: { segment: "about", navigation: true },
 } as const satisfies Record<
   string,
@@ -20,6 +21,7 @@ export const navigationIds = [
   "home",
   "projects",
   "blog",
+  "albums",
   "about",
 ] as const satisfies readonly NavId[];
 
@@ -58,6 +60,10 @@ export function blogPath(key: string): string {
 
 export function projectPath(slug: string): string {
   return normalizePath(`${routeConfig.projects.segment}/${slug}`);
+}
+
+export function albumPath(id: string): string {
+  return normalizePath(`${routeConfig.albums.segment}/${id}`);
 }
 
 export function searchPath(): string {

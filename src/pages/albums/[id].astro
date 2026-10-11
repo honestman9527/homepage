@@ -1,0 +1,9 @@
+---
+import type { InferGetStaticPropsType } from "astro";
+import AlbumPage from "@/components/astro/pages/AlbumPage.astro";
+import { getAlbumPaths } from "@/lib/content/albums";
+
+export async function getStaticPaths() { return getAlbumPaths(); }
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+---
+<AlbumPage {...Astro.props} />

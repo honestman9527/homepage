@@ -1,0 +1,82 @@
+---
+import "@/styles/listing.css";
+import "@/styles/albums.css";
+import SidebarLayout from "@/layouts/SidebarLayout.astro";
+import PhotoImage from "@/components/astro/albums/PhotoImage.astro";
+import { buttonVariants } from "@/components/react/ui/button";
+import { routePath } from "@/config/routes";
+import { photoUrl, type AlbumItem } from "@/lib/content/albums";
+import { getSiteConfig } from "@/lib/site-config";
+import { formatDate, uiText as t } from "@/lib/ui";
+
+interface Props { album: AlbumItem }
+const { album } = Astro.props;
+const site = await getSiteConfig();
+const controlClass = buttonVariants({ variant: "outline", size: "lg" });
+---
+<SidebarLayout activeNavId="albums" title={`${album.title} — ${t("albums.title")} — ${site.name}`} description={album.description ?? t("albums.subtitle")}>
+  <main class="listing-page" data-album-page>
+    <header class="page-heading album-heading">
+      <a class="album-back" href={routePath("albums")}>{t("albums.back")}</a>
+      <h1>{album.title}</h1>
+      {album.description && <p class="album-description">{album.description}</p>}
+      <span class="album-count">{t("albums.count", { count: album.photos.length })}</span>
+    </header>
+    <div class="album-wall" data-album-wall>
+      {album.photos.map((photo, index) => {
+        const preview = photo.thumbnail ?? photo.src;
+        return (
+          <figure class="album-photo" data-album-photo data-photo-state="pending" style={typeof preview === "string" ? undefined : { "--photo-ratio": `${preview.width} / ${preview.height}` }}>
+            <a class="album-photo-link" data-album-open href={photoUrl(photo.src)} target="_blank" rel="noreferrer"
+              aria-label={t("albums.open", { alt: photo.alt })}
+              data-photo-caption={photo.caption}
+              data-photo-date={photo.takenAt ? formatDate(new Date(`${photo.takenAt}T00:00:00Z`)) : undefined}
+              data-photo-location={photo.location}>
+              <PhotoImage src={preview} alt={photo.alt} eager={index < 3} />
+              <span class="album-photo-error" data-photo-error hidden>{t("albums.error")}</span>
+            </a>
+            {photo.caption && <figcaption>{photo.caption}</figcaption>}
+          </figure>
+        );
+      })}
+    </div>
+
+    <dialog class="album-viewer" data-album-viewer aria-labelledby="album-viewer-title">
+      <header class="album-viewer-header">
+        <h2 id="album-viewer-title" class="sr-only">{t("albums.viewer")}</h2>
+        <p data-viewer-counter aria-live="polite"></p>
+        <button class={controlClass} type="button" data-viewer-close autofocus>{t("albums.close")}</button>
+      </header>
+      <div class="album-viewer-stage" data-viewer-stage>
+        <p data-viewer-loading role="status" hidden>{t("albums.loading")}</p>
+        <div data-viewer-error role="alert" hidden>
+          <p>{t("albums.error")}</p>
+          <button class={controlClass} type="button" data-viewer-retry>{t("albums.retry")}</button>
+        </div>
+      </div>
+      <div class="album-viewer-info">
+        <p data-viewer-caption hidden></p>
+        <p class="album-viewer-meta"><span data-viewer-date hidden></span><span data-viewer-location hidden></span></p>
+      </div>
+      <footer class="album-viewer-controls">
+        <button class={controlClass} type="button" data-viewer-previous>{t("albums.previous")}</button>
+        <a class={controlClass} data-viewer-original target="_blank" rel="noreferrer">{t("albums.original")}</a>
+        <button class={controlClass} type="button" data-viewer-next>{t("albums.next")}</button>
+      </footer>
+    </dialog>
+  </main>
+</SidebarLayout>
+<script>
+  import { onPageLifecycle } from "@/lib/page-lifecycle";
+  import { mountMasonry } from "@/lib/albums/masonry";
+  import { mountAlbumViewer } from "@/lib/albums/viewer";
+
+  onPageLifecycle(() => {
+    const root = document.querySelector<HTMLElement>("[data-album-page]");
+    if (!root) return;
+    const wall = root.querySelector<HTMLElement>("[data-album-wall]")!;
+    const stopMasonry = mountMasonry(wall);
+    const stopViewer = mountAlbumViewer(root);
+    return () => { stopViewer(); stopMasonry(); };
+  });
+</script>

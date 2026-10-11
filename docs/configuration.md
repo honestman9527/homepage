@@ -5,9 +5,7 @@
 修改配置后运行：
 
 ```sh
-pnpm test
-pnpm check
-pnpm build
+pnpm verify
 ```
 
 ## 站点配置
@@ -55,7 +53,7 @@ site:
 
 ### 导航与布局
 
-`navigation` 接受 `home`、`projects`、`blog`、`about`。数组顺序就是侧栏顺序，不能重复；省略某项只隐藏侧栏入口，不会删除对应页面。整个字段省略时使用全部四项。
+`navigation` 接受 `home`、`projects`、`blog`、`albums`、`about`。数组顺序就是侧栏顺序，不能重复；省略某项只隐藏侧栏入口，不会删除对应页面。整个字段省略时使用全部五项。
 
 `layout.header.sticky` 控制页头是否吸附在视口顶部，默认值为 `true`。
 
@@ -279,3 +277,60 @@ about:
 配置只接受单语结构。旧 `zh`、`en` 分组和项目的 `originalLang`、`translations` 字段会作为未知字段在构建期报错。
 
 项目可另行关联 Markdown/MDX 案例，规则参见[作品案例](portfolio.md)。关联关系在案例的 `projectId` 中声明，项目 YAML 不增加正文或案例 URL 字段。
+
+## 相册配置
+
+`src/data/albums.yaml` 必须保留 `albums.items` 结构。初始值为 `items: []`，目录显示空状态；填入自己的照片后再发布。相册和照片均按数组顺序展示，不按日期自动排序。目录为 `/albums`，相册详情为 `/albums/{id}`；侧栏入口由 `site.navigation` 中的 `albums` 控制，省略入口仍可直接访问页面。
+
+下面是配置格式示例，图片文件与图床地址需要自行提供，仓库不附带示例照片：
+
+```yaml
+albums:
+  items:
+    - id: autumn-walk
+      title: 秋日散步
+      description: 记录秋天的街道与河岸。
+      draft: false
+      coverPhotoId: riverside
+      photos:
+        - id: riverside
+          src: https://cdn.example.com/riverside.jpg
+          alt: 秋日河岸与树木倒影
+          caption: 傍晚沿着河岸散步。
+          takenAt: "2026-10-11"
+          location: 杭州
+          # 可选，建议保留原图比例；省略时直接加载 src。
+          thumbnail: https://cdn.example.com/riverside-small.jpg
+        - id: street
+          src: ../assets/albums/street.jpg
+          alt: 阳光照在街道两旁的树木上
+```
+
+### 相册字段
+
+| 字段 | 必填 | 约束 |
+| --- | --- | --- |
+| `id` | 是 | 稳定的小写字母、数字和单连字符标识，全局唯一，决定公开 URL |
+| `title` | 是 | 非空标题 |
+| `description` | 否 | 非空纯文本简介 |
+| `draft` | 否 | 默认 `false`；为 `true` 时不生成详情或目录入口 |
+| `coverPhotoId` | 公开时是 | 引用本相册的照片 ID，调整照片顺序不更换封面 |
+| `photos` | 公开时是 | 默认空数组；公开相册至少一张，草稿可暂时为空 |
+
+草稿中填写的封面引用也必须有效，草稿不能掩盖重复 ID 或非法图片来源。隐藏相册只排除页面与入口，不提供私有文件访问控制。
+
+### 照片字段
+
+| 字段 | 必填 | 约束 |
+| --- | --- | --- |
+| `id` | 是 | 与相册 ID 格式相同，在所属相册内唯一 |
+| `src` | 是 | HTTPS 直链，或以 `./`、`../` 开头的本地路径 |
+| `alt` | 是 | 描述画面内容的非空替代文本 |
+| `thumbnail` | 否 | 来源格式同 `src`；列表和照片墙使用它，灯箱与原图链接使用 `src` |
+| `caption` | 否 | 非空纯文本说明，在照片下方和灯箱显示 |
+| `takenAt` | 否 | 拍摄日期，格式为带引号的 `YYYY-MM-DD`，使用中文 UTC 日期显示 |
+| `location` | 否 | 非空纯文本地点，在灯箱显示 |
+
+不填写图片宽高。远程图通过原生 `<img>` 自适应，构建不下载远程图片；浏览器加载后会依据实际尺寸重排瀑布流，首次加载允许页面发生布局变化。省略远程缩略图时会直接加载源图，可按实际流量需求提供压缩后的 `thumbnail`。本地文件路径相对于 `albums.yaml`，例如 `../assets/albums/street.jpg` 对应 `src/assets/albums/street.jpg`，Astro 自动读取尺寸并生成响应式小图；配置了本地缩略图时同样自动优化。
+
+列表封面使用 4:3 裁切，详情照片墙与灯箱保留图片完整比例。灯箱支持上一张、下一张、方向键、Esc、手机左右滑动、失败重试与打开原图；首尾停止切换，URL 保持相册地址。相册与照片拒绝未知字段，说明不解析 Markdown 或 HTML。

@@ -22,7 +22,7 @@ flowchart LR
 
 | 目录 | 职责 |
 | --- | --- |
-| `src/data/` | 站点、音乐、About 和项目 YAML 配置 |
+| `src/data/` | 站点、音乐、About、项目和相册 YAML 配置 |
 | `src/content/blog/` | 博客 Markdown 与 MDX |
 | `src/content/cases/` | 与项目一对一关联的案例 Markdown 与 MDX |
 | `src/lib/config/` | Content Collections 使用的 Zod schema |
@@ -49,6 +49,18 @@ Astro 文件中没有 `client:*` 的 React 组件只生成静态 HTML。当前�
 列表、卡片、标签、分页、个人资料和 About 正文不应新增独立水合根。
 
 博客与案例共用 `components/astro/content/` 中的正文、目录和阅读进度组件。博客文章壳负责发布日期、博客标签导航、评论与相邻文章；案例页面组合项目头部、外链和正文，不依赖博客文章壳，不新增水合根。首页保持介绍型布局。
+
+## 相册
+
+`src/data/albums.yaml` 通过 `albums` Content Collection 加载。原生 glob loader 将完整根对象作为单个条目校验，加载前检查必需文件存在，避免零匹配时沿用缓存；schema 严格校验顶层、相册和照片字段，包括草稿在内的重复 ID、无效封面引用和图片来源均报错。`src/lib/content/albums.ts` 按配置顺序选择公开相册、解析封面并生成静态路径；草稿不生成 `/albums/{id}`，目录固定为 `/albums`。
+
+目录与照片墙由 Astro 输出，不增加 React 水合根。列表复用 shadcn 卡片，灯箱使用原生 `<dialog>` 和现有按钮样式；本地图片通过 Astro 生成响应式缩略图，远程图片直接由浏览器加载，构建不抓取远程尺寸或资源。照片无需手填宽高；远程缩略图可独立配置，未配置时直接展示源图。
+
+详情页独占 `src/lib/albums/` 中的瀑布流和灯箱脚本。瀑布流保留 DOM/配置顺序，逐张放入当前最短列；图片加载前保留非零占位，缓存命中、加载失败及尺寸变化都会触发合并重排。图片加载后以实际高度排布，首次加载允许布局变化；无 JavaScript 时保留原比例网格与原图链接。
+
+灯箱依照片配置顺序切换，首尾停止，支持键盘、单指横向滑动和原图链接，不改变 URL 或增加历史记录。说明、拍摄日期与地点按纯文本显示。关闭时恢复焦点与滚动状态；通过 `onPageLifecycle` 在换页、pagehide 时移除监听、断开 Observer、取消 rAF、释放滚动锁和忽略过期图片回调，恢复缓存页面时重新挂载。相册状态不进入 AppShell，不跨页持久化。
+
+首版按 200 张以内的精选内容设计，不分页、不设照片数量硬上限，不包含搜索、标签、评论、上传后台或自定义双指缩放。首页保持介绍型布局。
 
 ## 未来交互模块
 
@@ -111,6 +123,7 @@ Cloudflare 原生 Workers Builds 负责 Git 自动部署，生产分支为 `mast
 | 首页背景、社交链接 | HomePage、SocialLinks 的原生全局样式块 |
 | 列表、卡片、分页 | 博客列表、项目列表、标签和搜索页面 |
 | About | AboutPage |
+| 相册目录、照片墙与灯箱 | AlbumsPage、AlbumPage |
 | 封面与配色变量 | Cover |
 | 正文、目录、进度、相邻文章 | MarkdownDocument |
 | 评论容器、加载与错误提示 | 实际渲染的 Comments |

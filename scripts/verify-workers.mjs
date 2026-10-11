@@ -81,7 +81,11 @@ try {
     assert.match(response.headers.get("content-type") ?? "", /text\/html/, route);
     const html = await response.text();
     assert.equal(html, await readFile(path.join(dist, file), "utf8"), `${route} 应直接返回静态产物`);
-    for (const [, href] of html.matchAll(/(?:src|href)="([^"<>]+)"/g)) {
+    const references = [...html.matchAll(/(?:src|href)="([^"<>]+)"/g)].map(([, href]) => href);
+    for (const [, value] of html.matchAll(/\bsrcset="([^"<>]+)"/g)) {
+      references.push(...value.split(",").map((candidate) => candidate.trim().split(/\s+/)[0]));
+    }
+    for (const href of references) {
       const url = new URL(href.replaceAll("&amp;", "&"), new URL(encodeURI(route), origin));
       if (url.origin !== origin) continue;
       const pathname = decodeURIComponent(url.pathname);
@@ -95,9 +99,10 @@ try {
     assert.equal(response.status, 200, asset);
     if (asset.endsWith(".css")) assert.match(response.headers.get("content-type") ?? "", /text\/css/);
     if (asset.endsWith(".js")) assert.match(response.headers.get("content-type") ?? "", /javascript/);
+    if (/\.(?:png|jpe?g|webp|avif|gif|svg)$/.test(asset)) assert.match(response.headers.get("content-type") ?? "", /^image\//, asset);
     await response.arrayBuffer();
   }
-  for (const route of ["/__workers_verify_missing__", "/projects/__workers_verify_missing__", "/_astro/__workers_verify_missing__.css", "/en"]) {
+  for (const route of ["/__workers_verify_missing__", "/projects/__workers_verify_missing__", "/albums/__workers_verify_missing__", "/_astro/__workers_verify_missing__.css", "/en"]) {
     assert.equal((await request(route)).status, 404, route);
   }
   for (const route of routes) {

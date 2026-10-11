@@ -1,5 +1,7 @@
 import { defineCollection } from "astro:content";
 import { file, glob } from "astro/loaders";
+import { albumsSchema } from "./lib/config/albums";
+import { albumsLoader } from "./lib/config/albums-loader.mjs";
 import { musicSchema } from "./lib/config/music";
 import {
   blogSchema,
@@ -33,4 +35,9 @@ const projects = defineCollection({
   loader: file("src/data/projects.yaml"),
   schema: ({ image }) => projectSchema(image),
 });
-export const collections = { site, music, about, blog, projects, cases };
+// Load the complete YAML root as one entry so missing IDs and unknown root keys fail.
+const albums = defineCollection({
+  loader: albumsLoader(),
+  schema: ({ image }) => albumsSchema(image),
+});
+export const collections = { site, music, about, blog, projects, cases, albums };

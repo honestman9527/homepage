@@ -3,6 +3,7 @@ import {
   ArticleIcon,
   CaretRightIcon,
   HouseIcon,
+  ImagesIcon,
   UserCircleIcon,
 } from "@phosphor-icons/react";
 import {
@@ -29,6 +30,7 @@ const navIcons = {
   home: HouseIcon,
   projects: ArchiveBoxIcon,
   blog: ArticleIcon,
+  albums: ImagesIcon,
   about: UserCircleIcon,
 } satisfies Record<NavId, typeof HouseIcon>;
 

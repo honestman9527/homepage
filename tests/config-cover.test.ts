@@ -138,7 +138,7 @@ describe("strict content schemas", () => {
     ).toBe(false);
     const parsed = siteSchema(image).parse(site);
     expect(parsed.listing.blog.pageSize).toBe(6);
-    expect(parsed.navigation).toEqual(["home", "projects", "blog", "about"]);
+    expect(parsed.navigation).toEqual(["home", "projects", "blog", "albums", "about"]);
     expect(parsed.comments).toEqual({ provider: "none" });
     expect(parsed.layout.header.sticky).toBe(true);
     expect(parsed.favicon).toEqual({

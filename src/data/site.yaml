@@ -46,9 +46,9 @@ site:
   # 技能按数组顺序显示。
   skills: [TypeScript, React, Astro, Tailwind CSS, Node.js, Rust, Python, PostgreSQL, Docker, GraphQL]
 
-  # 可选值：home、projects、blog、about。顺序决定侧栏顺序；省略只隐藏入口。
+  # 可选值：home、projects、blog、albums、about。顺序决定侧栏顺序；省略只隐藏入口。
   # 项目不能重复，空数组会隐藏全部主导航。
-  navigation: [home, projects, blog, about]
+  navigation: [home, projects, blog, albums, about]
 
   # pageSize 接受 1–48 的整数。每个列表还可设置 defaultCover。
   listing:

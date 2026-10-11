@@ -25,7 +25,7 @@ describe("route configuration", () => {
     const navigation: NavId = "blog";
     expect(routeConfig[route].segment).toBe("about");
     expect(routeConfig[navigation].navigation).toBe(true);
-    expect(navigationIds).toEqual(["home", "projects", "blog", "about"]);
+    expect(navigationIds).toEqual(["home", "projects", "blog", "albums", "about"]);
   });
 
   it("keeps public URLs stable and encodes complete tag names", () => {

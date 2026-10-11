@@ -7,6 +7,7 @@
 - 中文页面使用无前缀路由，旧 `/en` 地址返回 404
 - YAML 配置个人资料、About、项目、导航、评论与封面
 - 项目可关联 Markdown/MDX 案例，基本信息统一维护，草稿不公开
+- YAML 配置相册和照片，支持本地图片、HTTPS 直链、原比例瀑布流与灯箱，无需填写图片宽高
 - 博客支持 Markdown、MDX、标签、搜索和分页
 - Astro 静态渲染，评论与搜索按需加载
 - 可选音乐胶囊，桌面支持左右悬浮与收起，手机保留页头入口；支持精选歌单、顺序/随机播放和站内连续播放，默认关闭，音源自行配置
@@ -35,6 +36,7 @@ pnpm verify
 | 音乐胶囊与歌单 | `src/data/music.yaml` | [配置说明](docs/configuration.md#音乐配置) |
 | About 页面 | `src/data/about.yaml` | [配置说明](docs/configuration.md#about-配置) |
 | 项目列表 | `src/data/projects.yaml` | [配置说明](docs/configuration.md#项目配置) |
+| 相册与照片 | `src/data/albums.yaml` | [配置说明](docs/configuration.md#相册配置) |
 | 博客文章 | `src/content/blog/` | [博客写作](docs/blogging.md) |
 | 作品案例 | `src/content/cases/` | [作品案例](docs/portfolio.md) |
 

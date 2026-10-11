@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=none
+# 相册与照片按数组顺序展示，字段在构建期严格校验。
+# 本地 src/thumbnail 相对于本文件；远程图片使用 HTTPS，无需填写宽高。
+# 完整示例和发布规则见 docs/configuration.md 的“相册配置”。
+albums:
+  items: []

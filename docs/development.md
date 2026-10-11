@@ -7,6 +7,7 @@
 - Node.js >= 22.12，自动构建统一使用 `.node-version` 的 Node.js 24；pnpm 版本以 `package.json` 的 `packageManager` 为准，依赖以锁文件为准。
 - Astro 7、React 19、Tailwind CSS 4。
 - shadcn/ui 基于 Base UI，复用现有基础组件和项目 token，保留其公共 API。
+- `sharp` 显式作为构建期图片依赖声明，供 Astro 优化本地照片；静态部署不运行图片服务。
 
 安装依赖：
 
@@ -43,7 +44,7 @@ taskkill /PID $astroDev.Id /T /F
 - 优先直接导入实际模块，避免仅做转发的入口和单用途抽象；只有共享逻辑才提取为独立模块。
 - 博客和项目逻辑分别维护在 `src/lib/content/` 对应模块中，路由文件保持轻量。
 - 页面与静态内容由 Astro 组织；React 岛承载浏览器交互状态，静态 React 组件不添加 `client:*`，博客搜索只在搜索页水合。
-- `src/content/blog/` 和 `src/content/cases/` 分别存放博客与案例 Markdown/MDX。站点、音乐、About 和项目基本信息放在 `src/data/`，统一通过 Content Collections 和严格的 Zod schema 加载；音乐独立使用 `music.yaml`。
+- `src/content/blog/` 和 `src/content/cases/` 分别存放博客与案例 Markdown/MDX。站点、音乐、About、项目和相册信息放在 `src/data/`，统一通过 Content Collections 和严格的 Zod schema 加载；音乐与相册独立使用 `music.yaml`、`albums.yaml`。
 - 新增或修改配置字段时，同步更新 schema、示例数据和配置文档，未知字段继续在构建期报错。
 - 站点仅提供中文无前缀路径，公开路径通过 `src/config/routes.ts` 生成。
 - 架构与边界调整写入 `architecture.md`，开发流程写入本文，配置与内容规则分别写入对应文档，避免在 `AGENTS.md` 重复实现细节。
@@ -102,6 +103,8 @@ pnpm verify
 
 案例变更还需验证草稿不生成详情或卡片入口，缺失项目、重复 slug、重复项目关联和保留路由都失败；临时发布 Markdown 与 MDX 案例，检查标题／SEO 来自项目、目录与阅读进度正常输出、外链与站内链接语义正确。验证后恢复草稿并完成最终构建，测试内容不得公开。
 
+相册测试覆盖严格配置、真实 Astro 图片解析、草稿过滤、封面引用、缓存与乱序加载、失败重试、瀑布流尺寸变化和灯箱清理。构建集成测试在 `.cache/` 隔离目录复制源码并填入临时照片，不修改正式配置，完成后清理。新增图片资源检查同时覆盖 `src`、`href` 和 `srcset`，远程图可用性由人工验收，不使构建依赖图床网络。
+
 ## Workers 静态预览与部署
 
 Wrangler 是开发依赖，`pnpm-workspace.yaml` 仅额外允许其本地运行时 `workerd` 的安装脚本。`wrangler.jsonc` 不配置构建命令，构建由 `package.json` 脚本显式执行，避免自动构建与发布重复运行。没有运行时绑定，因此无需生成应用绑定类型。
@@ -145,6 +148,8 @@ taskkill /PID $workersPreview.Id /T /F
 - 面板左右切换保持打开和焦点，收起后关闭面板并聚焦圆钮，圆钮恢复胶囊时不打开面板。
 - 手机保留页头入口与底部面板，忽略桌面收起偏好；跨 768px 断点关闭面板，控件内焦点迁移至新入口，控件外焦点不被抢走。
 - 播放中收起、恢复、换位置、站内换页和浏览器前进后退均不断播；换页后面板关闭，刷新后暂停并恢复曲目、进度及 UI 偏好。
+
+相册人工验收使用自己的本地或 HTTPS 照片，检查横竖混排、延迟加载与失败占位、浅深主题、侧栏展开收起和手机宽度变化。灯箱检查焦点约束与恢复、Esc、方向键、触摸横向切换、纵向操作不误切、失败重试和原图入口；分别在音乐开启的客户端导航与关闭的整页导航下检查离页清理和浏览器前进后退。测试照片不得随正式配置公开。
 
 交付时说明检查结果与人工验收状态，未完成的验收明确标注。
 
