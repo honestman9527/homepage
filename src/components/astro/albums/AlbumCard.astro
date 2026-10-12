@@ -1,0 +1,20 @@
+---
+import PhotoImage from "./PhotoImage.astro";
+import type { AlbumItem } from "@/lib/content/albums";
+import { uiText as t } from "@/lib/ui";
+
+interface Props { album: AlbumItem; eager?: boolean }
+const { album, eager = false } = Astro.props;
+---
+<article class="album-card">
+  <a class="album-card-link" href={album.href}>
+    <div class="album-cover">
+      <PhotoImage src={album.cover.thumbnail ?? album.cover.src} alt={album.cover.alt} eager={eager} sizes="(max-width: 767px) 100vw, 50vw" />
+    </div>
+    <div class="album-card-heading">
+      <h2>{album.title}</h2>
+      <span class="album-count">{t("albums.count", { count: album.photos.length })}</span>
+    </div>
+    {album.description && <p class="album-card-description">{album.description}</p>}
+  </a>
+</article>

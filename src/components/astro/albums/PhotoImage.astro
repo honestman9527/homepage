@@ -2,11 +2,11 @@
 import { Image } from "astro:assets";
 import type { PhotoSource } from "@/lib/config/albums";
 
-interface Props { src: PhotoSource; alt: string; eager?: boolean }
-const { src, alt, eager = false } = Astro.props;
+interface Props { src: PhotoSource; alt: string; eager?: boolean; sizes?: string }
+const { src, alt, eager = false, sizes = "(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw" } = Astro.props;
 ---
 {typeof src === "string" ? (
   <img src={src} alt={alt} loading={eager ? "eager" : "lazy"} decoding="async" />
 ) : (
-  <Image src={src} alt={alt} widths={[400, 640, 960]} sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw" loading={eager ? "eager" : "lazy"} />
+  <Image src={src} alt={alt} widths={[400, 640, 960]} sizes={sizes} loading={eager ? "eager" : "lazy"} />
 )}

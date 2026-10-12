@@ -85,6 +85,7 @@ const ui = {
   "music.sequential": "顺序循环",
   "music.shuffle": "随机播放",
   "music.playlist": "精选歌单",
+  "music.settings": "设置",
   "music.loading": "正在缓冲…",
   "music.blocked": "请点击播放，浏览器需要你的操作。",
   "music.error": "播放失败，{seconds} 秒后切换下一首。",

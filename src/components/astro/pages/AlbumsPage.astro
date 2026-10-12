@@ -1,9 +1,7 @@
 ---
-import "@/styles/listing.css";
 import "@/styles/albums.css";
 import SidebarLayout from "@/layouts/SidebarLayout.astro";
-import PhotoImage from "@/components/astro/albums/PhotoImage.astro";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/react/ui/card";
+import AlbumCard from "@/components/astro/albums/AlbumCard.astro";
 import { ListingEmpty } from "@/components/react/content/ListingEmpty";
 import { getAlbumItems } from "@/lib/content/albums";
 import { getSiteConfig } from "@/lib/site-config";
@@ -12,28 +10,15 @@ import { uiText as t } from "@/lib/ui";
 const [albums, site] = await Promise.all([getAlbumItems(), getSiteConfig()]);
 ---
 <SidebarLayout activeNavId="albums" title={`${t("albums.title")} — ${site.name}`} description={t("albums.subtitle")}>
-  <main class="listing-page">
-    <header class="page-heading">
-      <p>{t("albums.title")}</p>
-      <h1>{t("albums.subtitle")}</h1>
+  <main class="albums-page">
+    <header class="album-heading">
+      <h1>{t("albums.title")}</h1>
+      <p class="album-description">{t("albums.subtitle")}</p>
     </header>
     {albums.length ? (
-      <div class="card-grid">
-        {albums.map((album, index) => (
-          <article class="content-card" data-has-cover="true">
-            <Card>
-              <a class="album-cover" href={album.href} aria-label={album.title}>
-                <PhotoImage src={album.cover.thumbnail ?? album.cover.src} alt={album.cover.alt} eager={index === 0} />
-              </a>
-              <CardHeader>
-                <p class="card-meta">{t("albums.count", { count: album.photos.length })}</p>
-                <CardTitle><h2><a class="card-title-link" href={album.href}>{album.title}</a></h2></CardTitle>
-                {album.description && <CardDescription><p>{album.description}</p></CardDescription>}
-              </CardHeader>
-            </Card>
-          </article>
-        ))}
+      <div class="album-grid">
+        {albums.map((album, index) => <AlbumCard album={album} eager={index === 0} />)}
       </div>
-    ) : <ListingEmpty title={t("empty.albums.title")} description={t("empty.albums.description")} />}
+    ) : <ListingEmpty className="album-empty" title={t("empty.albums.title")} description={t("empty.albums.description")} />}
   </main>
 </SidebarLayout>

@@ -129,6 +129,11 @@ describe("album lightbox", () => {
     expect(controls.previous.disabled).toBe(true); expect(controls.next.disabled).toBe(false);
     expect(controls.original.href).toBe(links[0].href);
     expect(controls.caption.textContent).toBe("说明");
+    expect(controls.date.textContent).toBe("2026年10月11日");
+    expect(controls.location.textContent).toBe("杭州");
+    expect(controls.caption.hidden).toBe(false);
+    expect(controls.date.hidden).toBe(false);
+    expect(controls.location.hidden).toBe(false);
     click(controls.close);
     expect(dialog.open).toBe(false); expect(scroll.overflow).toBe("clip");
     expect(scroll.getPropertyPriority("overflow")).toBe("important");
@@ -145,7 +150,7 @@ describe("album lightbox", () => {
     click(controls.retry); expect(images).toHaveLength(3);
     expect(controls.error.hidden).toBe(true); fire(images[2], "load");
     expect(images[2].hidden).toBe(false); expect(controls.loading.hidden).toBe(true);
-    expect(controls.caption.hidden).toBe(true); expect(controls.date.hidden).toBe(true);
+    expect(controls.caption.hidden).toBe(true); expect(controls.date.hidden).toBe(true); expect(controls.location.hidden).toBe(true);
     fire(dialog, "keydown", { key: "ArrowRight" });
     expect(controls.counter.textContent).toBe("3 / 3"); expect(controls.next.disabled).toBe(true);
     click(controls.next); expect(images).toHaveLength(4);

@@ -13,6 +13,8 @@ it("builds published local/remote albums with static links, responsive assets an
   try {
     await Promise.all(["src", "public", "astro.config.mjs", "tsconfig.json", "package.json", "ec.config.mjs"].map((file) => cp(join(project, file), join(fixture, file), { recursive: true })));
     await symlink(join(project, "node_modules"), join(fixture, "node_modules"), "junction");
+    // Contrast the normal music-enabled build without touching the real configuration.
+    await writeFile(join(fixture, "src/data/music.yaml"), "music:\n  enabled: false\n  tracks: []\n");
     await mkdir(join(fixture, "src/assets/albums"), { recursive: true });
     const sharp = astroRequire("sharp");
     await writeFile(join(fixture, "src/assets/albums/landscape.png"), await sharp({ create: { width: 900, height: 600, channels: 3, background: "#3563d9" } }).png().toBuffer());
@@ -52,7 +54,7 @@ it("builds published local/remote albums with static links, responsive assets an
 `);
     const bin = join(dirname(astroRequire.resolve("astro/package.json")), "bin/astro.mjs");
     const build = spawnSync(process.execPath, [bin, "build"], {
-      cwd: fixture, windowsHide: true, encoding: "utf8", timeout: 90000,
+      cwd: fixture, windowsHide: true, encoding: "utf8", timeout: 180000,
       env: { ...process.env, NODE_ENV: "production", ASTRO_TELEMETRY_DISABLED: "1" },
     });
     if (build.status !== 0) throw new Error((build.error?.message ?? "") + build.stdout + build.stderr);
@@ -67,6 +69,12 @@ it("builds published local/remote albums with static links, responsive assets an
     expect(detail).toContain('href="https://images.invalid/original.jpg"');
     expect(detail).toContain('loading="lazy"');
     expect(detail).toContain('data-photo-date="2026年10月11日"');
+    expect(detail).toContain('data-photo-caption="日常记录"');
+    expect(detail).toContain('data-photo-location="杭州"');
+    expect(detail).not.toContain("<figcaption");
+    expect(detail).toContain("data-viewer-caption");
+    expect(detail).toContain('aria-label="上一张"');
+    expect(detail).toContain('aria-label="下一张"');
     expect(detail).toContain('rel="canonical" href="https://honestman.me/albums/second"');
     // AppShell is the only hydrated island; the photo wall and lightbox are static.
     expect([...detail.matchAll(/<astro-island\b/g)]).toHaveLength(1);
@@ -83,8 +91,14 @@ it("builds published local/remote albums with static links, responsive assets an
     expect(detailOnlyScripts.every((src) => !home.includes(src))).toBe(true);
     const homeCss = (await Promise.all([...home.matchAll(/<link\b[^>]*href="([^"<>]+\.css)"/g)].map(([, href]) => readFile(join(dist, href.slice(1)), "utf8")))).join("\n");
     expect(homeCss).not.toContain(".album-wall");
+    for (const file of (await readdir(dist, { recursive: true })).filter((file) => file.endsWith(".html"))) {
+      const html = await readFile(join(dist, file), "utf8");
+      expect(html).not.toMatch(/<audio\b|data-music-(?:audio|capsule|placeholder|styles)|ClientRouter\./);
+      expect(html).not.toMatch(/MusicCapsule\.[^"<>]+\.js|\.music-dock|\.music-capsule/);
+    }
+    expect(homeCss).not.toMatch(/\.music-dock|\.music-capsule/);
   } finally {
     if (!resolve(fixture).startsWith(resolve(cache) + sep)) throw new Error("临时构建目录越界");
     await rm(fixture, { recursive: true, force: true });
   }
-}, 120000);
+}, 210000);

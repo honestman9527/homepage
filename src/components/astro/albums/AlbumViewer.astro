@@ -1,0 +1,42 @@
+---
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowUpRight";
+import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
+import { buttonVariants } from "@/components/react/ui/button";
+import { uiText as t } from "@/lib/ui";
+const controlClass = `${buttonVariants({ variant: "outline", size: "icon" })} album-viewer-button`;
+---
+<dialog class="album-viewer" data-album-viewer aria-labelledby="album-viewer-title">
+  <header class="album-viewer-header">
+    <h2 id="album-viewer-title" class="sr-only">{t("albums.viewer")}</h2>
+    <p class="album-viewer-counter" data-viewer-counter aria-live="polite"></p>
+    <button class={controlClass} type="button" data-viewer-close autofocus aria-label={t("albums.close")}>
+      <XIcon aria-hidden="true" />
+    </button>
+  </header>
+  <div class="album-viewer-body">
+    <button class={`${controlClass} album-viewer-previous`} type="button" data-viewer-previous aria-label={t("albums.previous")}>
+      <ArrowLeftIcon aria-hidden="true" />
+    </button>
+    <div class="album-viewer-stage" data-viewer-stage>
+      <p data-viewer-loading role="status" hidden>{t("albums.loading")}</p>
+      <div data-viewer-error role="alert" hidden>
+        <p>{t("albums.error")}</p>
+        <button class={`${buttonVariants({ variant: "outline" })} album-viewer-button`} type="button" data-viewer-retry>{t("albums.retry")}</button>
+      </div>
+    </div>
+    <button class={`${controlClass} album-viewer-next`} type="button" data-viewer-next aria-label={t("albums.next")}>
+      <ArrowRightIcon aria-hidden="true" />
+    </button>
+  </div>
+  <footer class="album-viewer-footer">
+    <div class="album-viewer-info">
+      <p data-viewer-caption hidden></p>
+      <p class="album-viewer-meta"><span data-viewer-date hidden></span><span data-viewer-location hidden></span></p>
+    </div>
+    <a class={`${buttonVariants({ variant: "outline" })} album-viewer-button album-viewer-original`} data-viewer-original target="_blank" rel="noreferrer">
+      {t("albums.original")}<ArrowUpRightIcon aria-hidden="true" />
+    </a>
+  </footer>
+</dialog>
