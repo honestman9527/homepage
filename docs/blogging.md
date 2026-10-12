@@ -1,8 +1,12 @@
 # 博客写作
 
-博客文件位于 `src/content/blog/`，支持 `.md` 和 `.mdx`，也可按目录分组。公开地址由必填 frontmatter `slug` 决定，与文件名无关。站点只提供中文页面。
+博客文件位于 `src/content/blog/`，支持 `.md` 和 `.mdx`，也可按目录分组。公开地址由必填 frontmatter `slug` 决定，与文件名无关。
 
 ## 新建文章
+
+1. 新建文件并填写以下 frontmatter；未完成的文章显式设置 `draft: true`。普通文章优先使用 Markdown，正文需要组件时使用 MDX。
+2. 完成正文、摘要、日期、标签与图片，按下方字段规则检查 slug 和资源引用。
+3. 发布时设置 `draft: false`，按[写作完成条件](#写作完成条件)检查公开入口与内容。
 
 ```yaml
 ---
@@ -11,13 +15,11 @@ title: 文章标题
 description: 用于文章列表、搜索和页面描述的摘要
 pubDate: 2026-09-14
 tags: [Astro, 性能]
-draft: false
+draft: true
 toc: true
 comments: true
 ---
 ```
-
-建议普通文章优先使用 Markdown；只有正文需要使用组件时才使用 MDX。
 
 ## Frontmatter 字段
 
@@ -25,7 +27,7 @@ comments: true
 
 | 字段 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `slug` | 是 | — | 稳定标识，也是 Astro 条目 ID 和文章 URL 的末段 |
+| `slug` | 是 | — | 稳定标识，决定文章 URL 的末段 |
 | `title` | 是 | — | 非空标题 |
 | `description` | 是 | — | 非空摘要，用于列表、搜索和 SEO |
 | `pubDate` | 是 | — | 可解析日期，建议使用 `YYYY-MM-DD` |
@@ -42,19 +44,19 @@ comments: true
 
 ## Markdown、MDX 与目录
 
-Markdown 和 MDX 使用相同 frontmatter。二级和三级标题参与目录。`toc: false` 只关闭目录，正文标题和顶部阅读进度仍正常工作。代码块由 Expressive Code 处理。
+Markdown 和 MDX 使用相同 frontmatter。二级和三级标题参与目录。`toc: false` 只关闭目录，正文标题和顶部阅读进度仍正常工作。
 
 ## 标签与搜索
 
 - 标签只来自已发布文章，区分大小写。
 - 标签按完整名称编码，因此中文、空格和 `C++` 等名称均可使用。
 - 文章卡片和头部的标签链接到对应标签页。
-- 搜索只索引标题、摘要和标签，不包含正文与封面，并且只在搜索页水合。
+- 搜索只索引标题、摘要和标签，不包含正文与封面。
 - 搜索忽略大小写，按空白拆分关键词；所有关键词都匹配时才显示文章。
 
 ## 评论与封面
 
-`comments: false` 关闭当前文章评论；站点未配置提供商时不会加载客户端。评论标识固定为 `/blog/{slug}`，Waline 和 Twikoo 都使用 `zh-CN`，并保留懒加载、失败重试与清理机制。修改文件名不会改变评论标识，修改 slug 则会改变标识。
+评论服务配置参见[配置说明](configuration.md#评论)。评论记录随 `/blog/{slug}` 识别，修改文件名保持记录，修改 slug 会改变评论标识。
 
 ```yaml
 cover:
@@ -63,18 +65,7 @@ cover:
   alt: 文章封面说明
 ```
 
-```yaml
-cover:
-  type: topographic
-  palette: neutral
-```
-
-```yaml
-cover:
-  type: none
-```
-
-远程图片必须使用 HTTPS，本地路径相对于文章文件。博客封面按“文章 → 列表默认封面 → 站点默认封面 → 内置等高线”选择，显式 `none` 会停止回退。详细配置参见[配置说明](configuration.md#封面)。
+图片路径、等高线参数、显式关闭与封面回退统一参见[配置说明](configuration.md#封面)。
 
 ## 生成路由
 
@@ -89,3 +80,10 @@ cover:
 | `/blog/tags/{tag}/page/{page}` | 标签后续分页 |
 
 以上页面都在构建期生成。草稿、空的后续分页和不存在的标签不会生成页面；旧 `/en` 地址返回 404，不生成跳转。
+
+## 写作完成条件
+
+- frontmatter 字段有效，slug 唯一且未误改；正文中的本地链接与图片路径存在，标题、摘要、日期和替代文本已核对。
+- 草稿保持 `draft: true`，检查其详情、列表、搜索、标签和相邻文章均未公开；发布文章检查这些入口按本文规则出现。
+- 按[自动检查与产物](development.md#自动检查与产物)选择验证范围。改变 frontmatter 字段规则时，按[编码与文档](development.md#编码与文档)同步 schema、示例与文档；改变路由、组件或客户端行为时补读[项目架构](architecture.md)。
+- 涉及正文排版、MDX 组件、目录、进度或评论时，完成对应[人工验收](development.md#人工验收)，并在交付中区分已完成检查与待验收项。

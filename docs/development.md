@@ -1,54 +1,40 @@
 # 开发约定
 
-本文维护开发环境、编码与验证流程；组件边界、数据流、音乐持久化和换页生命周期参见[项目架构](architecture.md)。配置字段参见[配置说明](configuration.md)，文章规则参见[博客写作](blogging.md)。
+本文维护环境、编码、验证、进程管理与交付流程。组件和生命周期见[项目架构](architecture.md)，字段见[配置说明](configuration.md)，云端发布见[部署说明](deployment.md)。
 
 ## 环境与命令
 
-- Node.js >= 22.12，自动构建统一使用 `.node-version` 的 Node.js 24；pnpm 版本以 `package.json` 的 `packageManager` 为准，依赖以锁文件为准。
-- Astro 7、React 19、Tailwind CSS 4。
-- shadcn/ui 基于 Base UI，复用现有基础组件和项目 token，保留其公共 API。
-- `sharp` 显式作为构建期图片依赖声明，供 Astro 优化本地照片；静态部署不运行图片服务。
+从 [`package.json`](../package.json) 的 `engines`、`packageManager` 和 `scripts` 读取本地环境与命令；自动构建使用 [`.node-version`](../.node-version)，安装依赖使用 `pnpm install`。依赖版本和安装脚本许可由锁文件及工作区配置维护。
 
-安装依赖：
-
-```sh
-pnpm install
-```
-
-开发服务器必须使用后台模式。Windows PowerShell 在项目目录启动、查看日志和停止 Astro 开发进程：
+开发与预览服务器后台运行，在所服务的项目或隔离副本根目录管理。Astro 自带后台进程管理，Windows 可直接调用本地 CLI，避免依赖包管理器启动器的子进程行为：
 
 ```powershell
-New-Item -ItemType Directory -Force .cache | Out-Null
-$astroDev = Start-Process -FilePath (Get-Command pnpm).Source `
-  -ArgumentList @("dev") -WorkingDirectory (Get-Location).Path `
-  -WindowStyle Hidden -RedirectStandardOutput .cache/astro-dev.log `
-  -RedirectStandardError .cache/astro-dev.err.log -PassThru
+node node_modules/astro/bin/astro.mjs dev --background --host 127.0.0.1
+node node_modules/astro/bin/astro.mjs dev status
+node node_modules/astro/bin/astro.mjs dev logs
 ```
 
-启动后等待日志出现就绪地址；查看正常输出与错误：
+日志出现就绪地址且该地址响应后才开始验收。结束时在同一项目目录停止服务：
 
 ```powershell
-Get-Content .cache/astro-dev.log -Tail 30
-Get-Content .cache/astro-dev.err.log -Tail 30
+node node_modules/astro/bin/astro.mjs dev stop
 ```
 
-使用完毕，在同一个 PowerShell 会话中停止进程及其子进程：
-
-```powershell
-taskkill /PID $astroDev.Id /T /F
-```
+静态 Astro 预览先运行 `pnpm build`，再将上述命令中的 `dev` 换成 `preview`；源码变更后重新构建。需要独立端口时传入 `--port`，使用 `--help` 查看当前 CLI 选项。Workers 本地预览见[下文](#workers-静态预览与部署)。
 
 ## 编码与文档
 
-- 使用 TypeScript 严格模式和 `@/` 路径别名。
-- 优先直接导入实际模块，避免仅做转发的入口和单用途抽象；只有共享逻辑才提取为独立模块。
-- 博客和项目逻辑分别维护在 `src/lib/content/` 对应模块中，路由文件保持轻量。
-- 页面与静态内容由 Astro 组织；React 岛承载浏览器交互状态，静态 React 组件不添加 `client:*`，博客搜索只在搜索页水合。
-- `src/content/blog/` 和 `src/content/cases/` 分别存放博客与案例 Markdown/MDX。站点、音乐、About、项目和相册信息放在 `src/data/`，统一通过 Content Collections 和严格的 Zod schema 加载；音乐与相册独立使用 `music.yaml`、`albums.yaml`。
-- 新增或修改配置字段时，同步更新 schema、示例数据和配置文档，未知字段继续在构建期报错。
-- 站点仅提供中文无前缀路径，公开路径通过 `src/config/routes.ts` 生成。
-- 架构与边界调整写入 `architecture.md`，开发流程写入本文，配置与内容规则分别写入对应文档，避免在 `AGENTS.md` 重复实现细节。
-- 答复和提交信息使用中文，项目名、品牌名及技术名称保留原有写法。
+- 使用严格 TypeScript 与 `@/` 路径别名，优先直接导入实际模块；共享逻辑才提取抽象。
+- 数据、路由、水合与样式按[项目架构](architecture.md)归属；复用现有 shadcn/Base UI 组件与 token，保留基础组件公共 API。
+- 本地照片使用 Astro Image；`sharp` 必须显式保留为构建依赖，静态部署不运行图片服务。
+- 答复与提交摘要使用中文，品牌和技术名称沿用原有写法。
+
+修改配置字段时，完成以下步骤后再交付：
+
+1. 同步 schema、使用该字段的内容选择与展示逻辑，未知字段仍严格报错。
+2. 更新对应示例、[配置说明](configuration.md)或博客／案例字段说明，并覆盖默认值、合法值和非法值。
+3. 把新增长期约定写入所属文档：边界归架构、流程归本文、字段归配置或内容文档、发布归部署。其他位置用带触发条件的链接引用。
+4. 按下节完成验证；所有改动字段、调用方和文档均已对应，待人工验收项已说明。
 
 ## 提交信息
 
@@ -79,80 +65,82 @@ docs: 统一提交信息规范
 
 ## 自动检查与产物
 
-本地验证按改动风险与影响范围选择：
+先按实际影响选择验证范围；CI 与正式部署始终运行完整验证。
 
-- 仅文档变更：检查本地链接与 `git diff --check`，无需运行代码测试。
-- 文案、样式或低风险局部修复：执行覆盖受影响行为的定向测试、类型检查或构建检查，不触发无关的全量验证。
-- 涉及架构、schema、路由、共享交互或部署行为的变更：运行完整验证。
-
-完整验证命令：
+| 改动 | 完成条件 |
+| --- | --- |
+| 仅文档 | 本地文件链接与章节锚点有效，`git diff --check` 通过 |
+| 文案、样式或低风险局部修复 | 覆盖受影响行为的定向测试、类型检查或构建检查通过 |
+| 架构、schema、路由、共享交互或部署行为 | `pnpm verify` 通过，并完成适用的产物检查 |
 
 ```sh
 pnpm verify
 ```
 
-该命令串行运行 `pnpm test`、`pnpm check`、`pnpm build` 和 `pnpm verify:workers`；任何一步失败都会停止。CI 与正式部署始终运行完整验证。GitHub Actions 对 PR、`master` 推送和手动触发运行相同流程，使用冻结锁文件安装依赖，不需要 Cloudflare 凭据。自动发布流程自身也运行全部检查，不依赖 GitHub 检查是否已完成。
+各子步骤及顺序以 `package.json` 的 `scripts.verify` 为准，失败时停止。`verify:workers` 检查已有 `dist/`，执行 Wrangler dry-run 和后台 HTTP 验证，不上传、无需 Cloudflare 登录；检查全部页面、引用资源、站内链接、末尾斜杠跳转及 404，结束时关闭自己启动的进程。
 
-检查通过后，仅在出现新改动、失败或未解决风险时追加验证，避免重复运行无关检查。
+检查通过后，仅在新改动、失败或未解决风险涉及该检查时追加验证。Windows 若出现 Astro 缓存文件替换的 `EPERM`，先检查同一工作目录是否有并发构建／检查，确认进程归属后重试失败步骤；交付记录实际执行结果。完整验证未跑完时，逐项说明补跑的步骤，不能把部分通过写成整条命令通过。
 
-检查构建产物：草稿不进入公开页面、列表、标签、搜索和相邻文章；内部链接能够解析，canonical 与 Open Graph URL 对应当前页面，不生成英文页面、旧 `/en` 跳转或 hreflang。新增页面或动态路由时同步检查公开入口和相关路径生成逻辑。
+### 按场景检查产物
 
-检查客户端边界：AppShell 保持现有水合根，搜索只在搜索页水合，静态内容不增加水合岛。涉及音乐时，每个启用页面只有一个持久化音频节点，首次播放前不设置音源；检查 HTML 的预加载入口与静态样式，音乐控件及其 `?inline` CSS 仍动态加载。临时禁用音乐后构建对照，页面不得输出音频、胶囊、音乐样式或音乐所需的 ClientRouter，也不得预加载音乐模块；恢复当前配置后完成最终 `pnpm verify`。不以 dist 中是否存在未被页面加载的动态 chunk 判断禁用状态。
+只检查与改动相关的分支：
 
-音乐配置测试覆盖 desktop 省略／空对象默认值、合法与非法位置、类型和未知字段；偏好测试覆盖有效恢复、损坏记录、读取前不写入、存储读写失败及跨组件订阅保留。桌面 UI 偏好只写入 `homepage.music.ui.v1`，播放记录格式和单音频节点边界保持原样。
+- **路由与内容**：公开入口和内部链接可解析；canonical、Open Graph 与当前页面对应；草稿不会进入路由、列表、标签、搜索或相邻文章；中文路由边界见[架构](architecture.md#内容与路由)。
+- **样式与依赖加载**：检查 HTML 的外链、内联样式和预加载入口，各页面只加载所属功能规则。临时关闭音乐或文章评论进行构建对照；比较体积时合计外链 CSS、内联 CSS 和动态模块携带的 CSS。
+- **音乐**：启用页面仅有一个持久化音频节点，首次播放前无 `src`；服务端与首次水合占位一致，控件及 `?inline` CSS 动态加载。禁用对照页面无音频、胶囊、音乐样式或音乐所需的 ClientRouter，不预加载音乐模块。以页面实际引用判断加载，不能以 dist 中存在未被引用的动态 chunk 判断功能启用。配置测试覆盖默认值、非法值和未知字段，偏好测试覆盖恢复、损坏记录、初始化只读、存储失败及跨组件订阅；持久化边界见[架构](architecture.md#音乐与站内导航)。
+- **相册**：覆盖严格配置、真实 Astro 图片解析、草稿过滤、封面引用、缓存与乱序加载、失败重试、瀑布流尺寸变化及灯箱清理；元数据从照片墙传入灯箱，切图后清空缺失字段。资源引用同时检查 `src`、`href` 和 `srcset`；图床可用性由人工检查，构建保持不依赖远程网络。
+- **案例**：草稿无详情或卡片入口，缺失项目、重复 slug、重复关联和保留路由报错；用隔离样本发布 Markdown 与 MDX，确认标题／SEO 来自项目、正文／目录／进度正常、站内与外链语义正确。展示规则见[作品案例](portfolio.md)。
 
-案例变更还需验证草稿不生成详情或卡片入口，缺失项目、重复 slug、重复项目关联和保留路由都失败；临时发布 Markdown 与 MDX 案例，检查标题／SEO 来自项目、目录与阅读进度正常输出、外链与站内链接语义正确。验证后恢复草稿并完成最终构建，测试内容不得公开。
-
-相册测试覆盖严格配置、真实 Astro 图片解析、草稿过滤、封面引用、缓存与乱序加载、失败重试、瀑布流尺寸变化和灯箱清理。构建集成测试在 `.cache/` 隔离目录复制源码并填入临时照片，不修改正式配置，完成后清理。新增图片资源检查同时覆盖 `src`、`href` 和 `srcset`，远程图可用性由人工验收，不使构建依赖图床网络。
+临时开关、测试图片和音频放在 `.cache/` 隔离副本，正式内容保持原样；构建集成测试结束后清理自身副本。若必须临时改动当前配置，恢复后重新验证并生成正式产物，测试内容不得发布。
 
 ## Workers 静态预览与部署
 
-Wrangler 是开发依赖，`pnpm-workspace.yaml` 仅额外允许其本地运行时 `workerd` 的安装脚本。`wrangler.jsonc` 不配置构建命令，构建由 `package.json` 脚本显式执行，避免自动构建与发布重复运行。没有运行时绑定，因此无需生成应用绑定类型。
-
-`pnpm verify:workers` 验证已有 `dist/`：先执行部署 dry-run，再由 `scripts/verify-workers.mjs` 使用可用端口后台启动本地 Wrangler，检查全部页面、页面引用资源、站内链接、末尾斜杠跳转与 404，成功或失败后均关闭自己启动的进程；不要求登录，也不上传。它验证 HTTP 与静态产物，不执行截图或替代人工交互验收。
-
-本地预览必须后台启动。Windows PowerShell 使用以下命令，并保留该会话中的进程对象：
+Astro 日常开发使用[开发服务器](#环境与命令)；需要模拟 Workers 静态托管时，先构建，再在 PowerShell 后台启动本地 Wrangler：
 
 ```powershell
+pnpm build
+if ($LASTEXITCODE -ne 0) { throw "Astro 构建失败，停止启动预览。" }
 New-Item -ItemType Directory -Force .cache | Out-Null
-$workersPreview = Start-Process -FilePath (Get-Command pnpm).Source `
-  -ArgumentList @("preview:workers") -WorkingDirectory (Get-Location).Path `
-  -WindowStyle Hidden -RedirectStandardOutput .cache/workers-preview.log `
+$workersPreview = Start-Process -FilePath (Get-Command node).Source `
+  -ArgumentList @("node_modules/wrangler/bin/wrangler.js", "dev", "--local", "--ip", "127.0.0.1") `
+  -WorkingDirectory (Get-Location).Path -WindowStyle Hidden `
+  -RedirectStandardOutput .cache/workers-preview.log `
   -RedirectStandardError .cache/workers-preview.err.log -PassThru
-```
-
-这个本地命令先执行 Astro 构建，启动不代表就绪。查看两份日志，等待 Wrangler 显示就绪地址后访问默认的 `http://localhost:8787`：
-
-```powershell
 Get-Content .cache/workers-preview.log -Tail 30
 Get-Content .cache/workers-preview.err.log -Tail 30
 ```
 
-预览不会自动重新构建源文件，修改内容后重新启动预览；日常开发使用 Astro 开发服务器。验收结束后，在同一个会话单独执行停止命令：
+构建成功、Wrangler 日志出现就绪地址且该地址响应后，才算预览可用。预览读取已有产物，源码修改后重新构建；在同一会话保留 `$workersPreview`，验收结束后停止该进程树：
 
 ```powershell
 taskkill /PID $workersPreview.Id /T /F
 ```
 
-以上 Windows 命令适用于当前 `pnpm.exe` 安装方式；关闭会话会丢失进程对象，应先停止预览。正式发布使用 `pnpm deploy:workers`，先完整验证再发布，需要 Cloudflare 登录或发布凭据。Git 自动部署、云端分支预览和回滚统一见[部署说明](deployment.md)；云端 `wrangler preview` 会上传，不能与本地 `preview:workers` 混淆。
-
-普通构建使用 `astro.config.mjs` 的站点地址。
+进程归属不明时，先核对命令行、工作目录与端口，只停止本次启动的服务。正式发布命令、凭据和云端分支预览见[部署说明](deployment.md#本地命令)；本地 `preview:workers` 与会上传的云端 `wrangler preview` 用途不同。
 
 ## 人工验收
 
-前端布局、主题、侧栏和交互由人工验收，不执行自动截图。根据修改范围检查桌面与手机展示、主题切换、侧栏、搜索、文章目录与进度、评论，以及站内导航和浏览器前进后退。
+布局、主题、侧栏和交互由人工验收，不执行自动截图。按修改范围检查桌面／手机、浅色／深色／跟随系统、侧栏变化和键盘焦点；涉及导航时检查站内换页、浏览器前进后退与离页清理。生命周期边界见[架构](architecture.md#页面生命周期)。
 
-涉及音乐时检查以下行为；可以使用临时本地测试音频，结束后清理临时配置和文件，真实音源可用性单独验收。换页生命周期的初始化与清理遵循[架构说明](architecture.md#音乐与站内导航)。
+### 音乐
 
-- 桌面左右定位跟随主内容区与侧栏，页头无音乐占位，浮层不遮挡周围点击；长标题截断、浅深主题、减少动态效果与弹层边界正常。
-- 桌面胶囊默认只显示封面、歌名和右侧收起按钮；悬停与键盘聚焦时显示播放／暂停和下一首，无悬停能力的设备持续显示快捷操作。
-- 面板左右切换保持打开和焦点，收起后关闭面板并聚焦侧边半露的封面入口，入口恢复胶囊时不打开面板；侧栏变化后入口继续贴合所选内容区边缘。
-- 手机保留页头入口与底部面板，忽略桌面收起偏好；跨 768px 断点关闭面板，控件内焦点迁移至新入口，控件外焦点不被抢走。
-- 播放中收起、恢复、换位置、站内换页和浏览器前进后退均不断播；换页后面板关闭，刷新后暂停并恢复曲目、进度及 UI 偏好。
+用隔离测试音频检查[入口与面板](configuration.md#音乐配置)：
 
-相册人工验收使用自己的本地或 HTTPS 照片，检查横竖混排、延迟加载与失败占位、浅深主题、侧栏展开收起和手机宽度变化。灯箱检查焦点约束与恢复、Esc、方向键、触摸横向切换、纵向操作不误切、失败重试和原图入口；分别在音乐开启的客户端导航与关闭的整页导航下检查离页清理和浏览器前进后退。测试照片不得随正式配置公开。
+- 左右定位跟随内容区和侧栏，长歌名截断，快捷操作在悬停、键盘聚焦或无悬停设备上可用。
+- 收起后聚焦半露封面入口，恢复时面板关闭；换位置保持面板、详情与焦点，重新打开面板时歌单与设置均收起。
+- 手机页头入口、独立播放键和底部面板正常；跨 768px 断点关闭面板，仅迁移原控件内的焦点。
+- 播放、暂停、切歌、进度和音量正常；单曲保留操作，缺失或失败封面显示音符，异常提示和重试始终可见。
+- 收起、恢复、换位置、换页及前进后退持续播放；换页后面板关闭，刷新后暂停并恢复记录；减少动态效果和设备音量提示按实际环境检查。
 
-交付时说明检查结果与人工验收状态，未完成的验收明确标注。
+真实音源可用性单独验收，合成音频通过不能替代真实音源检查。
+
+### 相册
+
+用隔离的横竖照片、长说明和失败地址检查[展示与灯箱](configuration.md#展示与灯箱)：目录列数、原图比例、延迟加载和失败占位正常；灯箱完整看图、长说明独立滚动且控制按钮可见。检查焦点约束与恢复、Esc、方向键、首尾停止、横向触摸切图、纵向操作不误切、失败重试和原图入口。分别在音乐启用的客户端导航与禁用的整页导航下检查离页清理和前进后退。
+
+### 交付
+
+列出实际执行的检查、结果与适用的人工验收状态；未执行项明确标为待验收。临时样本已与正式内容隔离，预览地址与停止方式可定位后再交付。
 
 ## Astro 参考
 
