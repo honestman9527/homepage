@@ -14,7 +14,7 @@ pnpm deploy:dry-run
 
 Wrangler **4.151.3** 于 2026-10-22 从 npm registry 稳定版本中选取，已锁定到 `package.json` 与 `pnpm-lock.yaml`。本地与 Actions 共用 Node 24.21.0、pnpm 12.14.0。`pnpm-workspace.yaml` 仅允许 Wrangler 所需的 `esbuild` 与 `workerd` 运行安装脚本，使全新环境可重复安装；依赖升级时需复核该允许列表。[pnpm 构建脚本配置](https://pnpm.io/cli/approve-builds)
 
-首屏体积与人工验收应在完整应用集成后测量，基础占位页面的数据不能作为最终结果。
+完整应用的本地检查与资产测量已记录在 [交付验证记录](delivery.md)；视觉、辅助技术与真机体验仍按 [人工验收清单](manual-acceptance.md) 执行。数据对应记录中的构建基线，资源变化后需重测。
 
 ## Actions 契约
 
@@ -59,4 +59,4 @@ pnpm exec wrangler rollback <已确认正常的版本ID>
 
 ## 尚待实际验证
 
-本地检查与 dry-run 的执行结果见交付记录。由于没有配置生产凭据或进行真实发布，Actions 上的 check、非默认分支拒绝 deploy、失败检查阻止发布、成功发布同一 commit 构建、并发发布行为和线上回退均待维护者实际验证。完整应用的最终检查、体积测量与人工视觉和真机验收清单由后续交付汇总，不将声明的工作流行为当成线上实测结果。
+本地检查、dry-run 与具体待补配置见 [交付验证记录](delivery.md)。由于没有配置生产凭据或进行真实发布，Actions 上的 check、非默认分支拒绝 deploy、失败检查阻止发布、成功发布同一 commit 构建、并发发布行为和线上回退均待维护者实际验证。不将声明的工作流行为当成线上实测结果。
