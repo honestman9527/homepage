@@ -6,6 +6,10 @@ coverage/
 .env*
 !.env.example
 .wrangler/
+.dev.vars*
+!.dev.vars.example
+dist.sha256
+revision.txt
 # Raw source handoffs stay local; only derived implementation assets are committed.
 honestos-handoff/
 reference-prototype/

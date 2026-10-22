@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "honestos",
+  "compatibility_date": "2026-10-22",
+  // The whole application is static. Deploy the exact dist checked by CI.
+  // No main entry, build command, account credentials, routes or domain changes.
+  "assets": {
+    "directory": "./dist"
+  }
+}
