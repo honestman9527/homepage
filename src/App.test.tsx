@@ -200,6 +200,8 @@ it('keeps the focused command and navigation usable in compact visual viewports 
   keepVisible.mockClear();
   act(() => { viewport.height = 200; viewport.dispatchEvent(new Event('resize')); });
   expect(document.documentElement.dataset.compactViewport).toBe('true');
+  fireEvent.click(within(terminal).getByRole('button', { name: '最大化终端' }));
+  expect(terminal.style.width).toBe(normal.width);
   expect(keepVisible).toHaveBeenCalledWith({ block: 'nearest' });
   expect(document.activeElement).toBe(input);
   fireEvent.keyDown(input, { key: 'Enter' });
@@ -231,4 +233,38 @@ it('returns cancelled search to visible navigation if presentation CSS hides its
   about.style.display = 'none';
   await user.keyboard('{Escape}');
   expect(document.activeElement).toBe(within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: '搜索应用' }));
+});
+
+it('reveals the focused compact terminal input when unread output and completion feedback grow without losing the old output reading position', async () => {
+  const user = userEvent.setup();
+  const viewport = Object.assign(new EventTarget(), { height: 768, offsetTop: 0 });
+  Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
+  render(<App />);
+  const input = terminalInput();
+  const output = screen.getByRole('log', { name: '终端输出' });
+  Object.defineProperties(output, {
+    clientHeight: { configurable: true, value: 64 },
+    scrollHeight: { configurable: true, get: () => output.children.length * 100 },
+  });
+  const keepVisible = vi.fn();
+  input.scrollIntoView = keepVisible;
+  await user.click(input);
+  fireEvent.change(input, { target: { value: 'echo first record' } });
+  fireEvent.keyDown(input, { key: 'Enter' });
+  output.scrollTop = 40;
+  fireEvent.scroll(output);
+  act(() => { viewport.height = 200; viewport.dispatchEvent(new Event('resize')); });
+  fireEvent.change(input, { target: { value: 'echo new unread output' } });
+  fireEvent.keyDown(input, { key: 'Enter' });
+  expect(screen.getByRole('button', { name: '查看新输出' })).toBeTruthy();
+  keepVisible.mockClear();
+  fireEvent.keyDown(input, { key: 'Tab' });
+  expect(screen.getByText(/可补全：/)).toBeTruthy();
+  expect(keepVisible).toHaveBeenCalledWith({ block: 'nearest' });
+  expect(document.activeElement).toBe(input);
+  expect(output.scrollTop).toBe(40);
+  fireEvent.change(input, { target: { value: 'echo still usable' } });
+  fireEvent.keyDown(input, { key: 'Enter' });
+  expect(output.textContent).toContain('still usable');
+  expect(output.scrollTop).toBe(40);
 });

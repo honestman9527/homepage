@@ -17,9 +17,18 @@ export function TerminalApp({ onOpen }: { onOpen: (appId: AppId) => void }) {
   const [unread, setUnread] = useState(false);
   const composing = useRef(false);
   const output = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const following = useRef(true);
   const readingTop = useRef(0);
   const pendingScroll = useRef<{ follow: boolean; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    // Feedback can add several nonshrinking rows. Keep an already-focused input
+    // within the compact terminal's own scrollport without moving old output.
+    if (document.documentElement.dataset.compactViewport === 'true' && document.activeElement === input.current) {
+      input.current?.scrollIntoView?.({ block: 'nearest' });
+    }
+  }, [suggestions, inputError, unread]);
 
   const applyPendingScroll = useCallback(() => {
     const node = output.current;
@@ -86,7 +95,7 @@ export function TerminalApp({ onOpen }: { onOpen: (appId: AppId) => void }) {
     {inputError ? <p className="terminal-feedback terminal-error" id="terminal-input-error" role="status">{inputError}</p> : null}
     <div className="terminal-controls">
       <span className="terminal-prompt" aria-hidden="true">~ $</span>
-      <input data-terminal-input aria-label="终端命令" aria-describedby={inputError ? 'terminal-input-error' : undefined} aria-invalid={Boolean(inputError)} autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false} value={session.input}
+      <input ref={input} data-terminal-input aria-label="终端命令" aria-describedby={inputError ? 'terminal-input-error' : undefined} aria-invalid={Boolean(inputError)} autoComplete="off" autoCapitalize="off" autoCorrect="off" spellCheck={false} value={session.input}
         onChange={event => {
           const raw = event.target.value;
           setSession(updateTerminalInput(session, raw.slice(0, MAX_INPUT_LENGTH)));

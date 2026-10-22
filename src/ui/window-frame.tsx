@@ -73,7 +73,7 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
     <header role="presentation" className="window-titlebar" onPointerDown={event => begin(event, 'move')} onDoubleClick={event => { if (!single && document.documentElement.dataset.compactViewport !== 'true' && !(event.target as HTMLElement).closest('[data-window-controls]')) desktop.toggleMaximize(appId); }}>
       <div className="window-controls" data-window-controls onPointerDown={event => { if (!presentation.active) event.preventDefault(); }}>
         <button className="window-close" onClick={onClose} aria-label={`关闭${app.name}`}><span aria-hidden="true">×</span></button>
-        {!single && <><button className="window-minimize" onClick={onMinimize} aria-label={`最小化${app.name}`}><span aria-hidden="true">−</span></button><button className="window-maximize" onClick={() => desktop.toggleMaximize(appId)} aria-label={`${record.maximized ? '还原' : '最大化'}${app.name}`}><span aria-hidden="true">{record.maximized ? '↙' : '+'}</span></button></>}
+        {!single && <><button className="window-minimize" onClick={onMinimize} aria-label={`最小化${app.name}`}><span aria-hidden="true">−</span></button><button className="window-maximize" onClick={() => { if (document.documentElement.dataset.compactViewport !== 'true') desktop.toggleMaximize(appId); }} aria-label={`${record.maximized ? '还原' : '最大化'}${app.name}`}><span aria-hidden="true">{record.maximized ? '↙' : '+'}</span></button></>}
       </div>
       <span className="window-title"><Icon name={app.icon} />{app.name}</span><span className="window-chrome-note" aria-hidden="true">{appId === 'terminal' ? '~/honestman' : 'HonestOS'}</span>
     </header>

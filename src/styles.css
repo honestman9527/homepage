@@ -169,7 +169,7 @@ html[data-compact-viewport="true"] .desktop-surface .app-window.active-window {
   max-height: none;
 }
 html[data-compact-viewport="true"] .window-titlebar { flex-basis: 44px; cursor: default; touch-action: auto; }
-html[data-compact-viewport="true"] .window-resize { display: none; }
+html[data-compact-viewport="true"] :is(.window-resize,.window-maximize) { display: none; }
 html[data-compact-viewport="true"] .dock-wrap { grid-row: 3; position: relative; inset: auto; top: auto; min-height: 64px; }
 html[data-compact-viewport="true"] .dock { gap: 3px; padding: 7px 8px 3px; max-width: calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right)); overflow-x: auto; }
 html[data-compact-viewport="true"] .dock-slot { flex-shrink: 0; }

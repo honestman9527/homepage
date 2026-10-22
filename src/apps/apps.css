@@ -104,6 +104,10 @@
 .settings-arrange .app-button { flex-shrink: 0; }
 .settings-storage-note { margin-bottom: 24px; }
 .app-content.terminal-content { display: flex; flex-direction: column; overflow: hidden; background: #22232b; color: #d8dad6; font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-size: 14px; line-height: 1.7; }
+/* Feedback and controls keep intrinsic height inside a compact inner scrollport.
+   The output remains independently scrollable at its saved reading position. */
+html[data-compact-viewport="true"] .app-content.terminal-content { overflow-y: auto; }
+html[data-compact-viewport="true"] .terminal-output { flex: 1 0 64px; min-height: 64px; }
 .terminal-output { flex: 1; min-height: 0; padding: 18px 20px 8px; overflow: auto; overscroll-behavior: contain; }
 .terminal-record { white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 8px; }
 .terminal-input { color: #f1eaf4; padding-top: 8px; }
