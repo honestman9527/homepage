@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { AppId, Project, ProjectStatus } from '../config/types';
 import { publicUrl } from '../config/validation';
 
@@ -35,14 +35,27 @@ export function ProjectsApp({ projects, onOpen }: { projects: readonly Project[]
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const actions = useRef(new Map<string, HTMLButtonElement>());
   const returnTarget = useRef<{ id: string; top: number } | null>(null);
+  const readingTop = useRef(0);
+
+  useEffect(() => {
+    const node = scroller.current;
+    if (!node) return;
+    const restore = () => { if (node.clientHeight > 0) node.scrollTop = readingTop.current; };
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(restore) : null;
+    observer?.observe(node);
+    window.addEventListener('resize', restore);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', restore); };
+  }, []);
 
   useLayoutEffect(() => {
     if (!scroller.current) return;
     if (selected) {
       scroller.current.scrollTop = 0;
+      readingTop.current = 0;
       detailHeading.current?.focus({ preventScroll: true });
     } else if (returnTarget.current) {
       scroller.current.scrollTop = returnTarget.current.top;
+      readingTop.current = returnTarget.current.top;
       (actions.current.get(returnTarget.current.id) ?? heading.current)?.focus({ preventScroll: true });
       returnTarget.current = null;
     }
@@ -53,7 +66,9 @@ export function ProjectsApp({ projects, onOpen }: { projects: readonly Project[]
     setSelectedId(project.id);
   }
 
-  return <section ref={scroller} aria-label="项目内容" className="app-content projects-content app-padded">
+  return <section ref={scroller} aria-label="项目内容" className="app-content projects-content app-padded" onScroll={event => {
+    if (event.currentTarget.clientHeight > 0) readingTop.current = event.currentTarget.scrollTop;
+  }}>
     {selected ? <>
       <button className="app-button project-back" onClick={() => setSelectedId(null)}>返回项目列表</button>
       <ProjectArt project={selected} />

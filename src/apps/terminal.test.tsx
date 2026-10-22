@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { PreferencesProvider } from '../preferences/provider';
 import { TerminalApp } from './terminal';
 
@@ -58,5 +59,29 @@ describe('terminal application session', () => {
     fireEvent.click(screen.getByRole('button', { name: '查看新输出' }));
     expect(output.scrollTop).toBe(400);
     expect(screen.queryByRole('button', { name: '查看新输出' })).toBeNull();
+  });
+
+  it('protects IME Enter, restores drafts and completes native input without trapping Shift+Tab', async () => {
+    const user = userEvent.setup();
+    const { input, onOpen } = renderTerminal();
+    fireEvent.change(input, { target: { value: 'open projects' } });
+    fireEvent.compositionStart(input);
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true, keyCode: 229 });
+    expect(onOpen).not.toHaveBeenCalled();
+    expect(input.value).toBe('open projects');
+    fireEvent.compositionEnd(input);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onOpen).toHaveBeenCalledExactlyOnceWith('projects');
+    fireEvent.change(input, { target: { value: 'unfinished draft' } });
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(input.value).toBe('open projects');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.value).toBe('unfinished draft');
+    fireEvent.change(input, { target: { value: 'open pro' } });
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.value).toBe('open projects ');
+    input.focus();
+    await user.tab({ shift: true });
+    expect(document.activeElement).not.toBe(input);
   });
 });

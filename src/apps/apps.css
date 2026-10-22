@@ -113,9 +113,9 @@
 .terminal-prompt { flex-shrink: 0; }
 .terminal-controls input { flex: 1; width: 0; min-width: 0; min-height: 44px; padding: 6px; background: transparent; color: #f1eaf4; border: 1px solid transparent; border-radius: 4px; caret-color: #ccebb5; font-size: 16px; }
 .terminal-controls input:focus-visible { outline: 2px solid #b6dba8; outline-offset: -2px; }
-.terminal-submit { min-width: 44px; min-height: 44px; border: 1px solid #ffffff30; border-radius: 5px; background: #ffffff08; color: #ccebb5 !important; }
+.terminal-content .terminal-submit { min-width: 44px; min-height: 44px; border: 1px solid #ffffff30; border-radius: 5px; background: #ffffff08; color: #ccebb5; }
 .terminal-feedback { margin: 0; padding: 4px 20px; color: #c0c8b6; font-size: 14px; overflow-wrap: anywhere; flex: 0 0 auto; }
-.terminal-new-output { min-height: 44px; padding: 6px 12px; border: 1px solid #96ad89; border-radius: 4px; color: #d5e9c9 !important; background: #31382f; }
+.terminal-content .terminal-new-output { min-height: 44px; padding: 6px 12px; border: 1px solid #96ad89; border-radius: 4px; color: #d5e9c9; background: #31382f; }
 @media (min-width: 1024px) {
   .terminal-controls { padding-right: 56px; }
 }
