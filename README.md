@@ -17,4 +17,4 @@ pnpm dev
 
 通过 GitHub Actions 的唯一手动入口选择 `check` 或 `deploy`。正式发布只接受仓库默认分支；部署当前构建，不触发第二次构建。首次凭据、域名接入、回退与待验证事项见 [发布说明](docs/deployment.md)。当前交付不代表站点已经上线。
 
-2026-10-23 的实际本地检查与资产测量见 [交付记录](docs/delivery.md)，视觉、键盘与真机待验事项见 [人工验收清单](docs/manual-acceptance.md)。代码检查通过、最终规格审查、人工体验验收与真实部署分别记录。
+2026-10-23 的实际本地检查与资产测量见 [交付记录](docs/delivery.md)，视觉、键盘与真机待验事项见 [人工验收清单](docs/manual-acceptance.md)。双轴审查原文及修复证据见 [代码审查记录](docs/code-review.md)。代码检查、独立复查、人工体验验收与真实部署分别记录。
