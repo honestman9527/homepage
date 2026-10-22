@@ -11,3 +11,7 @@
 ### Domain docs
 
 本仓库采用 single-context 布局。探索代码库前，先读 `docs/agents/domain.md`。
+
+### Product design
+
+设计或实现 HonestOS 功能前，先读 `docs/design/honestos.md`，区分已确认决策和访谈未决项。
