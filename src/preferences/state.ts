@@ -16,7 +16,7 @@ export function readPreferences(storage?: Pick<PreferenceStorage, 'getItem'> | n
     const raw = storage?.getItem(PREFERENCES_KEY);
     const value: unknown = raw ? JSON.parse(raw) : null;
     if (value && typeof value === 'object' && 'schemaVersion' in value && value.schemaVersion === 1
-      && 'wallpaper' in value && ['dusk', 'day', 'night'].includes(String(value.wallpaper))
+      && 'wallpaper' in value && typeof value.wallpaper === 'string' && ['dusk', 'day', 'night'].includes(value.wallpaper)
       && 'motionEnabled' in value && typeof value.motionEnabled === 'boolean') {
       return { schemaVersion: 1, wallpaper: value.wallpaper as WallpaperId, motionEnabled: value.motionEnabled };
     }

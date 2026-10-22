@@ -7,11 +7,13 @@ export interface MotionQuery {
   addEventListener(type: 'change', listener: () => void): void;
   removeEventListener(type: 'change', listener: () => void): void;
 }
+export type PreferenceSaveStatus = 'pending' | 'saved' | 'unavailable';
 interface PreferencesContextValue {
   preferences: Preferences;
   wallpaper: WallpaperId;
   motionEnabled: boolean;
   reducedMotion: boolean;
+  saveStatus: PreferenceSaveStatus;
   setWallpaper(wallpaper: WallpaperId): void;
   setMotionEnabled(enabled: boolean): void;
 }
@@ -32,8 +34,11 @@ export function PreferencesProvider({ children, storage, motionQuery }: {
   const [query] = useState(() => motionQuery === undefined ? browserMotion() : motionQuery);
   // Lazy initialization reads synchronously, so the first rendered UI has the saved wallpaper.
   const [preferences, dispatch] = useReducer(preferencesReducer, storageAdapter, readPreferences);
+  const [saveStatus, setSaveStatus] = useState<PreferenceSaveStatus>('pending');
   const [systemReducedMotion, setSystemReducedMotion] = useState(query?.matches ?? false);
-  useEffect(() => { persistPreferences(preferences, storageAdapter); }, [preferences, storageAdapter]);
+  useEffect(() => {
+    setSaveStatus(persistPreferences(preferences, storageAdapter) ? 'saved' : 'unavailable');
+  }, [preferences, storageAdapter]);
   useEffect(() => {
     if (!query) return;
     const changed = () => setSystemReducedMotion(query.matches);
@@ -45,9 +50,10 @@ export function PreferencesProvider({ children, storage, motionQuery }: {
     wallpaper: preferences.wallpaper,
     motionEnabled: preferences.motionEnabled,
     reducedMotion: systemReducedMotion || !preferences.motionEnabled,
-    setWallpaper: wallpaper => dispatch({ type: 'setWallpaper', wallpaper }),
-    setMotionEnabled: enabled => dispatch({ type: 'setMotionEnabled', enabled }),
-  }), [preferences, systemReducedMotion]);
+    saveStatus,
+    setWallpaper: wallpaper => { setSaveStatus('pending'); dispatch({ type: 'setWallpaper', wallpaper }); },
+    setMotionEnabled: enabled => { setSaveStatus('pending'); dispatch({ type: 'setMotionEnabled', enabled }); },
+  }), [preferences, systemReducedMotion, saveStatus]);
   return <PreferencesContext value={value}>{children}</PreferencesContext>;
 }
 

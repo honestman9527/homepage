@@ -13,6 +13,23 @@ function PreferenceProbe({ name }: { name: string }) {
   </div>;
 }
 
+function PersistenceProbe() {
+  const { wallpaper, saveStatus, setWallpaper } = usePreferences();
+  return <div>
+    <output aria-label="当前壁纸">{wallpaper}</output>
+    <output aria-label="偏好保存状态">{saveStatus}</output>
+    <button onClick={() => setWallpaper('night')}>选择午夜蓝调</button>
+  </div>;
+}
+
+it('keeps the chosen wallpaper in memory and reports unavailable persistence when writing throws', () => {
+  const storage = { getItem: () => null, setItem: () => { throw new Error('quota'); } };
+  render(<PreferencesProvider storage={storage} motionQuery={null}><PersistenceProbe /></PreferencesProvider>);
+  fireEvent.click(screen.getByRole('button', { name: '选择午夜蓝调' }));
+  expect(screen.getByLabelText('当前壁纸').textContent).toBe('night');
+  expect(screen.getByLabelText('偏好保存状态').textContent).toBe('unavailable');
+});
+
 it('reads before first UI, synchronizes settings and terminal, and respects system reduced motion', () => {
   const media = new EventTarget() as EventTarget & { matches: boolean };
   media.matches = true;

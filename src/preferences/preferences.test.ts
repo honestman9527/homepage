@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { preferencesReducer, readPreferences, persistPreferences, PREFERENCES_KEY } from './index.ts';
 
 describe('desktop preferences storage', () => {
+  it('rejects malformed wallpaper types instead of coercing them into a known identifier', () => {
+    for (const wallpaper of [['dusk'], ['day'], { name: 'night' }, 1, null]) {
+      const raw = JSON.stringify({ schemaVersion: 1, wallpaper, motionEnabled: false });
+      expect(readPreferences({ getItem: () => raw })).toEqual({ schemaVersion: 1, wallpaper: 'dusk', motionEnabled: true });
+    }
+  });
+
   it('restores a valid preference before rendering and shares changes through one reducer', () => {
     const storage = { getItem: () => '{"schemaVersion":1,"wallpaper":"night","motionEnabled":false}', setItem: (_key: string, _value: string) => {} };
     let state = readPreferences(storage);
