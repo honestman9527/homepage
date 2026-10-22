@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vite/
+.vitest/
+coverage/
+.env*
+!.env.example
+.wrangler/
+# Raw source handoffs stay local; only derived implementation assets are committed.
+honestos-handoff/
+reference-prototype/
+*.zip

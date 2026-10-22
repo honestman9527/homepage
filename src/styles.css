@@ -1,0 +1,19 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #292830;
+  background: #77708e;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --color-paper: #fcfaf7;
+  --color-text: #292830;
+  --color-muted: #68636d;
+  --color-border: #eae7e9;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; }
+button, input { font: inherit; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid #315b9b; outline-offset: 3px; }
+button { cursor: pointer; }
+.foundation-intro { max-width: 700px; margin: 8vh auto; padding: 32px; background: var(--color-paper); border-radius: 12px; }
