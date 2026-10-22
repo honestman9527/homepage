@@ -1,4 +1,4 @@
-import type { AppDefinition, AppId, WallpaperDefinition } from './types.ts';
+import type { AppDefinition, AppId, WallpaperDefinition, WallpaperId } from './types.ts';
 
 export const appRegistry: readonly AppDefinition[] = [
   { id: 'about', name: '关于我', icon: 'user', aliases: ['About', 'README', '个人介绍'], keywords: ['honestman', '爱睡觉的老实人', '介绍'], defaultSize: { width: 700, height: 530 }, minSize: { width: 360, height: 300 } },
@@ -15,3 +15,8 @@ export const wallpapers: readonly WallpaperDefinition[] = [
   { id: 'day', name: '薄荷晨光', colors: ['#7fada9', '#c6c6aa', '#ecddae'] },
   { id: 'night', name: '午夜蓝调', colors: ['#101e34', '#3b3c5e', '#a27b98'] },
 ];
+
+/** Strict boundary shared by persisted preferences and terminal command inputs. */
+export function isWallpaperId(value: unknown): value is WallpaperId {
+  return typeof value === 'string' && wallpapers.some(wallpaper => wallpaper.id === value);
+}

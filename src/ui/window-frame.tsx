@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
 import { appById, type AppId } from '../config/index.ts';
-import { getWindowPresentation, useDesktop, type Geometry } from '../desktop/index.ts';
+import { constrainWindowGeometry, getWindowPresentation, useDesktop, type Geometry } from '../desktop/index.ts';
 import { Icon } from './icon.tsx';
 
 interface Gesture { pointerId: number; x: number; y: number; base: Geometry; kind: 'move' | 'resize'; target: HTMLElement; restoreOnMove: boolean; started: boolean }
@@ -15,12 +15,6 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
   const previewRef = useRef<Geometry | null>(null);
   const [preview, setPreview] = useState<Geometry | null>(null);
   const single = desktop.state.mode === 'single';
-  function constrain(value: Geometry): Geometry {
-    const area = desktop.state.viewport.availableArea;
-    const width = Math.min(area.width, Math.max(app.minSize.width, value.width));
-    const height = Math.min(area.height, Math.max(app.minSize.height, value.height));
-    return { width, height, x: Math.max(area.x, Math.min(value.x, area.x + area.width - width)), y: Math.max(area.y, Math.min(value.y, area.y + area.height - height)) };
-  }
   function end(commit: boolean) {
     const current = gesture.current;
     if (!current) return;
@@ -29,7 +23,7 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
     previewRef.current = null;
     setPreview(null);
     if (current.target.hasPointerCapture?.(current.pointerId)) current.target.releasePointerCapture(current.pointerId);
-    if (commit && final) desktop.commitGeometry(appId, final);
+    if (commit && final && document.documentElement.dataset.compactViewport !== 'true') desktop.commitGeometry(appId, final);
   }
   useEffect(() => {
     // Layout/mode changes cancel an in-progress gesture without committing stale coordinates.
@@ -45,7 +39,7 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
     gesture.current = null;
   }, []);
   function begin(event: PointerEvent<HTMLElement>, kind: Gesture['kind']) {
-    if (single || event.button !== 0 || (event.target as HTMLElement).closest('[data-window-controls]')) return;
+    if (single || document.documentElement.dataset.compactViewport === 'true' || event.button !== 0 || (event.target as HTMLElement).closest('[data-window-controls]')) return;
     event.preventDefault();
     gesture.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, base: presentation.geometry, kind, target: event.currentTarget, restoreOnMove: record.maximized, started: false };
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -60,13 +54,13 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
     if (current.restoreOnMove) {
       const normal = record.normalGeometry;
       const fraction = Math.max(0, Math.min(1, (current.x - current.base.x) / current.base.width));
-      current.base = constrain({ ...normal, x: current.x - normal.width * fraction, y: current.y - 24 });
+      current.base = constrainWindowGeometry(appId, { ...normal, x: current.x - normal.width * fraction, y: current.y - 24 }, desktop.state.viewport.availableArea);
       current.restoreOnMove = false;
       desktop.toggleMaximize(appId);
     }
-    const next = constrain(current.kind === 'move'
+    const next = constrainWindowGeometry(appId, current.kind === 'move'
       ? { ...current.base, x: current.base.x + dx, y: current.base.y + dy }
-      : { ...current.base, width: current.base.width + dx, height: current.base.height + dy });
+      : { ...current.base, width: current.base.width + dx, height: current.base.height + dy }, desktop.state.viewport.availableArea);
     previewRef.current = next;
     setPreview(next);
   }
@@ -76,7 +70,7 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
     onPointerDown={event => { if (!(event.target as HTMLElement).closest('[data-window-controls]')) desktop.focus(appId); }}
     onFocusCapture={event => { if (!presentation.active && !(event.target as HTMLElement).closest('[data-window-controls]')) desktop.focus(appId); }}
     onPointerMove={move} onPointerUp={event => { if (event.pointerId === gesture.current?.pointerId) end(true); }} onPointerCancel={() => end(false)} onLostPointerCapture={() => end(false)}>
-    <header role="presentation" className="window-titlebar" onPointerDown={event => begin(event, 'move')} onDoubleClick={event => { if (!single && !(event.target as HTMLElement).closest('[data-window-controls]')) desktop.toggleMaximize(appId); }}>
+    <header role="presentation" className="window-titlebar" onPointerDown={event => begin(event, 'move')} onDoubleClick={event => { if (!single && document.documentElement.dataset.compactViewport !== 'true' && !(event.target as HTMLElement).closest('[data-window-controls]')) desktop.toggleMaximize(appId); }}>
       <div className="window-controls" data-window-controls onPointerDown={event => { if (!presentation.active) event.preventDefault(); }}>
         <button className="window-close" onClick={onClose} aria-label={`关闭${app.name}`}><span aria-hidden="true">×</span></button>
         {!single && <><button className="window-minimize" onClick={onMinimize} aria-label={`最小化${app.name}`}><span aria-hidden="true">−</span></button><button className="window-maximize" onClick={() => desktop.toggleMaximize(appId)} aria-label={`${record.maximized ? '还原' : '最大化'}${app.name}`}><span aria-hidden="true">{record.maximized ? '↙' : '+'}</span></button></>}

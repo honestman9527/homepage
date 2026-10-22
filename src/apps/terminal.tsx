@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { AppId } from '../config/types';
-import { siteConfig } from '../config/content';
-import { appRegistry } from '../config/registry';
+import { appRegistry, siteConfig, type AppId } from '../config/index.ts';
 import { usePreferences } from '../preferences/provider';
 import { createTerminalSession, handleTerminalKey, submitTerminalInput, updateTerminalInput } from '../terminal/session';
 import type { TerminalSession } from '../terminal/session';

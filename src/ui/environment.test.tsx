@@ -28,5 +28,6 @@ it('updates visitor local clock at least once per minute and cleans up presentat
   viewport.dispatchEvent(new Event('resize'));
   expect(document.documentElement.style.getPropertyValue('--visual-height')).toBe('');
   expect(document.documentElement.dataset.keyboard).toBeUndefined();
+  expect(document.documentElement.dataset.compactViewport).toBeUndefined();
   expect(vi.getTimerCount()).toBe(0);
 });

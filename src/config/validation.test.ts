@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry } from './registry';
-import { siteConfig } from './content';
-import { publicUrl, validateConfig } from './validation';
+import { appRegistry, siteConfig, publicUrl, validateConfig } from './index.ts';
 
 describe('public content configuration', () => {
   it('rejects duplicate app identities before navigation can diverge', () => {

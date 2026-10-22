@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry, siteConfig } from '../config';
+import { appRegistry, siteConfig } from '../config/index.ts';
 import { executeCommand } from './commands';
+import { readFileSync } from 'node:fs';
 
 const environment = { config: siteConfig, apps: appRegistry, now: new Date(2026, 9, 22, 14, 35, 0) };
 
@@ -17,6 +18,7 @@ describe('terminal commands', () => {
     const apps = appRegistry.filter(app => app.id !== 'blog');
     const result = executeCommand('ls', { ...environment, apps });
     expect(result.records[0]?.text).toContain('about');
+    expect(result.records[0]?.text).toContain('README.md');
     expect(result.records[0]?.text).not.toContain('blog');
     for (const appId of ['about', 'projects', 'blog', 'terminal', 'settings']) {
       expect(executeCommand(`OPEN ${appId}`, environment).intents).toEqual([{ type: 'open', appId }]);
@@ -28,7 +30,11 @@ describe('terminal commands', () => {
   it('describes the virtual site directory without claiming device detection', () => {
     expect(executeCommand('pwd', environment).records).toEqual([{ kind: 'output', text: '/home/honestman' }]);
     expect(executeCommand('cat README.md', environment).records[0]?.text).toContain(siteConfig.site.description);
-    expect(executeCommand('neofetch', environment).records[0]?.text).toMatch(/HonestOS[\s\S]*虚拟[\s\S]*不是.*设备/);
+    const info = executeCommand('neofetch', environment).records[0]?.text ?? '';
+    const version = (JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as { version: string }).version;
+    expect(info).toContain(`HonestOS ${version}`);
+    expect(info).toContain('Shell：HonestOS virtual shell（虚拟命令解释器）');
+    expect(info).toMatch(/HonestOS[\s\S]*虚拟[\s\S]*不是.*设备/);
     expect(executeCommand('cat /etc/passwd', environment).records).toEqual([{ kind: 'error', text: '用法：cat README.md' }]);
   });
 

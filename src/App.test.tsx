@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { App } from './App.tsx';
 
 beforeEach(() => {
@@ -182,4 +182,53 @@ it('restores cancelled search to the Dock when its original window trigger becom
   await user.keyboard('{Escape}');
   expect(document.activeElement).toBe(within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: '搜索应用' }));
   expect(dock('终端').getAttribute('aria-current')).toBe('true');
+});
+
+
+it('keeps the focused command and navigation usable in compact visual viewports without rewriting desktop geometry or the session', async () => {
+  const user = userEvent.setup();
+  const viewport = Object.assign(new EventTarget(), { height: 768, offsetTop: 0 });
+  Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
+  render(<App />);
+  const input = terminalInput();
+  const keepVisible = vi.fn();
+  input.scrollIntoView = keepVisible;
+  const terminal = frame('终端');
+  const normal = { left: terminal.style.left, top: terminal.style.top, width: terminal.style.width, height: terminal.style.height };
+  await user.click(input);
+  fireEvent.change(input, { target: { value: 'echo compact command' } });
+  keepVisible.mockClear();
+  act(() => { viewport.height = 200; viewport.dispatchEvent(new Event('resize')); });
+  expect(document.documentElement.dataset.compactViewport).toBe('true');
+  expect(keepVisible).toHaveBeenCalledWith({ block: 'nearest' });
+  expect(document.activeElement).toBe(input);
+  fireEvent.keyDown(input, { key: 'Enter' });
+  expect(screen.getByRole('log', { name: '终端输出' }).textContent).toContain('compact command');
+  fireEvent.change(input, { target: { value: 'draft survives keyboard' } });
+  await user.click(dock('我的项目'));
+  expect(document.activeElement).toBe(frame('我的项目'));
+  await user.click(dock('终端'));
+  expect(document.activeElement).toBe(terminal);
+  keepVisible.mockClear();
+  act(() => { viewport.height = 120; viewport.dispatchEvent(new Event('resize')); });
+  expect(keepVisible).not.toHaveBeenCalled();
+  expect(input.value).toBe('draft survives keyboard');
+  act(() => { viewport.height = 768; viewport.dispatchEvent(new Event('resize')); });
+  expect(document.documentElement.dataset.compactViewport).toBe('false');
+  expect({ left: terminal.style.left, top: terminal.style.top, width: terminal.style.width, height: terminal.style.height }).toEqual(normal);
+  expect(screen.getByRole('main').closest('[data-mode]')?.getAttribute('data-mode')).toBe('desktop');
+  fireEvent.keyDown(input, { key: 'ArrowUp' });
+  expect(input.value).toBe('echo compact command');
+});
+
+it('returns cancelled search to visible navigation if presentation CSS hides its window trigger', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  const about = frame('关于我');
+  act(() => within(about).getByRole('button', { name: '关闭关于我' }).focus());
+  fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+  // Model the browser's CSS-hidden background while the desktop session remains open.
+  about.style.display = 'none';
+  await user.keyboard('{Escape}');
+  expect(document.activeElement).toBe(within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: '搜索应用' }));
 });

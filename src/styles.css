@@ -144,3 +144,39 @@ svg { display: block; width: 24px; height: 24px; flex-shrink: 0; }
 
 /* Keyboard avoidance changes presentation only, including tablet desktop mode. */
 html[data-keyboard="true"] .terminal-frame { top: calc(var(--visual-top,0px) + 56px + env(safe-area-inset-top)) !important; max-height: calc(var(--visual-height,100dvh) - 152px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+
+/* Compact visual viewports use three nonoverlapping rows. The middle row scrolls
+   a usable window rather than squeezing titlebar + input into a clipped sliver.
+   Below 164px (plus safe insets), the outer grid can scroll to every row too. */
+html[data-compact-viewport="true"] .desktop-system {
+  position: fixed; inset: auto 0; top: var(--visual-top,0px);
+  height: var(--visual-height,100dvh); min-height: 0;
+  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+  display: grid; grid-template-rows: 44px minmax(56px,1fr) 64px;
+  overflow-y: auto; overscroll-behavior: contain;
+}
+html[data-compact-viewport="true"] .menubar {
+  position: relative; inset: auto; top: auto; grid-row: 1;
+  height: 44px; padding: 0 max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left));
+}
+html[data-compact-viewport="true"] :is(.top-navigation,.top-settings,.menu-date,.desktop-shortcuts,.desktop-brand,.dock-caption) { display: none; }
+html[data-compact-viewport="true"] .desktop-surface { grid-row: 2; position: relative; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+html[data-compact-viewport="true"] .desktop-surface .app-window:not(.active-window) { display: none; }
+html[data-compact-viewport="true"] .desktop-surface .app-window.active-window {
+  position: relative !important; inset: auto !important; margin: 4px 8px;
+  width: calc(100% - 16px) !important;
+  height: max(160px,calc(var(--visual-height,100dvh) - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+  max-height: none;
+}
+html[data-compact-viewport="true"] .window-titlebar { flex-basis: 44px; cursor: default; touch-action: auto; }
+html[data-compact-viewport="true"] .window-resize { display: none; }
+html[data-compact-viewport="true"] .dock-wrap { grid-row: 3; position: relative; inset: auto; top: auto; min-height: 64px; }
+html[data-compact-viewport="true"] .dock { gap: 3px; padding: 7px 8px 3px; max-width: calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right)); overflow-x: auto; }
+html[data-compact-viewport="true"] .dock-slot { flex-shrink: 0; }
+html[data-compact-viewport="true"] .dock-slot>button { width: 44px; min-height: 52px; }
+html[data-compact-viewport="true"] .app-icon { width: 42px; height: 42px; border-radius: 11px; }
+html[data-compact-viewport="true"] .dock-separated { padding-left: 6px; margin-left: 1px; }
+html[data-compact-viewport="true"] .dock-tooltip { display: none; }
+html[data-compact-viewport="true"] .system-menu { top: 44px; max-height: max(88px,calc(var(--visual-height,100dvh) - 52px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); overflow: auto; }
+html[data-compact-viewport="true"] .search-backdrop { top: var(--visual-top,0px); bottom: auto; height: var(--visual-height,100dvh); padding: max(4px,env(safe-area-inset-top)) 8px max(4px,env(safe-area-inset-bottom)); }
+html[data-compact-viewport="true"] .search-panel { max-height: max(88px,calc(var(--visual-height,100dvh) - 8px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); }

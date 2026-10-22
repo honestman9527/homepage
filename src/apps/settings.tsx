@@ -1,4 +1,4 @@
-import { wallpapers } from '../config/registry';
+import { wallpapers } from '../config/index.ts';
 import { usePreferences } from '../preferences/provider';
 
 export function SettingsApp({ onArrange }: { onArrange: () => void }) {

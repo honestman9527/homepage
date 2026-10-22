@@ -1,6 +1,4 @@
-import type { AppId } from '../config/types';
-import { siteConfig } from '../config/content';
-import { publicUrl } from '../config/validation';
+import { publicUrl, siteConfig, type AppId } from '../config/index.ts';
 import { ProjectsApp } from './projects';
 import { BlogApp } from './blog';
 import { SettingsApp } from './settings';

@@ -33,7 +33,7 @@ function modeFor(viewport: DesktopViewport): DesktopMode {
   }) ? 'desktop' : 'single';
 }
 
-function clampGeometry(id: AppId, value: Geometry, area: Geometry): Geometry {
+export function constrainWindowGeometry(id: AppId, value: Geometry, area: Geometry): Geometry {
   const min = appById[id].minSize;
   const width = Math.min(area.width, Math.max(min.width, value.width));
   const height = Math.min(area.height, Math.max(min.height, value.height));
@@ -55,7 +55,7 @@ function defaultGeometry(id: AppId, viewport: DesktopViewport): Geometry {
     settings: [Math.max(24, (area.width - 510) / 2), 48],
   };
   const [x, y] = positions[id];
-  return clampGeometry(id, { x: area.x + x, y: area.y + y, ...appById[id].defaultSize }, area);
+  return constrainWindowGeometry(id, { x: area.x + x, y: area.y + y, ...appById[id].defaultSize }, area);
 }
 
 export function createDesktopState(viewport: DesktopViewport): DesktopState {
@@ -101,8 +101,8 @@ export function desktopReducer(state: DesktopState, action: DesktopAction): Desk
     return { ...state, windows: { ...state.windows, [action.appId]: {
       ...current,
       ...(action.type === 'toggleMaximize'
-        ? { maximized: !current.maximized, normalGeometry: clampGeometry(action.appId, current.normalGeometry, state.viewport.availableArea) }
-        : { maximized: false, normalGeometry: clampGeometry(action.appId, action.geometry, state.viewport.availableArea) }),
+        ? { maximized: !current.maximized, normalGeometry: constrainWindowGeometry(action.appId, current.normalGeometry, state.viewport.availableArea) }
+        : { maximized: false, normalGeometry: constrainWindowGeometry(action.appId, action.geometry, state.viewport.availableArea) }),
     } } };
   }
   if (action.type === 'updateViewport') {
@@ -110,7 +110,7 @@ export function desktopReducer(state: DesktopState, action: DesktopAction): Desk
     const windows = { ...state.windows };
     if (mode === 'desktop') {
       for (const id of appIds) windows[id] = {
-        ...windows[id], normalGeometry: clampGeometry(id, windows[id].normalGeometry, action.viewport.availableArea),
+        ...windows[id], normalGeometry: constrainWindowGeometry(id, windows[id].normalGeometry, action.viewport.availableArea),
       };
     }
     return { ...state, viewport: action.viewport, mode, windows };

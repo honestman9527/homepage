@@ -1,4 +1,4 @@
-import type { WallpaperId } from '../config/index.ts';
+import { isWallpaperId, type WallpaperId } from '../config/index.ts';
 
 export const PREFERENCES_KEY = 'honestos.preferences.v1';
 export interface Preferences { schemaVersion: 1; wallpaper: WallpaperId; motionEnabled: boolean }
@@ -16,9 +16,9 @@ export function readPreferences(storage?: Pick<PreferenceStorage, 'getItem'> | n
     const raw = storage?.getItem(PREFERENCES_KEY);
     const value: unknown = raw ? JSON.parse(raw) : null;
     if (value && typeof value === 'object' && 'schemaVersion' in value && value.schemaVersion === 1
-      && 'wallpaper' in value && typeof value.wallpaper === 'string' && ['dusk', 'day', 'night'].includes(value.wallpaper)
+      && 'wallpaper' in value && isWallpaperId(value.wallpaper)
       && 'motionEnabled' in value && typeof value.motionEnabled === 'boolean') {
-      return { schemaVersion: 1, wallpaper: value.wallpaper as WallpaperId, motionEnabled: value.motionEnabled };
+      return { schemaVersion: 1, wallpaper: value.wallpaper, motionEnabled: value.motionEnabled };
     }
   } catch { /* Storage may be unavailable, corrupt, or restricted. */ }
   return { ...defaultPreferences };

@@ -11,7 +11,14 @@ import { Wallpaper } from './ui/wallpaper.tsx';
 import { WindowFrame } from './ui/window-frame.tsx';
 
 function visibleTarget(target: HTMLElement | null): target is HTMLElement {
-  return !!target?.isConnected && !target.closest('[hidden],[inert]');
+  if (!target?.isConnected || target.closest('[hidden],[inert]')) return false;
+  // Compact presentation can hide a background desktop window through CSS
+  // without ending its session or changing the reducer's layout mode.
+  for (let node: HTMLElement | null = target; node; node = node.parentElement) {
+    const style = getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+  }
+  return true;
 }
 
 export function DesktopShell() {
@@ -98,7 +105,7 @@ export function DesktopShell() {
         </div><strong className="active-app-name">{desktop.activeApp ? appById[desktop.activeApp].name : 'HonestOS'}</strong><nav className="top-navigation" aria-label="顶部导航"><button onClick={() => open('projects')}>项目</button><button onClick={() => open('blog')}>随笔</button><button onClick={() => open('settings')}>显示</button></nav></div>
         <div className="menu-right"><button aria-label="搜索应用" onClick={event => startSearch(event.currentTarget)}><Icon name="search" /></button><button className="top-settings" aria-label="打开桌面设置" onClick={() => open('settings')}><Icon name="sliders" /></button><time dateTime={now.toISOString()} aria-label={`本地时间 ${now.toLocaleString()}`}><span className="menu-date">{now.toLocaleDateString([], { month: 'short', day: 'numeric', weekday: 'short' })}</span>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></div>
       </header>
-      <main className="desktop-surface" aria-label="HonestOS 桌面">
+      <main className="desktop-surface" aria-label="HonestOS 桌面" tabIndex={0}>
         <div className="desktop-brand" aria-hidden="true"><span>H.</span><p>保持好奇，持续折腾。</p></div>
         <nav className="desktop-shortcuts" aria-label="桌面快捷入口">{(['projects', 'blog', 'about'] as const).map(id => <button key={id} onClick={() => open(id)}><span className={`shortcut-art shortcut-${id}`}>{id === 'about' ? <span aria-hidden="true">md</span> : <Icon name={appById[id].icon} />}</span><span>{id === 'about' ? 'README.md' : appById[id].name}</span></button>)}</nav>
         {appRegistry.map(app => {

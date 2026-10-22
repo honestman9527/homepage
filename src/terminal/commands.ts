@@ -1,4 +1,6 @@
-import type { AppDefinition, AppId, SiteConfig, WallpaperId } from '../config';
+import { version } from '../../package.json';
+import { isWallpaperId, wallpapers } from '../config/index.ts';
+import type { AppDefinition, AppId, SiteConfig, WallpaperId } from '../config/index.ts';
 
 /** Text only: callers render these as text nodes, never HTML. */
 export interface CommandRecord { kind: 'output' | 'error'; text: string }
@@ -36,8 +38,8 @@ const definitions: Record<string, CommandDefinition> = {
     run: (_args, { config }) => output([config.profile.introduction, config.profile.description, config.profile.interests.join(' · ')].join('\n')),
   },
   ls: {
-    usage: () => 'ls', description: '列出可用应用', example: 'ls',
-    run: (_args, { apps }) => output(apps.map(app => `${app.id} — ${app.name}`).join('\n')),
+    usage: () => 'ls', description: '列出应用与虚拟文件', example: 'ls',
+    run: (_args, { apps }) => output([...apps.map(app => `${app.id} — ${app.name}`), 'README.md — 虚拟站点说明'].join('\n')),
   },
   pwd: {
     usage: () => 'pwd', description: '显示虚拟目录', example: 'pwd',
@@ -60,14 +62,14 @@ const definitions: Record<string, CommandDefinition> = {
   },
   neofetch: {
     usage: () => 'neofetch', description: '查看虚拟站点趣味信息', example: 'neofetch',
-    run: (_args, { config }) => output(`HonestOS\n作者：${config.profile.name}\n虚拟个人桌面 · 静态网站\n这是站点趣味信息，不是你的设备检测结果。`),
+    run: (_args, { config }) => output(`HonestOS ${version}\n作者：${config.profile.name}\nShell：HonestOS virtual shell（虚拟命令解释器）\n虚拟个人桌面 · 静态网站\n这是站点趣味信息，不是你的设备检测结果。`),
   },
   theme: {
     acceptsArguments: true,
-    usage: () => 'theme <dusk | day | night>', description: '切换桌面壁纸', example: 'theme dusk',
+    usage: () => `theme <${wallpapers.map(wallpaper => wallpaper.id).join(' | ')}>`, description: '切换桌面壁纸', example: 'theme dusk',
     run: args => {
       const wallpaperId = args[0];
-      return args.length === 1 && (wallpaperId === 'dusk' || wallpaperId === 'day' || wallpaperId === 'night')
+      return args.length === 1 && isWallpaperId(wallpaperId)
         ? { records: [{ kind: 'output', text: `壁纸已切换为 ${wallpaperId}` }], intents: [{ type: 'wallpaper', wallpaperId }] }
         : undefined;
     },

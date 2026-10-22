@@ -1,7 +1,7 @@
 import { commandNames, executeCommand, MAX_INPUT_LENGTH } from './commands';
 import type { CommandEnvironment, TerminalIntent } from './commands';
-import type { AppDefinition } from '../config';
-import { wallpapers } from '../config';
+import type { AppDefinition } from '../config/index.ts';
+import { wallpapers } from '../config/index.ts';
 
 export const MAX_HISTORY = 100;
 export const MAX_RECORDS = 200;

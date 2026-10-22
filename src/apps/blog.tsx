@@ -1,5 +1,4 @@
-import type { Blog } from '../config/types';
-import { publicUrl } from '../config/validation';
+import { publicUrl, type Blog } from '../config/index.ts';
 
 export function BlogApp({ blog }: { blog: Blog }) {
   const url = publicUrl(blog.url);

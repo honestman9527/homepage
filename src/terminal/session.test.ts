@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry, siteConfig } from '../config';
+import { appRegistry, siteConfig } from '../config/index.ts';
 import { createTerminalSession, handleTerminalKey, shouldSubmitTerminal, submitTerminalInput, updateTerminalInput } from './session';
 
 const environment = { config: siteConfig, apps: appRegistry, now: new Date(2026, 9, 22, 14, 35, 0) };

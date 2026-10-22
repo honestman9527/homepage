@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { AppId, Project, ProjectStatus } from '../config/types';
-import { publicUrl } from '../config/validation';
+import { publicUrl, type AppId, type Project, type ProjectStatus } from '../config/index.ts';
 
 const statusNames: Record<ProjectStatus, string> = { live: '已上线', building: '开发中', idea: '构想中', archived: '归档' };
 
