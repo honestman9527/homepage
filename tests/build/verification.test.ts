@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { importIssues } from './verification.ts';
+import { importIssues } from '../../build/verification.ts';
 
-const runner = fileURLToPath(new URL('./verification.ts', import.meta.url));
+const runner = fileURLToPath(new URL('../../build/verification.ts', import.meta.url));
 const fixtures: string[] = [];
 afterEach(() => fixtures.splice(0).forEach(path => rmSync(path, { recursive: true, force: true })));
 function fixture() {

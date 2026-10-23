@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { PreferencesProvider } from '../preferences/provider';
-import { SettingsApp } from './settings';
-import { TerminalApp } from './terminal';
+import { PreferencesProvider } from '../../src/preferences/provider';
+import { SettingsApp } from '../../src/apps/settings';
+import { TerminalApp } from '../../src/apps/terminal';
 
 afterEach(cleanup);
 

@@ -11,7 +11,7 @@ pnpm dev
 
 开发由 Cloudflare Vite 插件提供本地环境与 React 热更新；构建仍使用 Vite，预览和 Wrangler 发布复用已检查的产物。日常命令与目录职责见 [开发说明](docs/development.md#本地运行与检查)。
 
-按改动范围运行相关测试，例如 `pnpm test src/config`。发布前的核心检查集合是 `pnpm check`，依次执行严格类型检查、`src` 与 `build` 中的核心行为测试、生产构建及 Cloudflare 本地预览 HTTP 检查；`pnpm preview` 通过 Cloudflare 本地环境预览已构建的 `dist`。
+按改动范围运行相关测试，例如 `pnpm test tests/config`。发布前的核心检查集合是 `pnpm check`，依次执行严格类型检查、`tests/` 中的核心行为测试、生产构建及 Cloudflare 本地预览 HTTP 检查；`pnpm preview` 通过 Cloudflare 本地环境预览已构建的 `dist`。
 
 桌面包含关于我、我的项目、随便写写、终端和桌面设置；通过 Dock 或 Ctrl / ⌘ K 搜索进入。终端是可选的预定义命令入口，`help` 列出可用命令。外观、图片壁纸、Dock 与动效偏好保存在当前浏览器，应用会话只保留到关闭或刷新。界面采用紧凑的 macOS 风格，终端输入跟随输出；博客展示手动精选的文章外链。
 

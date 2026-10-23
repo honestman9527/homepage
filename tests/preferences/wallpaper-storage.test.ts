@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { expect, it } from 'vitest';
-import { localWallpaperStorage, wallpaperFileError, MAX_WALLPAPER_BYTES } from './wallpaper-storage.ts';
+import { localWallpaperStorage, wallpaperFileError, MAX_WALLPAPER_BYTES } from '../../src/preferences/wallpaper-storage.ts';
 
 it('stores, replaces, reads and removes an image in browser-local storage', async () => {
   await localWallpaperStorage.write(null);

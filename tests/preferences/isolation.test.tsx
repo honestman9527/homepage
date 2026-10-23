@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
-import { PreferencesProvider, usePreferenceActions, usePreferenceValues, usePreferenceSaveStatus, useReducedMotion } from './index.ts';
+import { PreferencesProvider, usePreferenceActions, usePreferenceValues, usePreferenceSaveStatus, useReducedMotion } from '../../src/preferences/index.ts';
 
 afterEach(cleanup);
 it('isolates stable actions and motion from values and persistence feedback', async () => {

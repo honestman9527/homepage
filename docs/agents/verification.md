@@ -5,7 +5,7 @@
 ```sh
 pnpm hooks:install
 pnpm verify -- typecheck
-pnpm verify -- test src/apps
+pnpm verify -- test tests/apps
 ```
 
 `verify` 接受 package.json 中已有的脚本名及其参数，使用结构化参数启动 pnpm，等待完成并保留退出码。测试范围按改动和受影响依赖选择；发布或 Cloudflare 工具链变更按需运行 `pnpm verify -- check`。每条记录只证明该命令的结果，不替代对覆盖范围的判断。

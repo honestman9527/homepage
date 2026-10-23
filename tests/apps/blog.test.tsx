@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { siteConfig } from '../config/index.ts';
-import { BlogApp } from './blog';
+import { siteConfig } from '../../src/config/index.ts';
+import { BlogApp } from '../../src/apps/blog';
 
 afterEach(cleanup);
 

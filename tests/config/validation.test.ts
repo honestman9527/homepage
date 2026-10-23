@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry, siteConfig, profileLinks, publicUrl, validateConfig } from './index.ts';
+import { appRegistry, siteConfig, profileLinks, publicUrl, validateConfig } from '../../src/config/index.ts';
 
 describe('public content configuration', () => {
   it('rejects duplicate app identities before navigation can diverge', () => {
@@ -82,6 +82,6 @@ it('recognizes social hosts without branding look-alikes and supports explicit i
     expect.objectContaining({ label: '联系我', kind: 'email', icon: 'email' }),
   ]);
   const config = structuredClone(siteConfig);
-  config.profile.links = [{ label: 'GitHub', url: 'https://github.com/honestman9527', icon: 'missing' } as unknown as import('./types.ts').PublicLink];
+  config.profile.links = [{ label: 'GitHub', url: 'https://github.com/honestman9527', icon: 'missing' } as unknown as import('../../src/config/types.ts').PublicLink];
   expect(validateConfig(config, appRegistry)).toContain('profile.links.0: unknown contact icon');
 });

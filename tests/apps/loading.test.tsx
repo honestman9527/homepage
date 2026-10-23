@@ -2,8 +2,8 @@
 import { Suspense } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { createAppLoader } from './loading.ts';
-import { AppBoundary } from '../ui/app-boundary.tsx';
+import { createAppLoader } from '../../src/apps/loading.ts';
+import { AppBoundary } from '../../src/ui/app-boundary.tsx';
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 it('shares a pending load, keeps the window closable, and reuses success after closing during loading', async () => {

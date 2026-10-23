@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { useState } from 'react';
-import { DesktopProvider, getWindowPresentation, useDesktop } from './index.ts';
+import { DesktopProvider, getWindowPresentation, useDesktop } from '../../src/desktop/index.ts';
 
 afterEach(cleanup);
 function Session() {

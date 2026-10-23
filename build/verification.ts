@@ -79,7 +79,7 @@ async function verify(args: string[]) {
   const [script, ...parameters] = args;
   const pkg = JSON.parse(await readFile('package.json', 'utf8')) as { scripts: Record<string, string> };
   if (!script || !(script in pkg.scripts) || ['verify', 'hooks:install'].includes(script)) {
-    throw new Error('Usage: pnpm verify -- <package-script> [args], e.g. test src/apps');
+    throw new Error('Usage: pnpm verify -- <package-script> [args], e.g. test tests/apps');
   }
   const id = `${Date.now()}-${process.pid}`;
   const directory = `.artifacts/verification/${id}`;

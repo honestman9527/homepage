@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
-import { DesktopProvider } from '../desktop/index.ts';
-import { PreferencesProvider } from '../preferences/index.ts';
-import { WindowFrame } from './window-frame.tsx';
+import { DesktopProvider } from '../../src/desktop/index.ts';
+import { PreferencesProvider } from '../../src/preferences/index.ts';
+import { WindowFrame } from '../../src/ui/window-frame.tsx';
 
 afterEach(cleanup);
 it('uses a nonmodal window with named controls and retains input focus on content pointerdown', () => {

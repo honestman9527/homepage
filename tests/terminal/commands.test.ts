@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry, siteConfig } from '../config/index.ts';
-import { executeCommand } from './commands';
+import { appRegistry, siteConfig } from '../../src/config/index.ts';
+import { executeCommand } from '../../src/terminal/commands';
 import { readFileSync } from 'node:fs';
 
 const environment = { config: siteConfig, apps: appRegistry, now: new Date(2026, 9, 22, 14, 35, 0) };

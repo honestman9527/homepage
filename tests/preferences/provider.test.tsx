@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
-import { PreferencesProvider, usePreferences } from './index.ts';
+import { PreferencesProvider, usePreferences } from '../../src/preferences/index.ts';
 
 afterEach(cleanup);
 function PreferenceProbe({ name }: { name: string }) {

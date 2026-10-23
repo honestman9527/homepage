@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { preferencesReducer, readPreferences, persistPreferences, defaultPreferences, PREFERENCES_KEY } from './index.ts';
+import { preferencesReducer, readPreferences, persistPreferences, defaultPreferences, PREFERENCES_KEY } from '../../src/preferences/index.ts';
 
 describe('desktop preferences storage', () => {
   it('rejects malformed wallpaper types instead of coercing them into a known identifier', () => {

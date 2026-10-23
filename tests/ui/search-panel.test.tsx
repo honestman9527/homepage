@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { useState } from 'react';
-import { SearchPanel } from './search-panel.tsx';
+import { SearchPanel } from '../../src/ui/search-panel.tsx';
 
 afterEach(cleanup);
 function SearchProbe() {

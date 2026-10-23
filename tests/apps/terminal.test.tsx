@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PreferencesProvider } from '../preferences/provider';
-import { TerminalApp } from './terminal';
+import { PreferencesProvider } from '../../src/preferences/provider';
+import { TerminalApp } from '../../src/apps/terminal';
 
 afterEach(cleanup);
 

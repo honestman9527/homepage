@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { verifyWallpaperImage } from './wallpaper-storage.ts';
-import { PreferencesProvider, defaultPreferences, usePreferences } from './index.ts';
-import type { WallpaperStorage } from './wallpaper-storage.ts';
+import { verifyWallpaperImage } from '../../src/preferences/wallpaper-storage.ts';
+import { PreferencesProvider, defaultPreferences, usePreferences } from '../../src/preferences/index.ts';
+import type { WallpaperStorage } from '../../src/preferences/wallpaper-storage.ts';
 
 const revoke = vi.fn();
 let counter = 0;
@@ -50,8 +50,10 @@ it('keeps the selected image for the session and reports a storage failure', asy
   const write = vi.fn<WallpaperStorage['write']>().mockRejectedValue(new Error('quota'));
   render(<PreferencesProvider storage={null} motionQuery={null} imageStorage={{ read: async () => null, write }}><Probe /></PreferencesProvider>);
   fireEvent.click(screen.getByText('上传'));
-  await waitFor(() => expect(screen.getByLabelText('图片状态').textContent).toBe('unavailable:true'));
-  expect(screen.getByLabelText('图片地址').textContent).toMatch(/^blob:/);
+  await waitFor(() => {
+    expect(screen.getByLabelText('图片状态').textContent).toBe('unavailable:true');
+    expect(screen.getByLabelText('图片地址').textContent).toMatch(/^blob:/);
+  });
   expect(write).toHaveBeenCalledOnce();
 });
 
@@ -80,6 +82,7 @@ it('does not let a late image read overwrite a new upload', async () => {
   render(<PreferencesProvider storage={{ getItem: () => JSON.stringify({ ...defaultPreferences, customWallpaper: true }), setItem() {} }} motionQuery={null} imageStorage={imageStorage}><Probe /></PreferencesProvider>);
   fireEvent.click(screen.getByText('上传'));
   await waitFor(() => expect(write).toHaveBeenCalledOnce());
+  await waitFor(() => expect(screen.getByLabelText('图片地址').textContent).toMatch(/^blob:/));
   const current = screen.getByLabelText('图片地址').textContent;
   await act(async () => restored(file()));
   expect(screen.getByLabelText('图片地址').textContent).toBe(current);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDesktopState, desktopReducer, getActiveApp, getWindowPresentation } from './index.ts';
+import { createDesktopState, desktopReducer, getActiveApp, getWindowPresentation } from '../../src/desktop/index.ts';
 
 const desktop = { width: 1366, height: 768, availableArea: { x: 0, y: 48, width: 1366, height: 616 } };
 

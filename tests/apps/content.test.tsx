@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { AppContent } from './content';
-import { siteConfig } from '../config/index.ts';
+import { AppContent } from '../../src/apps/content';
+import { siteConfig } from '../../src/config/index.ts';
 
 const configuredLinks = siteConfig.profile.links;
 afterEach(() => { cleanup(); siteConfig.profile.links = configuredLinks; });

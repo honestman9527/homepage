@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { searchApps } from './index.ts';
+import { searchApps } from '../../src/search/index.ts';
 
 describe('application search', () => {
   it('matches the shared registry by Chinese name, English alias, ID and keyword', () => {

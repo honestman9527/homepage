@@ -9,9 +9,9 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-按改动影响运行必要检查，例如配置调整运行 `pnpm test src/config`，偏好调整运行 `pnpm test src/preferences`，界面交互运行对应的 `src/apps/*.test.tsx` 或 `src/App.test.tsx`。类型检查为 `pnpm typecheck`，生产构建为 `pnpm build`，`pnpm preview` 在 Cloudflare 本地环境预览已有 `dist`，不会重新构建。不要混用 npm / yarn 或重新生成另一份锁文件。
+按改动影响运行必要检查，例如配置调整运行 `pnpm test tests/config`，偏好调整运行 `pnpm test tests/preferences`，界面交互运行对应的 `tests/apps/*.test.tsx` 或 `tests/app/App.test.tsx`。类型检查为 `pnpm typecheck`，生产构建为 `pnpm build`，`pnpm preview` 在 Cloudflare 本地环境预览已有 `dist`，不会重新构建。不要混用 npm / yarn 或重新生成另一份锁文件。
 
-`pnpm check` 是规格确认的发布前核心集合，依次执行类型检查、`pnpm test:core`（当前为 `vitest run src build`）、生产构建与 Cloudflare 本地预览回归检查。预览检查只发 HTTP 请求；它不启动浏览器、不发布站点；平时小改动不强制执行整个集合。交互逻辑通过 Vitest / jsdom 验证，视觉、布局、辅助技术与真机仍按 [人工验收清单](manual-acceptance.md) 检查。
+`pnpm check` 是规格确认的发布前核心集合，依次执行类型检查、`pnpm test:core`（当前为 `vitest run tests`）、生产构建与 Cloudflare 本地预览回归检查。预览检查只发 HTTP 请求；它不启动浏览器、不发布站点；平时小改动不强制执行整个集合。交互逻辑通过 Vitest / jsdom 验证，视觉、布局、辅助技术与真机仍按 [人工验收清单](manual-acceptance.md) 检查。
 
 开发与预览通过 `@cloudflare/vite-plugin` 使用 Cloudflare 本地环境，React 保留热更新；站点仍只发布静态资产。`vite.config.ts` 负责 React、Cloudflare 与 HTML 内容生成，`vitest.config.ts` 单独负责测试，不启动 Cloudflare 运行时。
 
@@ -35,9 +35,28 @@ Cloudflare 工具版本集中在 `pnpm-workspace.yaml` 的 catalog：Wrangler 4.
 | `src/desktop/`、`src/preferences/`、`src/terminal/`、`src/search/` | 窗口会话、偏好、终端与搜索逻辑 |
 | `src/ui/`、`src/styles.css` | 桌面呈现、窗口、导航、动效与共享样式 |
 | `public/` | 直接发布的头像、HM 标志、favicon 与壁纸 |
+| `tests/` | 按模块组织的行为测试、整站交互测试和 HTTP 预览检查；不进入生产源码 |
 | `build/site-html.ts` | 从同一公开内容生成页面元信息与无 JavaScript 导航 |
 | `vite.config.ts`、`vitest.config.ts`、`wrangler.jsonc` | 开发构建、定向测试和 Cloudflare 输入配置 |
 | `dist/`、`.wrangler/` | 自动生成的构建与本地运行数据，不提交 |
+
+测试目录按被测模块组织，源文件与测试文件保留对应命名：
+
+```text
+tests/
+├── app/          # 整站导航、加载与渲染隔离
+├── apps/         # 五个应用及内容加载
+├── config/       # 公开内容与链接校验
+├── desktop/      # 窗口状态与 provider
+├── preferences/  # 偏好、持久化与壁纸竞态
+├── search/       # 应用搜索
+├── terminal/     # 命令与输入会话
+├── ui/           # 窗口、搜索面板与视口适配
+├── build/        # 验证工具的行为测试
+└── preview/      # Cloudflare HTTP 预览脚本（独立命令）
+```
+
+`pnpm test tests/preferences` 只运行指定模块；`pnpm test:core` 运行 Vitest 行为测试；`pnpm test:preview` 单独验证已有构建。Vitest 只发现 `tests/**/*.test.{ts,tsx}`，测试文件通过相对路径引用源码，TypeScript 同时检查源码、工具和测试。DOM 测试继续由文件头声明 jsdom 环境，其他测试使用 Node 环境。
 
 ## 公开内容
 
@@ -124,7 +143,7 @@ blog: {
 维护后运行对应检查与预览：
 
 ```sh
-pnpm test src/config src/apps/blog.test.tsx
+pnpm test tests/config tests/apps/blog.test.tsx
 pnpm typecheck
 pnpm build
 pnpm preview
@@ -146,6 +165,6 @@ pnpm preview
 
 ## 验证入口与日志
 
-日常检查使用 `pnpm verify -- <脚本名> [参数]`，例如 `pnpm verify -- test src/apps` 或 `pnpm verify -- typecheck`。它先检查改动代码的 import 位置，再等待指定命令结束，以该命令的退出码返回。日志与结果保存在忽略目录 `.artifacts/verification/`；完整流程见 [验证与提交](agents/verification.md)。
+日常检查使用 `pnpm verify -- <脚本名> [参数]`，例如 `pnpm verify -- test tests/apps` 或 `pnpm verify -- typecheck`。它先检查改动代码的 import 位置，再等待指定命令结束，以该命令的退出码返回。日志与结果保存在忽略目录 `.artifacts/verification/`；完整流程见 [验证与提交](agents/verification.md)。
 
 首次在本地运行 `pnpm hooks:install` 启用仓库提交检查。手动 CI 使用同一入口运行原有 `check`，并单独保存失败运行的验证日志；发布触发方式保持手动。
