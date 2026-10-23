@@ -23,6 +23,7 @@ it('shares single application sessions across Dock, About and desktop shortcuts 
   render(<App />);
   expect(document.activeElement).not.toBe(terminalInput());
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   await user.click(within(frame('我的项目')).getByRole('button', { name: '了解HonestOS' }));
   await user.click(within(screen.getByRole('navigation', { name: '桌面快捷入口' })).getByRole('button', { name: '我的项目' }));
   await user.click(within(frame('关于我')).getByRole('button', { name: '看看我在折腾什么' }));
@@ -48,6 +49,7 @@ it('retains terminal output, draft, history and reading position through minimiz
   expect(dock('终端').getAttribute('aria-label')).toContain('运行中');
   await user.click(dock('终端'));
   await user.click(dock('桌面设置'));
+  await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
   expect(document.activeElement).toBe(frame('终端'));
   const normal = { left: frame('终端').style.left, top: frame('终端').style.top, width: frame('终端').style.width };
@@ -84,7 +86,9 @@ it('preserves focus when closing an inactive window and chooses an open MRU succ
   expect(document.activeElement).toBe(input);
   expect(dock('终端').getAttribute('aria-current')).toBe('true');
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   await user.click(dock('随便写写'));
+  await within(frame('随便写写')).findByText('生活、代码与偶尔的灵感');
   await user.click(screen.getByRole('button', { name: '最小化我的项目' }));
   await user.click(screen.getByRole('button', { name: '关闭随便写写' }));
   expect(document.activeElement).toBe(frame('终端'));
@@ -100,19 +104,23 @@ it('preserves project detail and reading position across hide/arrange/modes, res
   const user = userEvent.setup();
   render(<App />);
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   const content = within(frame('我的项目')).getByRole('region', { name: '项目内容' });
   content.scrollTop = 120;
   await user.click(within(content).getByRole('button', { name: '了解HonestOS' }));
   content.scrollTop = 87;
   await user.click(dock('桌面设置'));
+  await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
   expect(screen.queryByRole('region', { name: '我的项目' })).toBeNull();
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(within(content).getByRole('heading', { name: 'HonestOS' })).toBeTruthy();
   expect(content.scrollTop).toBe(87);
   resize(390, 844);
   await user.click(dock('关于我'));
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(content.scrollTop).toBe(87);
   resize(1366, 768);
   await user.click(within(content).getByRole('button', { name: '返回项目列表' }));
@@ -120,6 +128,7 @@ it('preserves project detail and reading position across hide/arrange/modes, res
   expect(document.activeElement).toBe(within(content).getByRole('button', { name: '了解HonestOS' }));
   await user.click(screen.getByRole('button', { name: '关闭我的项目' }));
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(within(frame('我的项目')).queryByRole('button', { name: '返回项目列表' })).toBeNull();
   expect(within(frame('我的项目')).getByRole('region', { name: '项目内容' }).scrollTop).toBe(0);
 });
@@ -164,12 +173,15 @@ it('starts only About on a small layout and arranges it without ending a backgro
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   expect(screen.queryByRole('button', { name: '最小化关于我' })).toBeNull();
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   await user.click(within(frame('我的项目')).getByRole('button', { name: '了解小小宇宙' }));
   await user.click(dock('桌面设置'));
+  await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
   expect(document.activeElement).toBe(frame('关于我'));
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(within(frame('我的项目')).getByRole('heading', { name: '小小宇宙' })).toBeTruthy();
 });
 
@@ -208,6 +220,7 @@ it('keeps the focused command and navigation usable in compact visual viewports 
   expect(screen.getByRole('log', { name: '终端输出' }).textContent).toContain('compact command');
   fireEvent.change(input, { target: { value: 'draft survives keyboard' } });
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(document.activeElement).toBe(frame('我的项目'));
   await user.click(dock('终端'));
   expect(document.activeElement).toBe(terminal);
@@ -278,6 +291,7 @@ it('finishes an outgoing animation without stealing focus from an application se
   fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
   expect(screen.getByRole('region', { name: '终端' })).toBe(terminal);
   await user.click(dock('我的项目'));
+  await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   act(() => { gsap.getTweensOf(terminal).forEach(tween => tween.progress(1)); });
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   expect(document.activeElement).toBe(frame('我的项目'));

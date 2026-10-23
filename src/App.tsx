@@ -91,7 +91,7 @@ export function DesktopShell() {
         {appRegistry.map(app => {
           const record = desktop.state.windows[app.id];
           if (record.sessionId === null) return null;
-          return <WindowFrame appId={app.id} key={`${app.id}:${record.sessionId}`} onClose={() => finish(app.id)} onMinimize={() => finish(app.id, true)}><AppBoundary onClose={() => finish(app.id)}><AppContent appId={app.id} onOpen={open} onArrange={arrange} /></AppBoundary></WindowFrame>;
+          return <WindowFrame appId={app.id} key={`${app.id}:${record.sessionId}`} onClose={() => finish(app.id)} onMinimize={() => finish(app.id, true)}><AppBoundary onClose={() => finish(app.id)}><AppContent onClose={() => finish(app.id)} appId={app.id} onOpen={open} onArrange={arrange} /></AppBoundary></WindowFrame>;
         })}
         {desktop.state.openOrder.length === 0 && <p className="desktop-empty">桌面静下来了。点点 Dock，继续探索。</p>}
       </main>
