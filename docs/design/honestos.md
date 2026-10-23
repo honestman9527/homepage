@@ -1,6 +1,6 @@
 # HonestOS 设计
 
-状态：两轮访谈的六项决策及测试接口已确认，实现规格已发布。
+状态：首版实现已完成。2026-10-23 的后续视觉与 RSS 调整已确认，冲突处以 [macOS 风格细化](macos-refinement.md) 为准。
 
 实现规格：[HonestOS v1：实现桌面式个人主站与五应用交互（#1）](https://github.com/honestman9527/homepage/issues/1)，标签为 `ready-for-agent`。实施范围与验收要求以该规格为准，本文件保留设计理由与视觉基线。
 
