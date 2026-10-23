@@ -37,18 +37,20 @@ svg { display: block; width: 22px; height: 22px; flex-shrink: 0; }
 .shortcut-blog svg { width: 24px; height: 24px; fill: none; stroke: #717180; }
 .app-window { position: absolute; display: flex; flex-direction: column; min-width: 0; color: var(--text); background: rgb(var(--surface-rgb) / var(--glass-alpha,.65)); backdrop-filter: blur(28px) saturate(150%); border: 1px solid #ffffff65; border-radius: 12px; box-shadow: 0 16px 48px #11112438, inset 0 1px #ffffff70; overflow: hidden; container-type: inline-size; transform-origin: center center; }
 .app-window.active-window { box-shadow: 0 24px 64px #11112450,0 4px 16px #11112420, inset 0 1px #ffffff80; }
+.app-window:focus { outline: none; }
 [data-appearance="dark"] .app-window { border-color: #ffffff25; }
 .window-titlebar { position: relative; flex: 0 0 36px; display: flex; align-items: center; justify-content: center; min-width: 0; padding: 0 84px; border-bottom: 1px solid var(--line); cursor: grab; touch-action: none; user-select: none; }
 .window-titlebar:active { cursor: grabbing; }
 .window-controls { position: absolute; left: 9px; top: 0; height: 100%; display: flex; align-items: center; opacity: 0; }
 .window-titlebar:hover .window-controls,.app-window:focus-within .window-controls { opacity: 1; }
 .window-controls button { width: 24px; height: 30px; padding: 0; border: 0; background: transparent; display: grid; place-items: center; border-radius: 4px; }
+.window-controls button:focus { outline: none; }
 .window-controls button>span { display: grid; place-items: center; border-radius: 50%; width: 12px; height: 12px; font: 12px/1 sans-serif; color: #0000; box-shadow: inset 0 0 0 1px #0000000d; }
 .window-controls:hover button>span,.window-controls:focus-within button>span { color: #382a2b; }
 .window-close>span { background: #ff5f57; }
 .window-minimize>span { background: #febc2e; }
 .window-maximize>span { background: #28c840; }
-.window-controls button:focus-visible>span { color: #382a2b; }
+.window-controls button:focus-visible>span { color: #382a2b; box-shadow: 0 0 0 2px var(--paper),0 0 0 3px var(--blue); }
 .window-title { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; font-weight: 500; color: var(--muted); }
 .active-window .window-title { color: var(--text); }
 .window-title svg { width: 14px; height: 14px; opacity: .65; }
@@ -97,6 +99,8 @@ svg { display: block; width: 22px; height: 22px; flex-shrink: 0; }
 .search-panel { width: 520px; max-width: 100%; max-height: calc(var(--visual-height,100dvh) - 80px); overflow: auto; background: rgb(var(--surface-rgb) / max(.85,var(--glass-alpha))); backdrop-filter: blur(30px); border: 1px solid #ffffff65; border-radius: 16px; box-shadow: 0 24px 80px #1115; }
 .search-field { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .search-field input { width: 100%; min-width: 0; min-height: 36px; font-size: 16px; border: 0; background: transparent; color: var(--text); }
+.search-field input:focus { outline: none; box-shadow: none; }
+.search-field:focus-within { border-bottom-color: color-mix(in srgb,var(--blue) 45%,var(--line)); }
 .search-field>button { min-width: 36px; min-height: 30px; padding: 0 6px; color: var(--muted); background: var(--raised); border: 1px solid var(--line); border-radius: 6px; font-size: 11px; }
 .search-caption { color: var(--muted); margin: 10px 16px 6px; font-size: 12px; }
 .search-result { display: flex; align-items: center; gap: 10px; width: calc(100% - 16px); min-height: 52px; margin: 2px 8px; padding: 6px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text); text-align: left; }
