@@ -15,10 +15,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:core": "vitest run tests",
     "test:preview": "node tests/preview/check-preview.ts",
-    "check": "pnpm typecheck && pnpm test:core && pnpm build && pnpm test:preview",
-    "deploy:dry-run": "wrangler deploy --dry-run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:preview",
+    "deploy:dry-run": "wrangler deploy --config wrangler.jsonc --dry-run",
     "verify": "node build/verification.ts",
     "lint": "node build/verification.ts --lint",
     "hooks:install": "node build/verification.ts --install-hooks"
@@ -32,7 +31,6 @@
   },
   "devDependencies": {
     "@babel/parser": "8.0.7",
-    "@cloudflare/vite-plugin": "1.64.0",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",
     "@types/node": "24.19.2",
@@ -44,6 +42,6 @@
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "5.0.5",
-    "wrangler": "catalog:"
+    "wrangler": "4.151.3"
   }
 }

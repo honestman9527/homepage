@@ -14,7 +14,7 @@
 
 ### Product design
 
-设计或实现 HonestOS 功能前，先读 `docs/design/honestos.md`，区分已确认决策和访谈未决项。
+设计或实现 HonestOS 功能前，先读 `docs/design/honestos.md`，该文件统一描述当前行为；历史方案仅作决策背景。
 
 ### Verification
 

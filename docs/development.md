@@ -1,6 +1,6 @@
 # 开发与内容维护
 
-本项目使用 Node **24.21.0**（`.node-version`）、pnpm **12.14.0**（`packageManager`），直接依赖与锁文件固定版本。2026-10-22 查询 npm registry 稳定版本与兼容约束，选用 React 19.3.1、Vite 8.3.5、Vitest 5.0.5、TypeScript 7.0.2。相关说明见 [Vite](https://vite.dev/guide/) 与 [Vitest](https://vitest.dev/guide/)；Wrangler 及安装脚本允许列表见 [发布说明](deployment.md)。
+Node 版本以 `.node-version` 为准，pnpm 与直接依赖版本以 `package.json` 为准；安装使用提交的锁文件。
 
 ## 本地运行与检查
 
@@ -9,22 +9,20 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-按改动影响运行必要检查，例如配置调整运行 `pnpm test tests/config`，偏好调整运行 `pnpm test tests/preferences`，界面交互运行对应的 `tests/apps/*.test.tsx` 或 `tests/app/App.test.tsx`。类型检查为 `pnpm typecheck`，生产构建为 `pnpm build`，`pnpm preview` 在 Cloudflare 本地环境预览已有 `dist`，不会重新构建。不要混用 npm / yarn 或重新生成另一份锁文件。
+开发使用普通 Vite 和 React 热更新，默认地址 `http://localhost:5173`，端口以实际输出为准。无需 Cloudflare 账户、Wrangler dev 或 Workers 本地运行时。
 
-`pnpm check` 是规格确认的发布前核心集合，依次执行类型检查、`pnpm test:core`（当前为 `vitest run tests`）、生产构建与 Cloudflare 本地预览回归检查。预览检查只发 HTTP 请求；它不启动浏览器、不发布站点；平时小改动不强制执行整个集合。交互逻辑通过 Vitest / jsdom 验证，视觉、布局、辅助技术与真机仍按 [人工验收清单](manual-acceptance.md) 检查。
+按改动执行 `pnpm test tests/config`、`pnpm test tests/preferences` 或对应交互测试；类型检查用 `pnpm typecheck`，import 位置检查用 `pnpm lint`。提交约定和可选日志见 [验证与提交](agents/verification.md)。
 
-开发与预览通过 `@cloudflare/vite-plugin` 使用 Cloudflare 本地环境，React 保留热更新；站点仍只发布静态资产。`vite.config.ts` 负责 React、Cloudflare 与 HTML 内容生成，`vitest.config.ts` 单独负责测试，不启动 Cloudflare 运行时。
-
-当前开发入口是 **`pnpm dev`**（`vite` + Cloudflare 插件），默认访问 `http://localhost:5173`，端口占用时以命令输出为准。无需先构建，也无需另外启动 `wrangler dev`。构建采用 **Workers Static Assets**：`pnpm build` 生成静态文件及含 `assets.directory` 的 `dist/wrangler.json`，Wrangler 读取这份配置发布；没有自定义 Worker 请求处理脚本。该方式遵循 [Cloudflare Vite 静态资产说明](https://developers.cloudflare.com/workers/vite-plugin/reference/static-assets/)。
+`pnpm check` 是 CI 和发布前集合：源码检查、类型检查、Vitest 行为测试、生产构建和 Vite HTTP 预览。HTTP 检查不启动浏览器；视觉、布局、辅助技术和真机按 [人工验收清单](manual-acceptance.md) 验证。平时小改动不强制执行整个集合。
 
 ```sh
-pnpm build            # 生成 dist 与对应 Wrangler 输出配置
-pnpm preview          # 预览已有构建
-pnpm test:preview     # HTTP 验证本地预览与真实构建资产
-pnpm deploy:dry-run   # Wrangler 校验同一份构建，不上传
+pnpm build            # 生成纯静态 dist
+pnpm preview          # 用 Vite 预览已有构建
+pnpm test:preview     # HTTP 核对页面、静态资产与未知路径 404
+pnpm deploy:dry-run   # 验证根 Wrangler 配置及已有产物，不上传
 ```
 
-Cloudflare 工具版本集中在 `pnpm-workspace.yaml` 的 catalog：Wrangler 4.151.3、Miniflare 5.20261019.1-beta、workerd 1.20261019.1。项目命令和 Cloudflare 插件通过定向 overrides 共用这组版本，避免重复运行时。升级时按 Wrangler 的依赖版本同步更新 catalog 与锁文件，核对插件兼容要求，并执行 `pnpm build && pnpm test:preview`。此次本地复现过旧 Miniflare 导致预览启动失败，统一版本后恢复；回归检查覆盖真实预览启动和资产响应。插件生成 `dist/wrangler.json` 和 `.wrangler/deploy/config.json`，Wrangler 自动定位输出配置；输入 `wrangler.jsonc` 不设置额外构建命令，发布阶段复用构建结果。[Cloudflare 开发方式](https://developers.cloudflare.com/workers/local-development/wrangler-vs-vite/)
+`vite.config.ts` 负责 React、HTML 生成与延迟加载约束；`vitest.config.ts` 独立管理测试。Workers 仅用于部署，`wrangler.jsonc` 直接指向 `dist`，详见 [发布说明](deployment.md)。
 
 ## 目录职责
 
@@ -37,7 +35,7 @@ Cloudflare 工具版本集中在 `pnpm-workspace.yaml` 的 catalog：Wrangler 4.
 | `public/` | 直接发布的头像、HM 标志、favicon 与壁纸 |
 | `tests/` | 按模块组织的行为测试、整站交互测试和 HTTP 预览检查；不进入生产源码 |
 | `build/site-html.ts` | 从同一公开内容生成页面元信息与无 JavaScript 导航 |
-| `vite.config.ts`、`vitest.config.ts`、`wrangler.jsonc` | 开发构建、定向测试和 Cloudflare 输入配置 |
+| `vite.config.ts`、`vitest.config.ts`、`wrangler.jsonc` | 开发构建、定向测试和 Workers 部署配置 |
 | `dist/`、`.wrangler/` | 自动生成的构建与本地运行数据，不提交 |
 
 测试目录按被测模块组织，源文件与测试文件保留对应命名：
@@ -53,10 +51,10 @@ tests/
 ├── terminal/     # 命令与输入会话
 ├── ui/           # 窗口、搜索面板与视口适配
 ├── build/        # 验证工具的行为测试
-└── preview/      # Cloudflare HTTP 预览脚本（独立命令）
+└── preview/      # Vite HTTP 预览脚本（独立命令）
 ```
 
-`pnpm test tests/preferences` 只运行指定模块；`pnpm test:core` 运行 Vitest 行为测试；`pnpm test:preview` 单独验证已有构建。Vitest 只发现 `tests/**/*.test.{ts,tsx}`，测试文件通过相对路径引用源码，TypeScript 同时检查源码、工具和测试。DOM 测试继续由文件头声明 jsdom 环境，其他测试使用 Node 环境。
+`pnpm test tests/preferences` 只运行指定模块；`pnpm test` 运行 Vitest 行为测试；`pnpm test:preview` 单独验证已有构建。Vitest 只发现 `tests/**/*.test.{ts,tsx}`，测试文件通过相对路径引用源码，TypeScript 同时检查源码、工具和测试。DOM 测试继续由文件头声明 jsdom 环境，其他测试使用 Node 环境。
 
 ## 公开内容
 
@@ -101,7 +99,7 @@ links: [
 
 ## 应用身份、偏好与会话
 
-应用清单、名称、图标、别名、搜索关键词、默认与最小尺寸集中在 `src/config/registry.ts`；稳定 AppId 为 `about / projects / blog / terminal / settings`，搜索是系统面板。新增应用需同时补充类型和实际内容承载，不能只在 Dock 或终端另建独立清单。壁纸定义也在注册表中，目前支持 `dusk / day / night / lake / summit`，默认暮色山峦；只改变桌面背景。
+应用清单、名称、图标、别名、搜索关键词、默认与最小尺寸集中在 `src/config/registry.ts`；稳定 AppId 为 `about / projects / blog / terminal / settings`，搜索是系统面板。AppId 和运行时 ID 列表由注册表派生；新增应用需补充注册项和实际内容承载，不能只在 Dock 或终端另建独立清单。壁纸定义也在注册表中，目前支持 `dusk / day / night / lake / summit`，默认暮色山峦；只改变桌面背景。
 
 壁纸有效值由注册表的 `isWallpaperId` 统一校验，`theme` 帮助参数与补全也从注册表生成。偏好继续使用 `honestos.preferences.v1` 键，值升级为 `schemaVersion: 2`：壁纸、是否使用自选图、动效、外观、背景亮度、玻璃不透明度、Dock 大小和自动隐藏。旧版 schema 1 的壁纸与动效会迁移，其余补默认值；非法值、错误类型或未知版本回到默认。系统减弱动态效果优先于站内开关。设置中的“恢复默认设置”同时恢复偏好和删除自选图，不结束应用会话。
 
@@ -111,7 +109,7 @@ links: [
 
 终端 `neofetch` 的站点版本直接读取根 `package.json` 的 `version`；升级站点版本时维护这一处，虚拟 Shell 与设备检测免责声明继续保留。桌面 reducer 与拖动预览共用 `constrainWindowGeometry`，不要在界面另写一份边界规则。
 
-软键盘和极短可视高度只影响呈现：紧凑网格将顶栏、可滚动应用区和 Dock 分行；高度不足时外层也可滚动，终端反馈与输入另有内部滚动区。只显露已聚焦输入，不能在视口事件中自动聚焦或写回普通窗口几何。
+软键盘和极短可视高度只影响呈现：紧凑网格将可滚动应用区和 Dock 分行；高度不足时外层也可滚动，终端反馈与输入另有内部滚动区。只显露已聚焦输入，不能在视口事件中自动聚焦或写回普通窗口几何。
 
 当前配置待补资料与实际验证范围见 [交付记录](delivery.md)；内容上线、发布凭据、域名与回退分别按 [发布说明](deployment.md) 处理。
 
@@ -153,7 +151,7 @@ pnpm preview
 
 ## 界面与动效
 
-本轮视觉与交互以 [macOS 风格细化](design/macos-refinement.md) 为准。Dock 是应用导航，整理入口在设置中；移除菜单栏后桌面几何重新扣除安全边距与 Dock。GSAP 与 `@gsap/react` 负责窗口进入、退出、最小化和 Dock 邻近缩放，组件作用域自动清理。减弱动态效果下直接完成操作；没有持续背景动画。终端记录与输入同区滚动，新输出提示浮在可见区域，避免在阅读历史时被移出屏幕。
+本轮视觉与交互以 [macOS 风格细化](history/macos-refinement-design.md) 为准。Dock 是应用导航，整理入口在设置中；移除菜单栏后桌面几何重新扣除安全边距与 Dock。GSAP 与 `@gsap/react` 负责窗口进入、退出、最小化和 Dock 邻近缩放，组件作用域自动清理。减弱动态效果下直接完成操作；没有持续背景动画。终端记录与输入同区滚动，新输出提示浮在可见区域，避免在阅读历史时被移出屏幕。
 
 ## 应用加载与偏好通知
 
@@ -161,10 +159,10 @@ pnpm preview
 
 桌面偏好提供值、稳定动作、保存反馈与最终动效状态四种读取入口；终端只读取动作，窗口和 Dock 只读取动效状态。外观根元素独立更新，应用正文以稳定回调和 memo 隔离祖先重渲染。原偏好格式、图片恢复、写入顺序及失败降级保持原语义。
 
-构建会检查三个延迟应用未进入初始静态依赖图，预览回归检查覆盖全部 JS/CSS 分包。此次测量初始 JS 静态依赖 gzip 从约 115.11 KB 降至 114.10 KB（含 React 与 JSX 共享包），三个应用的包在打开时加载；这不代表浏览器耗时测量。视觉与慢网体验由人工验收。
+构建会检查三个延迟应用未进入初始静态依赖图，预览回归检查覆盖全部 JS/CSS 分包。历史体积测量只对应当时的构建，不能作为当前浏览器耗时或资产预算的证明。视觉与慢网体验由人工验收。
 
-## 验证入口与日志
+## 提交与 CI
 
-日常检查使用 `pnpm verify -- <脚本名> [参数]`，例如 `pnpm verify -- test tests/apps` 或 `pnpm verify -- typecheck`。它先检查改动代码的 import 位置，再等待指定命令结束，以该命令的退出码返回。日志与结果保存在忽略目录 `.artifacts/verification/`；完整流程见 [验证与提交](agents/verification.md)。
+首次运行 `pnpm hooks:install` 启用快速暂存检查。日常直接运行相关脚本；需要保存输出时可使用 `pnpm verify -- <脚本名> [参数]`。日志不充当提交凭据，修改文档或部分暂存不要求重复验证。
 
-首次在本地运行 `pnpm hooks:install` 启用仓库提交检查。GitHub Actions 使用同一入口运行原有 `check`，并单独保存失败运行的验证日志；推送 main 自动检查与部署，同时保留手动入口。
+PR 自动检查合并候选提交；main push 检查并部署，保留手动 check / deploy。日志、构建与正式发布分别记录，详见 [验证与提交](agents/verification.md) 和发布说明。

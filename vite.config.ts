@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
-import { cloudflare } from '@cloudflare/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { siteHtml } from './build/site-html.ts';
 
 export default defineConfig({
-  plugins: [react(), cloudflare(), siteHtml(), {
+  // Window navigation stays at the root; unknown paths should return 404.
+  appType: 'mpa',
+  plugins: [react(), siteHtml(), {
     name: 'honestos-initial-app-budget',
     generateBundle(_options, bundle) {
       const visited = new Set<string>();

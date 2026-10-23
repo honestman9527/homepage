@@ -1,11 +1,10 @@
+import type { AppId } from './registry.ts';
 import type { ContactIconName } from './social-links.ts';
 
-export const appIds = ['about', 'projects', 'blog', 'terminal', 'settings'] as const;
-export type AppId = (typeof appIds)[number];
 export type IconName = 'user' | 'folder' | 'book' | 'terminal' | 'sliders';
 export interface Size { width: number; height: number }
-export interface AppDefinition {
-  id: AppId;
+export interface AppDefinition<Id extends string = AppId> {
+  id: Id;
   name: string;
   icon: IconName;
   aliases: readonly string[];

@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { preview } from 'vite';
 
-// Exercise the actual Cloudflare preview after a build, including its runtime.
-// Unit tests cannot catch incompatible Vite-plugin / Miniflare versions here.
+// Verify the existing Vite build over HTTP without a browser or platform runtime.
 const server = await preview({ preview: { host: '127.0.0.1', port: 0, open: false } });
 try {
   const address = server.httpServer.address();
@@ -19,12 +18,12 @@ try {
     const expected = await readFile(path === '/' ? 'dist/index.html' : `dist${path}`);
     assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected, path);
   }));
-  for (const path of ['/wrangler.json', '/missing-asset']) {
+  for (const path of ['/wrangler.json', '/wrangler.jsonc', '/missing-asset', '/assets/missing.js']) {
     const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(5000) });
     assert.equal(response.status, 404, path);
     await response.body?.cancel();
   }
-  console.log(`Cloudflare preview: ${paths.length} built assets verified; configuration and missing paths return 404.`);
+  console.log(`Vite preview: ${paths.length} built assets verified; configuration and missing paths return 404.`);
 } finally {
   await server.close();
 }

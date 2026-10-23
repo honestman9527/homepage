@@ -1,8 +1,10 @@
+> 历史归档：仅保留当时的设计与验证依据。当前行为以 [HonestOS 设计](../design/honestos.md) 为准；开发和发布以当前指南为准。
+
 # macOS 风格细化交付记录
 
-> 历史阶段记录：下述分支、RSS、品牌文件布局与资产体积对应当时版本。RSS 已由 ADR-0003 的手动精选取代，品牌统一由 public 提供；当前状态见 [交付记录](delivery.md)。
+> 历史阶段记录：下述分支、RSS、品牌文件布局与资产体积对应当时版本。RSS 已由 ADR-0003 的手动精选取代，品牌统一由 public 提供；当前状态见 [交付记录](../delivery.md)。
 
-日期：2026-10-23。设计依据与确认范围见 [设计记录](design/macos-refinement.md)。本轮保留开发分支 `feat/macos-desktop`，不合入 main、不推送或部署。
+日期：2026-10-23。设计依据与确认范围见 [设计记录](macos-refinement-design.md)。本轮保留开发分支 `feat/macos-desktop`，不合入 main、不推送或部署。
 
 ## 已实现
 
@@ -44,4 +46,4 @@
 
 ## 后续状态
 
-用户已于 2026-10-23 确认人工验证完成，[人工验收清单](manual-acceptance.md) 保留为回归参考。博客现已改为手动精选，不再配置 RSS 或维护快照。公开内容以 `src/config/content.ts` 为准，用户未提交的内容修改单独保留。自动发布与线上验证要求见 [发布说明](deployment.md)。
+用户已于 2026-10-23 确认人工验证完成，[人工验收清单](../manual-acceptance.md) 保留为回归参考。博客现已改为手动精选，不再配置 RSS 或维护快照。公开内容以 `src/config/content.ts` 为准，用户未提交的内容修改单独保留。自动发布与线上验证要求见 [发布说明](../deployment.md)。

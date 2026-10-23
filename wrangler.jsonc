@@ -2,7 +2,9 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "honestos",
   "compatibility_date": "2026-10-22",
-  // Assets-only site. The Vite plugin writes assets.directory into its output
-  // configuration; Wrangler deploys that checked output without rebuilding it.
-  // Window navigation stays at the root URL, so no SPA fallback is needed.
+  // Deploy the existing Vite build without a Worker script or another build.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "none"
+  }
 }

@@ -1,25 +1,23 @@
 # 验证与提交
 
-## 按改动选择命令
+## 日常检查
 
-```sh
-pnpm hooks:install
-pnpm verify -- typecheck
-pnpm verify -- test tests/apps
-```
+按改动选择直接命令，例如 `pnpm test tests/apps`、`pnpm typecheck`、`pnpm lint`。构建、工具链或发布配置变更运行 `pnpm check`，部署配置另加 `pnpm deploy:dry-run`。视觉与布局人工验收。
 
-`verify` 接受 package.json 中已有的脚本名及其参数，使用结构化参数启动 pnpm，等待完成并保留退出码。测试范围按改动和受影响依赖选择；发布或 Cloudflare 工具链变更按需运行 `pnpm verify -- check`。每条记录只证明该命令的结果，不替代对覆盖范围的判断。
+`pnpm lint` 检查仓库源码的 import 位置，也可传入明确文件路径。全量检查用于 CI 和跨模块变更；小改动选择相关检查即可。
 
-## 留存结果
+## 提交检查
 
-每次运行写入 `.artifacts/verification/<时间戳-进程号>/output.log` 和 `result.json`，包含命令、Git revision、工作文件指纹、开始/结束时间与退出码；目录已忽略。`latest.json` 指向最近开始的运行，未完成时退出码为 null。失败、取消和运行中代码改变的结果不能用于提交。多个检查并发时，以最后开始的运行作为提交凭据，其余记录仍保留在各自目录。
+首次运行 `pnpm hooks:install` 安装本地 hook。hook 只读取暂存内容，检查 import 位置和 Git 空白错误；不运行测试、不修改文件、不自动暂存，也不读取验证凭据。支持部分暂存，补文档无需重跑代码检查。
 
-GitHub Actions 运行同一入口，成功与失败日志均作为独立 artifact 保留 14 天。
+提交前由执行者选择相关验证，并如实报告范围与结果。hook 通过只代表机械检查通过；PR CI 验证合并候选提交，main CI 验证实际发布提交。
 
-## 提交
+安装仅设置当前仓库的 `core.hooksPath`。已有其他 hook 路径时，保留原配置，将 `node build/verification.ts --pre-commit` 接入原 hook。
 
-完成文件修改后，先运行适合本次改动的验证，再暂存本次任务文件并提交。hook 只检查暂存代码的 import 位置、空白错误及验证凭据，不运行全量测试。代码提交需要最近一次验证成功且工作文件未变化，暂存内容也必须与验证过的文件字节一致。部分暂存时，先安排出希望提交的文件版本再验证；hook 不会替你暂存或重写文件。
+## 可选日志
 
-纯 Markdown 文档提交只执行机械检查。import 位置规则由语法树识别，支持类型导入、注释、指令和 TSX；`pnpm lint` 单独检查当前改动，也可追加明确文件路径。
+需要留存输出时使用 `pnpm verify -- <脚本名> [参数]`，例如 `pnpm verify -- test tests/apps`。它执行对应脚本并保留退出码，不额外执行隐式检查。
 
-安装 hook 只设置当前仓库的 core.hooksPath。若已有其他 hooksPath，安装会保留现有设置并提示把 `node build/verification.ts --pre-commit` 接入原 hook。
+每次运行独立写入 `.artifacts/verification/<时间戳-进程号>/output.log` 和 `result.json`，记录命令、Git revision、开始/结束时间和退出码。运行中退出码为 null；各次运行互不覆盖，没有“最近一次成功即准许提交”的规则。revision 是运行时 HEAD，不证明本地未提交改动已经成为提交，也不证明测试覆盖充分。
+
+该目录已忽略。GitHub Actions 使用此入口保存成功及失败日志，artifact 保留 14 天。

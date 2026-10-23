@@ -1,7 +1,9 @@
 name: HonestOS CI and deploy
-run-name: HonestOS ${{ github.event_name == 'push' && 'auto deploy' || inputs.mode }} · ${{ github.ref_name }}
+run-name: HonestOS ${{ github.event_name == 'push' && 'auto deploy' || inputs.mode || 'check' }} · ${{ github.ref_name }}
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -49,7 +51,6 @@ jobs:
       - name: Install locked pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
-          version: 12.14.0
           run_install: false
 
       - name: Install project Node
@@ -61,8 +62,11 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck, core behavior tests, production build and Cloudflare preview
+      - name: Check source, behavior and the static build
         run: pnpm verify -- check
+
+      - name: Validate Workers deployment configuration without uploading
+        run: pnpm verify -- deploy:dry-run
 
       - name: Preserve verification logs, including failed checks
         if: ${{ always() }}
@@ -100,4 +104,4 @@ jobs:
           : "${CLOUDFLARE_API_TOKEN:?Set the CLOUDFLARE_API_TOKEN repository secret}"
           : "${CLOUDFLARE_ACCOUNT_ID:?Set the CLOUDFLARE_ACCOUNT_ID repository secret}"
           sha256sum --check dist.sha256
-          pnpm exec wrangler deploy --message "GitHub commit ${GITHUB_SHA}"
+          pnpm exec wrangler deploy --config wrangler.jsonc --message "GitHub commit ${GITHUB_SHA}"

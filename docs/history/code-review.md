@@ -1,6 +1,8 @@
+> 历史归档：仅保留当时的设计与验证依据。当前行为以 [HonestOS 设计](../design/honestos.md) 为准；开发和发布以当前指南为准。
+
 # HonestOS v1 双轴审查
 
-> 历史审查记录：保留原提交的发现和验证边界。2026-10-23 用户已确认人工验证完成，当前交付状态见 [交付记录](delivery.md)。
+> 历史审查记录：保留原提交的发现和验证边界。2026-10-23 用户已确认人工验证完成，当前交付状态见 [交付记录](../delivery.md)。
 
 审查基线：25a47cb → 078a582；diff：`git diff 25a47cb...HEAD`。两个独立只读子代理分别审查 Standards 与 Spec。下面保留初次审查报告；修复状态另行记录。
 
@@ -37,16 +39,16 @@ Standards：3 项（最严重为配置公开入口约定违反，P3）；Spec：
 
 | 首次发现 | 修复状态与证据 |
 | --- | --- |
-| Standards 1：配置公开入口 | 已修复。应用及配置外部测试调用统一使用 `src/config/index.ts`；例如 [应用内容](../src/apps/content.tsx)、[项目](../src/apps/projects.tsx)、[终端](../src/apps/terminal.tsx)。配置模块自己的行为测试也通过公开入口调用。 |
-| Standards 2：几何约束重复 | 已修复。[桌面模块](../src/desktop/state.ts) 导出纯操作 `constrainWindowGeometry`，reducer 与 [窗口预览](../src/ui/window-frame.tsx) 共用；拖动高频预览仍保留在局部状态。既有公开窗口与指针行为测试覆盖约束、还原、提交与取消，没有为提取的函数新增私有步骤测试。 |
-| Standards 3：壁纸清单重复 | 已修复。[注册表](../src/config/registry.ts) 提供 `isWallpaperId`，偏好读取与终端命令共同使用；`theme` 用法参数从同一注册表生成，设置和补全继续读取它。已有未知 JSON 类型、未知字符串与有效偏好回归保持通过。 |
-| Spec 1：低可视高度输入裁切 | 已修复源码约束与公开 DOM 行为。[视口适配](../src/ui/environment.ts) 在可视高度小于 360px 时启用呈现层紧凑网格；[样式](../src/styles.css) 将顶栏、应用滚动区与 Dock 分成互不覆盖的行。200px、无安全区时分配为 44px / 92px / 64px，应用滚动区承载至少 160px 的窗口，输入行不再随窗口被压成裁切条。低于 164px 或安全区使总高度不足时，外层网格也允许滚动到所有行。终端内部另设滚动区，输出区保留独立的 64px 起点，提示、补全、错误与输入使用完整自身高度；这些行叠加时不再在内部裁切。只滚动已聚焦的终端输入，反馈增长时也重新显露它，不自动聚焦、不改写桌面模式或普通几何。[App 回归](../tests/app/App.test.tsx) 输入 200px / 120px 视口事件，验证输入、导航、草稿、历史、模式与普通几何保持；同时覆盖 CSS 隐藏搜索触发窗口后的焦点回退。jsdom 不验证实际布局，手机横屏、安全区与真实键盘仍待人工验收。 |
-| Spec 2：`ls` 缺少 README | 已修复。[命令接口](../src/terminal/commands.ts) 继续列出传入注册表的应用，并增加虚拟 `README.md`；公开命令回归验证它可以被发现。 |
+| Standards 1：配置公开入口 | 已修复。应用及配置外部测试调用统一使用 `src/config/index.ts`；例如 [应用内容](../../src/apps/content.tsx)、[项目](../../src/apps/projects.tsx)、[终端](../../src/apps/terminal.tsx)。配置模块自己的行为测试也通过公开入口调用。 |
+| Standards 2：几何约束重复 | 已修复。[桌面模块](../../src/desktop/state.ts) 导出纯操作 `constrainWindowGeometry`，reducer 与 [窗口预览](../../src/ui/window-frame.tsx) 共用；拖动高频预览仍保留在局部状态。既有公开窗口与指针行为测试覆盖约束、还原、提交与取消，没有为提取的函数新增私有步骤测试。 |
+| Standards 3：壁纸清单重复 | 已修复。[注册表](../../src/config/registry.ts) 提供 `isWallpaperId`，偏好读取与终端命令共同使用；`theme` 用法参数从同一注册表生成，设置和补全继续读取它。已有未知 JSON 类型、未知字符串与有效偏好回归保持通过。 |
+| Spec 1：低可视高度输入裁切 | 已修复源码约束与公开 DOM 行为。[视口适配](../../src/ui/environment.ts) 在可视高度小于 360px 时启用呈现层紧凑网格；[样式](../../src/styles.css) 将顶栏、应用滚动区与 Dock 分成互不覆盖的行。200px、无安全区时分配为 44px / 92px / 64px，应用滚动区承载至少 160px 的窗口，输入行不再随窗口被压成裁切条。低于 164px 或安全区使总高度不足时，外层网格也允许滚动到所有行。终端内部另设滚动区，输出区保留独立的 64px 起点，提示、补全、错误与输入使用完整自身高度；这些行叠加时不再在内部裁切。只滚动已聚焦的终端输入，反馈增长时也重新显露它，不自动聚焦、不改写桌面模式或普通几何。[App 回归](../../tests/app/App.test.tsx) 输入 200px / 120px 视口事件，验证输入、导航、草稿、历史、模式与普通几何保持；同时覆盖 CSS 隐藏搜索触发窗口后的焦点回退。jsdom 不验证实际布局，手机横屏、安全区与真实键盘仍待人工验收。 |
+| Spec 2：`ls` 缺少 README | 已修复。[命令接口](../../src/terminal/commands.ts) 继续列出传入注册表的应用，并增加虚拟 `README.md`；公开命令回归验证它可以被发现。 |
 | Spec 3：`neofetch` 缺少版本与 Shell | 已修复。版本直接导入根 `package.json` 的实际 `version`，Shell 标为 `HonestOS virtual shell（虚拟命令解释器）`，保留“不是你的设备检测结果”。公开命令回归从维护源核对版本并验证虚拟声明。 |
 
 ## 修复后验证
 
-在最终 `83b98a6` 的实际运行时代码上执行：`pnpm check` 通过，包含严格类型检查、17 个文件中的 63 项核心行为测试及生产构建；Wrangler 4.151.3 dry-run 与 actionlint 1.7.12 均通过，`git diff --check` 通过。冻结安装使用共享 pnpm 缓存，锁文件未修改。独立 Node gzip 测量及待验边界详见 [交付记录](delivery.md)。
+在最终 `83b98a6` 的实际运行时代码上执行：`pnpm check` 通过，包含严格类型检查、17 个文件中的 63 项核心行为测试及生产构建；Wrangler 4.151.3 dry-run 与 actionlint 1.7.12 均通过，`git diff --check` 通过。冻结安装使用共享 pnpm 缓存，锁文件未修改。独立 Node gzip 测量及待验边界详见 [交付记录](../delivery.md)。
 
 ## 独立复查
 
