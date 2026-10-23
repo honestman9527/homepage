@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { preview } from 'vite';
 
 // Exercise the actual Cloudflare preview after a build, including its runtime.
@@ -11,7 +11,8 @@ try {
   const origin = `http://127.0.0.1:${address.port}`;
   const html = await readFile('dist/index.html', 'utf8');
   const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match => match[1]!);
-  const paths = ['/', '/avatar.webp', '/hm-light.svg', '/hm-dark.svg', '/favicon.svg', ...assets];
+  assets.push(...(await readdir('dist/assets')).filter(name => /\.(js|css)$/.test(name)).map(name => `/assets/${name}`));
+  const paths = ['/', '/avatar.webp', '/hm-light.svg', '/hm-dark.svg', '/favicon.svg', ...new Set(assets)];
   await Promise.all(paths.map(async path => {
     const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(5000) });
     assert.equal(response.status, 200, path);

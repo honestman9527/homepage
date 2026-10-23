@@ -31,9 +31,7 @@ export function DesktopProvider({ children, initialViewport }: { children: React
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, [initialViewport]);
-  const value = useMemo<DesktopContextValue>(() => ({
-    state,
-    activeApp: getActiveApp(state),
+  const actions = useMemo<Omit<DesktopContextValue, 'state' | 'activeApp'>>(() => ({
     open: appId => dispatch({ type: 'open', appId }),
     focus: appId => dispatch({ type: 'focus', appId }),
     minimize: appId => dispatch({ type: 'minimize', appId }),
@@ -42,7 +40,8 @@ export function DesktopProvider({ children, initialViewport }: { children: React
     commitGeometry: (appId, geometry) => dispatch({ type: 'commitGeometry', appId, geometry }),
     updateViewport: viewport => dispatch({ type: 'updateViewport', viewport }),
     arrange: () => dispatch({ type: 'arrange' }),
-  }), [state]);
+  }), []);
+  const value = useMemo(() => ({ ...actions, state, activeApp: getActiveApp(state) }), [actions, state]);
   return <DesktopContext value={value}>{children}</DesktopContext>;
 }
 

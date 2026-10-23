@@ -24,7 +24,13 @@ interface PreferencesContextValue {
   uploadWallpaper(file: Blob): Promise<void>;
   reset(): void;
 }
-const PreferencesContext = createContext<PreferencesContextValue | null>(null);
+type Actions = Pick<PreferencesContextValue, 'setWallpaper' | 'setMotionEnabled' | 'update' | 'uploadWallpaper' | 'reset'>;
+type Values = Omit<PreferencesContextValue, keyof Actions | 'saveStatus' | 'imageStatus' | 'reducedMotion'>;
+type SaveStatus = Pick<PreferencesContextValue, 'saveStatus' | 'imageStatus'>;
+const ValuesContext = createContext<Values | null>(null);
+const ActionsContext = createContext<Actions | null>(null);
+const SaveContext = createContext<SaveStatus | null>(null);
+const MotionContext = createContext<boolean | null>(null);
 function browserStorage(): PreferenceStorage | null {
   try { return typeof window === 'undefined' ? null : window.localStorage; } catch { return null; }
 }
@@ -84,7 +90,7 @@ export function PreferencesProvider({ children, storage, motionQuery, colorQuery
     return () => URL.revokeObjectURL(url);
   }, [imageBlob]);
   useEffect(() => () => { generation.current++; }, []);
-  const value = useMemo<PreferencesContextValue>(() => {
+  const actions = useMemo<Actions>(() => {
     function persistImage(image: Blob | null, version: number) {
       // Serialize uploads/resets so a slow old write cannot overwrite the latest choice.
       const pending = writes.current.catch(() => {}).then(() => imageStorage.write(image));
@@ -93,10 +99,6 @@ export function PreferencesProvider({ children, storage, motionQuery, colorQuery
         .catch(() => { if (version === generation.current) setImageStatus('unavailable'); });
     }
     return {
-      preferences, wallpaper: preferences.wallpaper, motionEnabled: preferences.motionEnabled,
-      reducedMotion: systemReducedMotion || !preferences.motionEnabled,
-      appearance: preferences.appearance === 'system' ? (systemDark ? 'dark' : 'light') : preferences.appearance,
-      customImage, imageStatus, saveStatus,
       setWallpaper: wallpaper => { generation.current++; setImageStatus('saved'); setSaveStatus('pending'); dispatch({ type: 'setWallpaper', wallpaper }); },
       setMotionEnabled: enabled => { setSaveStatus('pending'); dispatch({ type: 'setMotionEnabled', enabled }); },
       update: values => { if ('customWallpaper' in values) generation.current++; setSaveStatus('pending'); dispatch({ type: 'update', values }); },
@@ -121,11 +123,21 @@ export function PreferencesProvider({ children, storage, motionQuery, colorQuery
         void persistImage(null, version);
       },
     };
-  }, [preferences, systemReducedMotion, systemDark, customImage, imageStatus, saveStatus, imageStorage]);
-  return <PreferencesContext value={value}>{children}</PreferencesContext>;
+  }, [imageStorage]);
+  const appearance = preferences.appearance === 'system' ? (systemDark ? 'dark' : 'light') : preferences.appearance;
+  const values = useMemo<Values>(() => ({ preferences, wallpaper: preferences.wallpaper, motionEnabled: preferences.motionEnabled, appearance, customImage }), [preferences, appearance, customImage]);
+  const status = useMemo(() => ({ imageStatus, saveStatus }), [imageStatus, saveStatus]);
+  const reducedMotion = systemReducedMotion || !preferences.motionEnabled;
+  return <ActionsContext value={actions}><ValuesContext value={values}><SaveContext value={status}><MotionContext value={reducedMotion}>{children}</MotionContext></SaveContext></ValuesContext></ActionsContext>;
 }
-export function usePreferences() {
-  const value = useContext(PreferencesContext);
-  if (!value) throw new Error('usePreferences requires PreferencesProvider');
+function required<T>(value: T | null): T {
+  if (value === null) throw new Error('Preferences hooks require PreferencesProvider');
   return value;
+}
+export function usePreferenceValues() { return required(useContext(ValuesContext)); }
+export function usePreferenceActions() { return required(useContext(ActionsContext)); }
+export function usePreferenceSaveStatus() { return required(useContext(SaveContext)); }
+export function useReducedMotion() { return required(useContext(MotionContext)); }
+export function usePreferences() {
+  return { ...usePreferenceValues(), ...usePreferenceActions(), ...usePreferenceSaveStatus(), reducedMotion: useReducedMotion() };
 }

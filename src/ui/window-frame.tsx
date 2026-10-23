@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { appById, type AppId } from '../config/index.ts';
 import { constrainWindowGeometry, getWindowPresentation, useDesktop, type Geometry } from '../desktop/index.ts';
 import { Icon } from './icon.tsx';
-import { usePreferences } from '../preferences/index.ts';
+import { useReducedMotion } from '../preferences/index.ts';
 import { useWindowMotion } from './motion.ts';
 
 interface Gesture { pointerId: number; x: number; y: number; base: Geometry; kind: 'move' | 'resize'; target: HTMLElement; restoreOnMove: boolean; started: boolean }
@@ -13,7 +13,7 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
   const root = useRef<HTMLElement>(null);
   const actions = useRef({ onClose, onMinimize });
   useLayoutEffect(() => { actions.current = { onClose, onMinimize }; }, [onClose, onMinimize]);
-  const { reducedMotion } = usePreferences();
+  const reducedMotion = useReducedMotion();
   const app = appById[appId];
   const record = desktop.state.windows[appId];
   const presentation = getWindowPresentation(desktop.state, appId);

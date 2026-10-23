@@ -1,6 +1,6 @@
 import { Component, type ReactNode } from 'react';
 
-export class AppBoundary extends Component<{ children: ReactNode; onClose?(): void; onRetry?(): void }, { failed: boolean }> {
+export class AppBoundary extends Component<{ children: ReactNode; onClose(): void; onRetry?(): void }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   render() {

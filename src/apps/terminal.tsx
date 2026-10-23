@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { appRegistry, siteConfig, type AppId } from '../config/index.ts';
-import { usePreferences } from '../preferences/index.ts';
+import { usePreferenceActions } from '../preferences/index.ts';
 import { createTerminalSession, handleTerminalKey, submitTerminalInput, updateTerminalInput } from '../terminal/session';
 import type { TerminalSession } from '../terminal/session';
 import { MAX_INPUT_LENGTH } from '../terminal/commands';
 
 export function TerminalApp({ onOpen }: { onOpen: (appId: AppId) => void }) {
-  const { setWallpaper } = usePreferences();
+  const { setWallpaper } = usePreferenceActions();
   const [session, setSession] = useState<TerminalSession>(() => ({
     ...createTerminalSession(),
     records: [{ id: 0, kind: 'output' as const, text: 'HonestOS — welcome home\n\nhelp           查看全部命令\nls             看看桌面上有什么\nopen <app>     打开应用\ncat README.md  阅读桌面自述\ntheme <name>   切换壁纸\nclear          清空终端\n\n输入 help 查看命令；↑ ↓ 浏览历史，Tab 补全。' }],
