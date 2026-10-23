@@ -17,7 +17,12 @@ export const siteConfig: SiteConfig = {
       "一个学生，喜欢把脑海里的「要不试试」变成互联网上真实存在的小东西。",
     interests: ["Web 开发", "AI 探索", "NAS / OpenWrt"],
     status: "学习中，也创造中",
-    links: ["mailto:hello@honestman.me"],
+    links: [
+      "mailto:hello@honestman.me",
+      "https://github.com/honestman9527",
+      "https://www.youtube.com/@honestman9527",
+      "https://space.bilibili.com/1503382902",
+    ],
   },
   projects: [
     {
