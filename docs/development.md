@@ -149,7 +149,7 @@ pnpm build
 pnpm preview
 ```
 
-发布沿用 [手动发布流程](deployment.md)。精选文章变更随重新构建发布生效；站点不会在开发、构建或浏览器中抓取 RSS，不再使用 `blog:sync`、`HONESTOS_RSS_URL` 或文章快照。决策见 [ADR-0003](adr/0003-manually-curated-blog-posts.md)。
+发布沿用 [发布流程](deployment.md)。精选文章变更随重新构建发布生效；站点不会在开发、构建或浏览器中抓取 RSS，不再使用 `blog:sync`、`HONESTOS_RSS_URL` 或文章快照。决策见 [ADR-0003](adr/0003-manually-curated-blog-posts.md)。
 
 ## 界面与动效
 
@@ -167,4 +167,4 @@ pnpm preview
 
 日常检查使用 `pnpm verify -- <脚本名> [参数]`，例如 `pnpm verify -- test tests/apps` 或 `pnpm verify -- typecheck`。它先检查改动代码的 import 位置，再等待指定命令结束，以该命令的退出码返回。日志与结果保存在忽略目录 `.artifacts/verification/`；完整流程见 [验证与提交](agents/verification.md)。
 
-首次在本地运行 `pnpm hooks:install` 启用仓库提交检查。手动 CI 使用同一入口运行原有 `check`，并单独保存失败运行的验证日志；发布触发方式保持手动。
+首次在本地运行 `pnpm hooks:install` 启用仓库提交检查。GitHub Actions 使用同一入口运行原有 `check`，并单独保存失败运行的验证日志；推送 main 自动检查与部署，同时保留手动入口。
