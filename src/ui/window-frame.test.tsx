@@ -2,11 +2,12 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { DesktopProvider } from '../desktop/index.ts';
+import { PreferencesProvider } from '../preferences/index.ts';
 import { WindowFrame } from './window-frame.tsx';
 
 afterEach(cleanup);
 it('uses a nonmodal window with named controls and retains input focus on content pointerdown', () => {
-  render(<DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><input aria-label="editor" /></WindowFrame></DesktopProvider>);
+  render(<PreferencesProvider storage={null} motionQuery={null}><DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><input aria-label="editor" /></WindowFrame></DesktopProvider></PreferencesProvider>);
   expect(screen.getByRole('region', { name: '关于我' }).getAttribute('aria-modal')).toBeNull();
   const editor = screen.getByLabelText('editor');
   act(() => editor.focus());
@@ -23,7 +24,7 @@ function pointer(target: Element, type: string, x: number, y: number) {
 }
 
 it('commits title drag and resize, cancels partial gestures and restores maximized windows before dragging', () => {
-  render(<DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><p>content</p></WindowFrame></DesktopProvider>);
+  render(<PreferencesProvider storage={null} motionQuery={null}><DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><p>content</p></WindowFrame></DesktopProvider></PreferencesProvider>);
   const frame = screen.getByRole('region', { name: '关于我' });
   const title = frame.querySelector('header')!;
   const before = frame.style.left;
@@ -39,28 +40,28 @@ it('commits title drag and resize, cancels partial gestures and restores maximiz
   pointer(frame, 'pointermove', 600, 160);
   expect(frame.style.left).toBe(saved);
   fireEvent.click(screen.getByRole('button', { name: '最大化关于我' }));
-  expect(frame.style.width).toBe('1024px');
+  expect(frame.style.width).toBe('1000px');
   pointer(title, 'pointerdown', 500, 80);
   pointer(frame, 'pointermove', 520, 100);
   pointer(frame, 'pointerup', 520, 100);
-  expect(frame.style.width).toBe('700px');
+  expect(frame.style.width).toBe('560px');
   const resize = screen.getByRole('button', { name: '调整关于我大小' });
   pointer(resize, 'pointerdown', 700, 500);
   pointer(frame, 'pointermove', 730, 520);
   pointer(frame, 'pointerup', 730, 520);
-  expect(frame.style.width).toBe('730px');
+  expect(frame.style.width).toBe('590px');
 });
 
 it('keeps a maximized window unchanged on title clicks and toggles once on a title double click', () => {
-  render(<DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><p>content</p></WindowFrame></DesktopProvider>);
+  render(<PreferencesProvider storage={null} motionQuery={null}><DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><p>content</p></WindowFrame></DesktopProvider></PreferencesProvider>);
   const frame = screen.getByRole('region', { name: '关于我' });
   const title = frame.querySelector('header')!;
   fireEvent.click(screen.getByRole('button', { name: '最大化关于我' }));
   pointer(title, 'pointerdown', 500, 80);
   pointer(title, 'pointerup', 500, 80);
-  expect(frame.style.width).toBe('1024px');
+  expect(frame.style.width).toBe('1000px');
   pointer(title, 'pointerdown', 500, 80);
   pointer(title, 'pointerup', 500, 80);
   fireEvent.doubleClick(title);
-  expect(frame.style.width).toBe('700px');
+  expect(frame.style.width).toBe('560px');
 });

@@ -1,16 +1,23 @@
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
 import { appById, type AppId } from '../config/index.ts';
 import { constrainWindowGeometry, getWindowPresentation, useDesktop, type Geometry } from '../desktop/index.ts';
 import { Icon } from './icon.tsx';
+import { usePreferences } from '../preferences/index.ts';
+import { useWindowMotion } from './motion.ts';
 
 interface Gesture { pointerId: number; x: number; y: number; base: Geometry; kind: 'move' | 'resize'; target: HTMLElement; restoreOnMove: boolean; started: boolean }
 export function WindowFrame({ appId, children, onClose, onMinimize }: {
   appId: AppId; children: ReactNode; onClose(): void; onMinimize(): void;
 }) {
   const desktop = useDesktop();
+  const root = useRef<HTMLElement>(null);
+  const actions = useRef({ onClose, onMinimize });
+  useLayoutEffect(() => { actions.current = { onClose, onMinimize }; }, [onClose, onMinimize]);
+  const { reducedMotion } = usePreferences();
   const app = appById[appId];
   const record = desktop.state.windows[appId];
   const presentation = getWindowPresentation(desktop.state, appId);
+  const animateAction = useWindowMotion(root, presentation.visible, reducedMotion);
   const gesture = useRef<Gesture | null>(null);
   const previewRef = useRef<Geometry | null>(null);
   const [preview, setPreview] = useState<Geometry | null>(null);
@@ -66,16 +73,16 @@ export function WindowFrame({ appId, children, onClose, onMinimize }: {
   }
   const geometry = preview ?? presentation.geometry;
   const style = { left: geometry.x, top: geometry.y, width: geometry.width, height: geometry.height, zIndex: presentation.zIndex } as CSSProperties;
-  return <section className={`app-window ${appId === 'terminal' ? 'terminal-frame' : ''} ${presentation.active ? 'active-window' : ''} ${single ? 'single-window' : ''}`} style={style} role="region" aria-label={app.name} data-app-window={appId} hidden={!presentation.visible} inert={!presentation.visible} tabIndex={-1}
+  return <section ref={root} className={`app-window ${appId === 'terminal' ? 'terminal-frame' : ''} ${presentation.active ? 'active-window' : ''} ${single ? 'single-window' : ''}`} style={style} role="region" aria-label={app.name} data-app-window={appId} hidden={!presentation.visible} inert={!presentation.visible} tabIndex={-1}
     onPointerDown={event => { if (!(event.target as HTMLElement).closest('[data-window-controls]')) desktop.focus(appId); }}
     onFocusCapture={event => { if (!presentation.active && !(event.target as HTMLElement).closest('[data-window-controls]')) desktop.focus(appId); }}
     onPointerMove={move} onPointerUp={event => { if (event.pointerId === gesture.current?.pointerId) end(true); }} onPointerCancel={() => end(false)} onLostPointerCapture={() => end(false)}>
     <header role="presentation" className="window-titlebar" onPointerDown={event => begin(event, 'move')} onDoubleClick={event => { if (!single && document.documentElement.dataset.compactViewport !== 'true' && !(event.target as HTMLElement).closest('[data-window-controls]')) desktop.toggleMaximize(appId); }}>
       <div className="window-controls" data-window-controls onPointerDown={event => { if (!presentation.active) event.preventDefault(); }}>
-        <button className="window-close" onClick={onClose} aria-label={`关闭${app.name}`}><span aria-hidden="true">×</span></button>
-        {!single && <><button className="window-minimize" onClick={onMinimize} aria-label={`最小化${app.name}`}><span aria-hidden="true">−</span></button><button className="window-maximize" onClick={() => { if (document.documentElement.dataset.compactViewport !== 'true') desktop.toggleMaximize(appId); }} aria-label={`${record.maximized ? '还原' : '最大化'}${app.name}`}><span aria-hidden="true">{record.maximized ? '↙' : '+'}</span></button></>}
+        <button className="window-close" onClick={() => animateAction(() => actions.current.onClose(), false)} aria-label={`关闭${app.name}`}><span aria-hidden="true">×</span></button>
+        {!single && <><button className="window-minimize" onClick={() => animateAction(() => actions.current.onMinimize(), true)} aria-label={`最小化${app.name}`}><span aria-hidden="true">−</span></button><button className="window-maximize" onClick={() => { if (document.documentElement.dataset.compactViewport !== 'true') desktop.toggleMaximize(appId); }} aria-label={`${record.maximized ? '还原' : '最大化'}${app.name}`}><span aria-hidden="true">{record.maximized ? '↙' : '+'}</span></button></>}
       </div>
-      <span className="window-title"><Icon name={app.icon} />{app.name}</span><span className="window-chrome-note" aria-hidden="true">{appId === 'terminal' ? '~/honestman' : 'HonestOS'}</span>
+      <span className="window-title"><Icon name={app.icon} />{appId === 'terminal' ? 'honestman — bash' : app.name}</span><span className="window-chrome-note" aria-hidden="true">{appId === 'terminal' ? '~' : ''}</span>
     </header>
     <div className="window-content">{children}</div>
     {!single && !record.maximized && <button className="window-resize" aria-label={`调整${app.name}大小`} onPointerDown={event => begin(event, 'resize')} onKeyDown={event => {

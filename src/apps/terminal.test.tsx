@@ -12,7 +12,7 @@ function renderTerminal() {
   render(<PreferencesProvider storage={null} motionQuery={null}><TerminalApp onOpen={onOpen} /></PreferencesProvider>);
   const input = screen.getByRole('textbox', { name: '终端命令' }) as HTMLInputElement;
   const run = (text: string) => { fireEvent.change(input, { target: { value: text } }); fireEvent.keyDown(input, { key: 'Enter' }); };
-  return { input, run, onOpen, output: screen.getByRole('log', { name: '终端输出' }) };
+  return { input, run, onOpen, output: screen.getByRole('log', { name: '终端输出' }), scroller: screen.getByLabelText('终端记录与输入') };
 }
 
 describe('terminal application session', () => {
@@ -45,19 +45,19 @@ describe('terminal application session', () => {
   });
 
   it('follows output only from the bottom and preserves a reader position until they request new output', () => {
-    const { run, output } = renderTerminal();
-    Object.defineProperties(output, {
+    const { run, output, scroller } = renderTerminal();
+    Object.defineProperties(scroller, {
       clientHeight: { configurable: true, value: 100 },
       scrollHeight: { configurable: true, get: () => output.children.length * 100 },
     });
     run('echo first');
-    expect(output.scrollTop).toBe(200);
-    output.scrollTop = 40;
-    fireEvent.scroll(output);
+    expect(scroller.scrollTop).toBe(200);
+    scroller.scrollTop = 40;
+    fireEvent.scroll(scroller);
     run('echo second');
-    expect(output.scrollTop).toBe(40);
+    expect(scroller.scrollTop).toBe(40);
     fireEvent.click(screen.getByRole('button', { name: '查看新输出' }));
-    expect(output.scrollTop).toBe(400);
+    expect(scroller.scrollTop).toBe(400);
     expect(screen.queryByRole('button', { name: '查看新输出' })).toBeNull();
   });
 

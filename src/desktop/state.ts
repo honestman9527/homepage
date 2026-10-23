@@ -47,12 +47,13 @@ export function constrainWindowGeometry(id: AppId, value: Geometry, area: Geomet
 function defaultGeometry(id: AppId, viewport: DesktopViewport): Geometry {
   const area = viewport.availableArea;
   const center = Math.max(0, (area.width - 1366) / 2);
+  const aboutY = Math.max(24, (area.height - appById.about.defaultSize.height) / 2 - 50);
   const positions: Record<AppId, [number, number]> = {
-    about: [area.width >= 1200 ? 96 + center : 24, 24],
-    terminal: [Math.min(area.width - 494, area.width >= 1200 ? 844 + center : 530), Math.max(24, area.height - 320)],
+    about: [area.width >= 1200 ? 96 + center : 24, aboutY],
+    terminal: [Math.min(area.width - 534, area.width >= 1200 ? 744 + center : 510), aboutY + 120],
     projects: [Math.max(24, (area.width - 820) / 2), 24],
     blog: [Math.max(24, (area.width - 820) / 2 + 24), 40],
-    settings: [Math.max(24, (area.width - 510) / 2), 48],
+    settings: [Math.max(24, (area.width - 720) / 2), Math.max(24, (area.height - appById.settings.defaultSize.height) / 2)],
   };
   const [x, y] = positions[id];
   return constrainWindowGeometry(id, { x: area.x + x, y: area.y + y, ...appById[id].defaultSize }, area);

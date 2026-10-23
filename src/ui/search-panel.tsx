@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { AppId } from '../config/index.ts';
 import { searchApps } from '../search/index.ts';
 import { Icon } from './icon.tsx';
+import { Brand } from './brand.tsx';
 
 export function SearchPanel({ onCancel, onOpen }: { onCancel(): void; onOpen(appId: AppId): void }) {
   const [query, setQuery] = useState('');
@@ -41,7 +42,7 @@ export function SearchPanel({ onCancel, onOpen }: { onCancel(): void; onOpen(app
       <p className="search-caption">这张桌面上的应用</p>
       <div id="app-results" role="listbox" aria-label="应用搜索结果">
         {results.map((app, index) => <div role="option" aria-selected={index === selection} id={`result-${app.id}`} key={app.id}>
-          <button className={`search-result ${index === selection ? 'selected' : ''}`} onPointerMove={() => setSelected(index)} onClick={() => onOpen(app.id)} tabIndex={-1}><span className={`app-icon icon-${app.id}`}><Icon name={app.icon} /></span><span><strong>{app.name}</strong><small>{app.aliases[0]}</small></span><span className="result-enter" aria-hidden="true">↵</span></button>
+          <button className={`search-result ${index === selection ? 'selected' : ''}`} onPointerMove={() => setSelected(index)} onClick={() => onOpen(app.id)} tabIndex={-1}><span className={`app-icon icon-${app.id}`}>{app.id === 'about' ? <Brand /> : <Icon name={app.icon} />}</span><span><strong>{app.name}</strong><small>{app.aliases[0]}</small></span><span className="result-enter" aria-hidden="true">↵</span></button>
         </div>)}
       </div>
       {!results.length && <p className="search-empty" role="status">没有找到应用，试试“项目”或“终端”。</p>}

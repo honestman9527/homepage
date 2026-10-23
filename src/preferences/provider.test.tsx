@@ -43,3 +43,18 @@ it('reads before first UI, synchronizes settings and terminal, and respects syst
   fireEvent.click(screen.getByText('motion settings'));
   expect(screen.getByTestId('terminal').textContent).toBe('day:false:true');
 });
+
+function AppearanceProbe() {
+  const preference = usePreferences();
+  return <><output aria-label="外观">{preference.appearance}</output><button onClick={() => preference.update({ appearance: 'light' })}>固定浅色</button><button onClick={() => preference.update({ appearance: 'system' })}>跟随系统</button></>;
+}
+it('follows system appearance changes until an explicit appearance is selected', () => {
+  const media = Object.assign(new EventTarget(), { matches: true });
+  render(<PreferencesProvider storage={null} motionQuery={null} colorQuery={media}><AppearanceProbe /></PreferencesProvider>);
+  expect(screen.getByLabelText('外观').textContent).toBe('dark');
+  fireEvent.click(screen.getByText('固定浅色'));
+  act(() => { media.matches = false; media.dispatchEvent(new Event('change')); media.matches = true; media.dispatchEvent(new Event('change')); });
+  expect(screen.getByLabelText('外观').textContent).toBe('light');
+  fireEvent.click(screen.getByText('跟随系统'));
+  expect(screen.getByLabelText('外观').textContent).toBe('dark');
+});

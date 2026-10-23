@@ -1,4 +1,4 @@
-import type { AppDefinition, SiteConfig } from './types.ts';
+import type { AppDefinition, PublicLink, SiteConfig } from './types.ts';
 
 /** Return a validated address, or undefined so callers never render a fake link. */
 export function publicUrl(value?: string, kind: 'web' | 'email' = 'web'): string | undefined {
@@ -21,6 +21,15 @@ export function publicUrl(value?: string, kind: 'web' | 'email' = 'web'): string
   }
 }
 
+/** Accept a compact address in author configuration without changing their source file. */
+export function profileLinks(links: readonly (PublicLink | string)[]): PublicLink[] {
+  return links.map(link => {
+    if (typeof link !== 'string') return link;
+    const email = link.startsWith('mailto:');
+    return { label: email ? link.slice(7) : publicUrl(link) ? new URL(link).hostname : link, url: link, kind: email ? 'email' : 'web' };
+  });
+}
+
 /** Configuration diagnostics consumed by the build and content editors. */
 export function validateConfig(config: SiteConfig, apps: readonly AppDefinition[]): string[] {
   const issues: string[] = [];
@@ -32,7 +41,7 @@ export function validateConfig(config: SiteConfig, apps: readonly AppDefinition[
   function checkUrl(label: string, url?: string, kind: 'web' | 'email' = 'web') {
     if (url !== undefined && !publicUrl(url, kind)) issues.push(`${label}: invalid public URL`);
   }
-  config.profile.links.forEach((link, index) => checkUrl(`profile.links.${index}`, link.url, link.kind));
+  profileLinks(config.profile.links).forEach((link, index) => checkUrl(`profile.links.${index}`, link.url, link.kind));
   checkUrl('site', config.site.url);
   checkUrl('site.shareImage', config.site.shareImage);
   checkUrl('blog', config.blog.url);

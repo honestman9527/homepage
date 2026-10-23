@@ -1,11 +1,15 @@
-import { wallpapers, type WallpaperId } from '../config/index.ts';
+import { useState } from 'react';
+import { wallpapers } from '../config/index.ts';
+import { usePreferences } from '../preferences/index.ts';
 import mountains from '../assets/mountains.svg';
 
-export function Wallpaper({ wallpaper }: { wallpaper: WallpaperId }) {
-  const colors = wallpapers.find(item => item.id === wallpaper)!.colors;
-  return <div className={`wallpaper wallpaper-${wallpaper}`} style={{ backgroundImage: `linear-gradient(160deg,${colors[0]} 0%,${colors[1]} 52%,${colors[2]} 100%)` }} aria-hidden="true">
-    <div className="sky-glow" /><div className="planet" /><div className="stars" />
-    <img className="mountains" src={mountains} alt="" draggable="false" />
-    <div className="wallpaper-signature">a little curious.<br />a little different.</div>
+export function Wallpaper() {
+  const { wallpaper, preferences, customImage } = usePreferences();
+  const option = wallpapers.find(item => item.id === wallpaper)!;
+  const image = preferences.customWallpaper && customImage ? customImage : option.image;
+  const [failed, setFailed] = useState<string | null>(null);
+  const colors = option.colors;
+  return <div className={`wallpaper wallpaper-${wallpaper}`} style={{ backgroundImage: `linear-gradient(160deg,${colors[0]} 0%,${colors[1]} 52%,${colors[2]} 100%)`, filter: `brightness(${preferences.brightness}%)` }} aria-hidden="true">
+    {image && image !== failed ? <img className="wallpaper-image" src={image} alt="" draggable="false" onError={() => setFailed(image)} /> : <><div className="sky-glow" /><div className="planet" /><div className="stars" /><img className="mountains" src={mountains} alt="" draggable="false" /></>}
   </div>;
 }

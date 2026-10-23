@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Brand } from '../ui/brand.tsx';
 import { publicUrl, type AppId, type Project, type ProjectStatus } from '../config/index.ts';
 
 const statusNames: Record<ProjectStatus, string> = { live: '已上线', building: '开发中', idea: '构想中', archived: '归档' };
@@ -7,7 +8,7 @@ function ProjectArt({ project }: { project: Project }) {
   const [failedImage, setFailedImage] = useState<string | null>(null);
   if (project.image && failedImage !== project.image) return <div className="project-art"><img src={project.image} alt={`${project.name} 项目预览`} loading="lazy" onError={() => setFailedImage(project.image!)} /></div>;
   return <div className={`project-art project-art-${project.id}`} aria-hidden="true">
-    {project.id === 'honestos' ? <span className="project-monogram">H.</span>
+    {project.id === 'honestos' ? <Brand className="project-monogram" />
       : project.id === 'universe' ? <><span className="project-orbit" /><span className="project-orbit orbit-two" /><span className="project-orbit orbit-three" /><span className="project-orb" /></>
       : <><span className="project-grid" /><span className="project-lab-mark">{'{ ? }'}</span></>}
   </div>;

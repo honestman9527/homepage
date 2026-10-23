@@ -20,7 +20,7 @@ const DesktopContext = createContext<DesktopContextValue | null>(null);
 export function readLayoutViewport(): DesktopViewport {
   const width = typeof window === 'undefined' ? 1366 : window.innerWidth;
   const height = typeof window === 'undefined' ? 768 : window.innerHeight;
-  return { width, height, availableArea: { x: 0, y: 48, width, height: Math.max(1, height - 152) } };
+  return { width, height, availableArea: { x: 12, y: 12, width: Math.max(1, width - 24), height: Math.max(1, height - 106) } };
 }
 
 export function DesktopProvider({ children, initialViewport }: { children: ReactNode; initialViewport?: DesktopViewport }) {

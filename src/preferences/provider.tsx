@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import type { WallpaperId } from '../config/index.ts';
 import { persistPreferences, preferencesReducer, readPreferences, type Preferences, type PreferenceStorage } from './state.ts';
+import { localWallpaperStorage, verifyWallpaperImage, type WallpaperStorage } from './wallpaper-storage.ts';
 
 export interface MotionQuery {
   matches: boolean;
@@ -13,50 +14,116 @@ interface PreferencesContextValue {
   wallpaper: WallpaperId;
   motionEnabled: boolean;
   reducedMotion: boolean;
+  appearance: 'light' | 'dark';
+  customImage: string | null;
+  imageStatus: PreferenceSaveStatus;
   saveStatus: PreferenceSaveStatus;
   setWallpaper(wallpaper: WallpaperId): void;
   setMotionEnabled(enabled: boolean): void;
+  update(values: Partial<Omit<Preferences, 'schemaVersion' | 'wallpaper'>>): void;
+  uploadWallpaper(file: Blob): Promise<void>;
+  reset(): void;
 }
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 function browserStorage(): PreferenceStorage | null {
   try { return typeof window === 'undefined' ? null : window.localStorage; } catch { return null; }
 }
-function browserMotion(): MotionQuery | null {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+function mediaQuery(query: string): MotionQuery | null {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia(query) : null;
 }
-
-export function PreferencesProvider({ children, storage, motionQuery }: {
-  children: ReactNode;
-  storage?: PreferenceStorage | null;
-  motionQuery?: MotionQuery | null;
-}) {
-  const [storageAdapter] = useState(() => storage === undefined ? browserStorage() : storage);
-  const [query] = useState(() => motionQuery === undefined ? browserMotion() : motionQuery);
-  // Lazy initialization reads synchronously, so the first rendered UI has the saved wallpaper.
-  const [preferences, dispatch] = useReducer(preferencesReducer, storageAdapter, readPreferences);
-  const [saveStatus, setSaveStatus] = useState<PreferenceSaveStatus>('pending');
-  const [systemReducedMotion, setSystemReducedMotion] = useState(query?.matches ?? false);
-  useEffect(() => {
-    setSaveStatus(persistPreferences(preferences, storageAdapter) ? 'saved' : 'unavailable');
-  }, [preferences, storageAdapter]);
+function useSystemQuery(query: MotionQuery | null) {
+  const [matches, setMatches] = useState(query?.matches ?? false);
   useEffect(() => {
     if (!query) return;
-    const changed = () => setSystemReducedMotion(query.matches);
+    const changed = () => setMatches(query.matches);
     query.addEventListener('change', changed);
     return () => query.removeEventListener('change', changed);
   }, [query]);
-  const value = useMemo<PreferencesContextValue>(() => ({
-    preferences,
-    wallpaper: preferences.wallpaper,
-    motionEnabled: preferences.motionEnabled,
-    reducedMotion: systemReducedMotion || !preferences.motionEnabled,
-    saveStatus,
-    setWallpaper: wallpaper => { setSaveStatus('pending'); dispatch({ type: 'setWallpaper', wallpaper }); },
-    setMotionEnabled: enabled => { setSaveStatus('pending'); dispatch({ type: 'setMotionEnabled', enabled }); },
-  }), [preferences, systemReducedMotion, saveStatus]);
-  return <PreferencesContext value={value}>{children}</PreferencesContext>;
+  return matches;
 }
 
+export function PreferencesProvider({ children, storage, motionQuery, colorQuery, imageStorage = localWallpaperStorage }: {
+  children: ReactNode;
+  storage?: PreferenceStorage | null;
+  motionQuery?: MotionQuery | null;
+  colorQuery?: MotionQuery | null;
+  imageStorage?: WallpaperStorage;
+}) {
+  const [storageAdapter] = useState(() => storage === undefined ? browserStorage() : storage);
+  const [motion] = useState(() => motionQuery === undefined ? mediaQuery('(prefers-reduced-motion: reduce)') : motionQuery);
+  const [color] = useState(() => colorQuery === undefined ? mediaQuery('(prefers-color-scheme: dark)') : colorQuery);
+  const [preferences, dispatch] = useReducer(preferencesReducer, storageAdapter, readPreferences);
+  const [initialCustomWallpaper] = useState(preferences.customWallpaper);
+  const [saveStatus, setSaveStatus] = useState<PreferenceSaveStatus>('pending');
+  const [imageStatus, setImageStatus] = useState<PreferenceSaveStatus>('saved');
+  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+  const [customImage, setCustomImage] = useState<string | null>(null);
+  const generation = useRef(0);
+  const uploadAttempt = useRef(0);
+  const writes = useRef<Promise<void>>(Promise.resolve());
+  const systemReducedMotion = useSystemQuery(motion);
+  const systemDark = useSystemQuery(color);
+  useEffect(() => { setSaveStatus(persistPreferences(preferences, storageAdapter) ? 'saved' : 'unavailable'); }, [preferences, storageAdapter]);
+  useEffect(() => {
+    let cancelled = false;
+    const version = generation.current;
+    if (initialCustomWallpaper) setImageStatus('pending');
+    imageStorage.read().then(image => {
+      if (!cancelled && version === generation.current) {
+        setImageBlob(image);
+        setImageStatus(image || !initialCustomWallpaper ? 'saved' : 'unavailable');
+      }
+    }).catch(() => { if (!cancelled && version === generation.current) setImageStatus('unavailable'); });
+    return () => { cancelled = true; };
+    // Restore once. User selections below own all subsequent image changes.
+  }, [imageStorage, initialCustomWallpaper]);
+  useEffect(() => {
+    if (!imageBlob) { setCustomImage(null); return; }
+    const url = URL.createObjectURL(imageBlob);
+    setCustomImage(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageBlob]);
+  useEffect(() => () => { generation.current++; }, []);
+  const value = useMemo<PreferencesContextValue>(() => {
+    function persistImage(image: Blob | null, version: number) {
+      // Serialize uploads/resets so a slow old write cannot overwrite the latest choice.
+      const pending = writes.current.catch(() => {}).then(() => imageStorage.write(image));
+      writes.current = pending;
+      return pending.then(() => { if (version === generation.current) setImageStatus('saved'); })
+        .catch(() => { if (version === generation.current) setImageStatus('unavailable'); });
+    }
+    return {
+      preferences, wallpaper: preferences.wallpaper, motionEnabled: preferences.motionEnabled,
+      reducedMotion: systemReducedMotion || !preferences.motionEnabled,
+      appearance: preferences.appearance === 'system' ? (systemDark ? 'dark' : 'light') : preferences.appearance,
+      customImage, imageStatus, saveStatus,
+      setWallpaper: wallpaper => { generation.current++; setImageStatus('saved'); setSaveStatus('pending'); dispatch({ type: 'setWallpaper', wallpaper }); },
+      setMotionEnabled: enabled => { setSaveStatus('pending'); dispatch({ type: 'setMotionEnabled', enabled }); },
+      update: values => { if ('customWallpaper' in values) generation.current++; setSaveStatus('pending'); dispatch({ type: 'update', values }); },
+      uploadWallpaper: async file => {
+        const attempt = ++uploadAttempt.current;
+        const previous = generation.current;
+        await verifyWallpaperImage(file);
+        if (attempt !== uploadAttempt.current || previous !== generation.current) return;
+        const version = ++generation.current;
+        setImageBlob(file);
+        setImageStatus('pending');
+        setSaveStatus('pending');
+        dispatch({ type: 'update', values: { customWallpaper: true } });
+        await persistImage(file, version);
+      },
+      reset: () => {
+        const version = ++generation.current;
+        setImageBlob(null);
+        setSaveStatus('pending');
+        setImageStatus('pending');
+        dispatch({ type: 'reset' });
+        void persistImage(null, version);
+      },
+    };
+  }, [preferences, systemReducedMotion, systemDark, customImage, imageStatus, saveStatus, imageStorage]);
+  return <PreferencesContext value={value}>{children}</PreferencesContext>;
+}
 export function usePreferences() {
   const value = useContext(PreferencesContext);
   if (!value) throw new Error('usePreferences requires PreferencesProvider');

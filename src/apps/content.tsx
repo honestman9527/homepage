@@ -1,8 +1,9 @@
-import { publicUrl, siteConfig, type AppId } from '../config/index.ts';
+import { profileLinks, publicUrl, siteConfig, type AppId } from '../config/index.ts';
 import { ProjectsApp } from './projects';
 import { BlogApp } from './blog';
 import { SettingsApp } from './settings';
 import { TerminalApp } from './terminal';
+import avatar from '../assets/brand/avatar.webp';
 import './apps.css';
 
 export interface AppContentProps {
@@ -20,7 +21,7 @@ export function AppContent({ appId, onOpen, onArrange }: AppContentProps) {
   const profile = siteConfig.profile;
   return <section className="app-content about-content">
     <div className="about-story">
-      <div className="about-brand"><span className="about-monogram" aria-hidden="true">H.</span><span>HonestOS</span></div>
+      <div className="about-identity"><img className="profile-avatar" src={avatar} alt={`${profile.name} 的头像`} /><div><strong>{profile.name}</strong><p className="app-muted">{profile.alias}</p></div></div>
       <h1>{profile.headline}</h1>
       <p className="about-introduction">{profile.introduction}</p>
       <p className="app-muted">{profile.description}</p>
@@ -29,12 +30,11 @@ export function AppContent({ appId, onOpen, onArrange }: AppContentProps) {
         <button className="app-button app-primary" onClick={() => onOpen('projects')}>看看我在折腾什么</button>
         <button className="app-button app-text-button" onClick={() => onOpen('terminal', { focusTerminal: true })}>或者，敲点命令</button>
       </div>
-      {profile.links.length ? <nav className="profile-links" aria-label="公开联系方式">{profile.links.map(link => {
+      {profile.links.length ? <nav className="profile-links" aria-label="公开联系方式">{profileLinks(profile.links).map(link => {
         const url = publicUrl(link.url, link.kind);
         return url ? <a key={link.label} href={url} target="_blank" rel="noopener noreferrer">{link.label}<span className="app-sr-only">（新标签打开）</span></a> : null;
       })}</nav> : null}
     </div>
-    <span className="about-spark" aria-hidden="true">✳</span>
     <footer className="about-footer"><span><i aria-hidden="true" />{profile.status}</span><span>honestman.me</span></footer>
   </section>;
 }

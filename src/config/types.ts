@@ -12,11 +12,12 @@ export interface AppDefinition {
   minSize: Size;
 }
 
-export type WallpaperId = 'dusk' | 'day' | 'night';
+export type WallpaperId = 'dusk' | 'day' | 'night' | 'lake' | 'summit';
 export interface WallpaperDefinition {
   id: WallpaperId;
   name: string;
   colors: readonly [string, string, string];
+  image?: string;
 }
 
 export interface PublicLink { label: string; url: string; kind?: 'web' | 'email' }
@@ -28,7 +29,7 @@ export interface Profile {
   description: string;
   interests: readonly string[];
   status: string;
-  links: readonly PublicLink[];
+  links: readonly (PublicLink | string)[];
 }
 export type ProjectStatus = 'live' | 'building' | 'idea' | 'archived';
 export interface Project {

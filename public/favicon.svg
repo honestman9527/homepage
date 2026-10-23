@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="22" fill="#b8efc4"/><text x="17" y="57" font-family="monospace" font-weight="bold" font-size="48" fill="#25212c">H</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Honestman — HM</title>
+  <desc id="desc">Rounded H and M monogram sharing a vertical stem. Black on white.</desc>
+  <style>rect{fill:#fff}path{stroke:#000}@media(prefers-color-scheme:dark){rect{fill:#000}path{stroke:#fff}}</style><rect width="512" height="512" rx="96"/>
+  <path d="M112 164V348 M112 256H232 M232 348V164L316 258L400 164V348" fill="none"  stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

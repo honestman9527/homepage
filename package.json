@@ -15,11 +15,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:core": "vitest run src",
+    "test:core": "vitest run src build",
     "check": "pnpm typecheck && pnpm test:core && pnpm build",
-    "deploy:dry-run": "wrangler deploy --dry-run"
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "blog:sync": "node build/sync-blog.ts"
   },
   "dependencies": {
+    "@gsap/react": "2.1.2",
+    "gsap": "3.15.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -30,6 +33,8 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "fake-indexeddb": "6.2.6",
+    "fast-xml-parser": "5.11.2",
     "jsdom": "30.1.3",
     "typescript": "7.0.2",
     "vite": "8.3.5",

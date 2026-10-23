@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry, siteConfig, publicUrl, validateConfig } from './index.ts';
+import { appRegistry, siteConfig, profileLinks, publicUrl, validateConfig } from './index.ts';
 
 describe('public content configuration', () => {
   it('rejects duplicate app identities before navigation can diverge', () => {
@@ -46,9 +46,21 @@ describe('public content configuration', () => {
   it('accepts empty projects and an unconfigured blog without inventing destinations', () => {
     const config = structuredClone(siteConfig);
     config.projects = [];
+    config.blog.url = undefined;
     expect(validateConfig(config, appRegistry)).toEqual([]);
     expect(publicUrl(config.blog.url)).toBeUndefined();
     expect(publicUrl(undefined)).toBeUndefined();
     expect(publicUrl('')).toBeUndefined();
   });
+});
+
+it('normalizes compact author addresses while preserving explicit link labels and validation', () => {
+  expect(profileLinks(['mailto:hello@honestman.me', 'https://honestman.me', { label: '代码', url: 'https://github.com/honestman9527' }])).toEqual([
+    { label: 'hello@honestman.me', url: 'mailto:hello@honestman.me', kind: 'email' },
+    { label: 'honestman.me', url: 'https://honestman.me', kind: 'web' },
+    { label: '代码', url: 'https://github.com/honestman9527' },
+  ]);
+  const config = structuredClone(siteConfig);
+  config.profile.links = ['javascript:alert(1)'];
+  expect(validateConfig(config, appRegistry)).toContain('profile.links.0: invalid public URL');
 });
