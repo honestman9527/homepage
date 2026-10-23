@@ -4,6 +4,8 @@
 
 按改动选择直接命令，例如 `pnpm test tests/apps`、`pnpm typecheck`、`pnpm lint`。构建、工具链或发布配置变更运行 `pnpm check`，部署配置另加 `pnpm deploy:dry-run`。视觉与布局人工验收。
 
+`pnpm format` 统一排版源码、测试和配置；`pnpm format:check` 只检查格式，也由 CI 执行。单文件可用 `pnpm exec prettier --write <文件>`。历史文档、图片和生成文件不参与格式化。
+
 `pnpm lint` 检查仓库源码的 import 位置，也可传入明确文件路径。全量检查用于 CI 和跨模块变更；小改动选择相关检查即可。
 
 ## 提交检查

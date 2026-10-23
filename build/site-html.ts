@@ -1,8 +1,17 @@
 import type { Plugin } from 'vite';
-import { appRegistry, profileLinks, publicUrl, siteConfig, validateConfig } from '../src/config/index.ts';
+import {
+  appRegistry,
+  profileLinks,
+  publicUrl,
+  siteConfig,
+  validateConfig,
+} from '../src/config/index.ts';
 
 function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+  return text.replace(
+    /[&<>"']/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!,
+  );
 }
 
 // Built from the same public configuration as React; no environment credentials are read.
@@ -34,10 +43,13 @@ export function siteHtml(): Plugin {
         }
         const links = [...profileLinks(profile.links)];
         if (blog.url) links.push({ label: '独立博客', url: blog.url });
-        const navigation = links.flatMap(link => {
+        const navigation = links.flatMap((link) => {
           const url = publicUrl(link.url, link.kind);
-          const external = link.kind === 'email' ? '' : ' target="_blank" rel="noopener noreferrer"';
-          return url ? [`<li><a href="${escapeHtml(url)}"${external}>${escapeHtml(link.label)}</a></li>`] : [];
+          const external =
+            link.kind === 'email' ? '' : ' target="_blank" rel="noopener noreferrer"';
+          return url
+            ? [`<li><a href="${escapeHtml(url)}"${external}>${escapeHtml(link.label)}</a></li>`]
+            : [];
         });
         const fallback = `<main style="max-width:45rem;margin:8vh auto;padding:2rem;background:#fcfaf7;border-radius:12px;color:#292830;font:16px/1.7 system-ui,sans-serif">
           <p>HonestOS</p><h1>${escapeHtml(profile.headline)}</h1>
@@ -45,7 +57,9 @@ export function siteHtml(): Plugin {
           <p>启用 JavaScript 后，可以探索桌面与项目。${blog.url ? '' : '独立博客筹备中。'}</p>
           ${navigation.length ? `<nav aria-label="公开导航"><ul>${navigation.join('')}</ul></nav>` : ''}
         </main>`;
-        return html.replace('<!--honestos:metadata-->', metadata.join('\n    ')).replace('<!--honestos:fallback-->', fallback);
+        return html
+          .replace('<!--honestos:metadata-->', metadata.join('\n    '))
+          .replace('<!--honestos:fallback-->', fallback);
       },
     },
   };

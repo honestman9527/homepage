@@ -7,15 +7,19 @@ export function publicUrl(value?: string, kind: 'web' | 'email' = 'web'): string
   try {
     const url = new URL(value);
     if (kind === 'email') {
-      if (url.protocol !== 'mailto:' || !/^[^\s@?#]+@[^\s@?#]+\.[^\s@?#]+$/.test(url.pathname)) return undefined;
+      if (url.protocol !== 'mailto:' || !/^[^\s@?#]+@[^\s@?#]+\.[^\s@?#]+$/.test(url.pathname))
+        return undefined;
       const domain = url.pathname.split('@')[1];
       return publicUrl(`https://${domain}`) ? url.href : undefined;
     }
     const host = url.hostname.toLowerCase();
-    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return undefined;
-    if (!host.includes('.') || host === 'localhost' || host.endsWith('.localhost')) return undefined;
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password)
+      return undefined;
+    if (!host.includes('.') || host === 'localhost' || host.endsWith('.localhost'))
+      return undefined;
     if (/(^|\.)(example\.(com|org|net)|example|test|invalid|local)$/.test(host)) return undefined;
-    if (/^(127\.|10\.|192\.168\.|0\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return undefined;
+    if (/^(127\.|10\.|192\.168\.|0\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host))
+      return undefined;
     return url.href;
   } catch {
     return undefined;
@@ -24,16 +28,24 @@ export function publicUrl(value?: string, kind: 'web' | 'email' = 'web'): string
 
 /** Accept a compact address in author configuration without changing their source file. */
 export function profileLinks(links: readonly (PublicLink | string)[]): PublicLink[] {
-  return links.map(link => {
+  return links.map((link) => {
     const source: PublicLink = typeof link === 'string' ? { label: link, url: link } : link;
     const kind = source.kind ?? (/^mailto:/i.test(source.url.trim()) ? 'email' : 'web');
     const valid = publicUrl(source.url, kind);
     const address = valid ? new URL(valid) : undefined;
     const brand = kind === 'web' && address ? socialBrand(address.hostname) : undefined;
-    const label = typeof link === 'string'
-      ? kind === 'email' ? address?.pathname ?? link : brand?.label ?? address?.hostname ?? link
-      : link.label;
-    return { ...source, label, kind, icon: source.icon ?? (kind === 'email' ? 'email' : brand?.id ?? 'link') };
+    const label =
+      typeof link === 'string'
+        ? kind === 'email'
+          ? (address?.pathname ?? link)
+          : (brand?.label ?? address?.hostname ?? link)
+        : link.label;
+    return {
+      ...source,
+      label,
+      kind,
+      icon: source.icon ?? (kind === 'email' ? 'email' : (brand?.id ?? 'link')),
+    };
   });
 }
 

@@ -11,11 +11,23 @@ beforeEach(() => {
   window.localStorage.clear();
 });
 afterEach(cleanup);
-function dock(name: string) { return within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: new RegExp(`打开${name}`) }); }
-function frame(name: string) { return screen.getByRole('region', { name }); }
-function terminalInput() { return frame('终端').querySelector<HTMLInputElement>('[data-terminal-input]')!; }
+function dock(name: string) {
+  return within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
+    name: new RegExp(`打开${name}`),
+  });
+}
+function frame(name: string) {
+  return screen.getByRole('region', { name });
+}
+function terminalInput() {
+  return frame('终端').querySelector<HTMLInputElement>('[data-terminal-input]')!;
+}
 function resize(width: number, height = 768) {
-  act(() => { window.innerWidth = width; window.innerHeight = height; window.dispatchEvent(new Event('resize')); });
+  act(() => {
+    window.innerWidth = width;
+    window.innerHeight = height;
+    window.dispatchEvent(new Event('resize'));
+  });
 }
 
 it('shares single application sessions across Dock, About and desktop shortcuts and focuses terminal only for its explicit CTA', async () => {
@@ -25,7 +37,11 @@ it('shares single application sessions across Dock, About and desktop shortcuts 
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   await user.click(within(frame('我的项目')).getByRole('button', { name: '了解HonestOS' }));
-  await user.click(within(screen.getByRole('navigation', { name: '桌面快捷入口' })).getByRole('button', { name: '我的项目' }));
+  await user.click(
+    within(screen.getByRole('navigation', { name: '桌面快捷入口' })).getByRole('button', {
+      name: '我的项目',
+    }),
+  );
   await user.click(within(frame('关于我')).getByRole('button', { name: '看看我在折腾什么' }));
   expect(screen.getAllByRole('region', { name: '我的项目' })).toHaveLength(1);
   expect(within(frame('我的项目')).getByRole('heading', { name: 'HonestOS' })).toBeTruthy();
@@ -52,7 +68,11 @@ it('retains terminal output, draft, history and reading position through minimiz
   await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
   expect(document.activeElement).toBe(frame('终端'));
-  const normal = { left: frame('终端').style.left, top: frame('终端').style.top, width: frame('终端').style.width };
+  const normal = {
+    left: frame('终端').style.left,
+    top: frame('终端').style.top,
+    width: frame('终端').style.width,
+  };
   resize(390, 844);
   expect(screen.queryByRole('region', { name: '关于我' })).toBeNull();
   expect(terminalInput()).toBe(input);
@@ -125,7 +145,9 @@ it('preserves project detail and reading position across hide/arrange/modes, res
   resize(1366, 768);
   await user.click(within(content).getByRole('button', { name: '返回项目列表' }));
   expect(content.scrollTop).toBe(120);
-  expect(document.activeElement).toBe(within(content).getByRole('button', { name: '了解HonestOS' }));
+  expect(document.activeElement).toBe(
+    within(content).getByRole('button', { name: '了解HonestOS' }),
+  );
   await user.click(screen.getByRole('button', { name: '关闭我的项目' }));
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
@@ -136,7 +158,10 @@ it('preserves project detail and reading position across hide/arrange/modes, res
 it('shares search entries, excludes the background, traps focus, restores cancellation and hands selection to the application', async () => {
   const user = userEvent.setup();
   render(<App />);
-  const searchButton = within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: '搜索应用' });
+  const searchButton = within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole(
+    'button',
+    { name: '搜索应用' },
+  );
   await user.click(searchButton);
   expect(screen.getByRole('main').closest('[inert]')).not.toBeNull();
   expect(document.activeElement).toBe(screen.getByRole('combobox'));
@@ -192,10 +217,13 @@ it('restores cancelled search to the Dock when its original window trigger becom
   fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
   resize(390, 844);
   await user.keyboard('{Escape}');
-  expect(document.activeElement).toBe(within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: '搜索应用' }));
+  expect(document.activeElement).toBe(
+    within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
+      name: '搜索应用',
+    }),
+  );
   expect(dock('终端').getAttribute('aria-current')).toBe('true');
 });
-
 
 it('keeps the focused command and navigation usable in compact visual viewports without rewriting desktop geometry or the session', async () => {
   const user = userEvent.setup();
@@ -206,11 +234,19 @@ it('keeps the focused command and navigation usable in compact visual viewports 
   const keepVisible = vi.fn();
   input.scrollIntoView = keepVisible;
   const terminal = frame('终端');
-  const normal = { left: terminal.style.left, top: terminal.style.top, width: terminal.style.width, height: terminal.style.height };
+  const normal = {
+    left: terminal.style.left,
+    top: terminal.style.top,
+    width: terminal.style.width,
+    height: terminal.style.height,
+  };
   await user.click(input);
   fireEvent.change(input, { target: { value: 'echo compact command' } });
   keepVisible.mockClear();
-  act(() => { viewport.height = 200; viewport.dispatchEvent(new Event('resize')); });
+  act(() => {
+    viewport.height = 200;
+    viewport.dispatchEvent(new Event('resize'));
+  });
   expect(document.documentElement.dataset.compactViewport).toBe('true');
   fireEvent.click(within(terminal).getByRole('button', { name: '最大化终端' }));
   expect(terminal.style.width).toBe(normal.width);
@@ -225,13 +261,26 @@ it('keeps the focused command and navigation usable in compact visual viewports 
   await user.click(dock('终端'));
   expect(document.activeElement).toBe(terminal);
   keepVisible.mockClear();
-  act(() => { viewport.height = 120; viewport.dispatchEvent(new Event('resize')); });
+  act(() => {
+    viewport.height = 120;
+    viewport.dispatchEvent(new Event('resize'));
+  });
   expect(keepVisible).not.toHaveBeenCalled();
   expect(input.value).toBe('draft survives keyboard');
-  act(() => { viewport.height = 768; viewport.dispatchEvent(new Event('resize')); });
+  act(() => {
+    viewport.height = 768;
+    viewport.dispatchEvent(new Event('resize'));
+  });
   expect(document.documentElement.dataset.compactViewport).toBe('false');
-  expect({ left: terminal.style.left, top: terminal.style.top, width: terminal.style.width, height: terminal.style.height }).toEqual(normal);
-  expect(screen.getByRole('main').closest('[data-mode]')?.getAttribute('data-mode')).toBe('desktop');
+  expect({
+    left: terminal.style.left,
+    top: terminal.style.top,
+    width: terminal.style.width,
+    height: terminal.style.height,
+  }).toEqual(normal);
+  expect(screen.getByRole('main').closest('[data-mode]')?.getAttribute('data-mode')).toBe(
+    'desktop',
+  );
   fireEvent.keyDown(input, { key: 'ArrowUp' });
   expect(input.value).toBe('echo compact command');
 });
@@ -245,7 +294,11 @@ it('returns cancelled search to visible navigation if presentation CSS hides its
   // Model the browser's CSS-hidden background while the desktop session remains open.
   about.style.display = 'none';
   await user.keyboard('{Escape}');
-  expect(document.activeElement).toBe(within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', { name: '搜索应用' }));
+  expect(document.activeElement).toBe(
+    within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
+      name: '搜索应用',
+    }),
+  );
 });
 
 it('reveals the focused compact terminal input when unread output and completion feedback grow without losing the old output reading position', async () => {
@@ -257,7 +310,10 @@ it('reveals the focused compact terminal input when unread output and completion
   const output = screen.getByLabelText('终端记录与输入');
   Object.defineProperties(output, {
     clientHeight: { configurable: true, value: 64 },
-    scrollHeight: { configurable: true, get: () => output.querySelector('[role=log]')!.children.length * 100 },
+    scrollHeight: {
+      configurable: true,
+      get: () => output.querySelector('[role=log]')!.children.length * 100,
+    },
   });
   const keepVisible = vi.fn();
   input.scrollIntoView = keepVisible;
@@ -266,7 +322,10 @@ it('reveals the focused compact terminal input when unread output and completion
   fireEvent.keyDown(input, { key: 'Enter' });
   output.scrollTop = 40;
   fireEvent.scroll(output);
-  act(() => { viewport.height = 200; viewport.dispatchEvent(new Event('resize')); });
+  act(() => {
+    viewport.height = 200;
+    viewport.dispatchEvent(new Event('resize'));
+  });
   fireEvent.change(input, { target: { value: 'echo new unread output' } });
   fireEvent.keyDown(input, { key: 'Enter' });
   expect(screen.getByRole('button', { name: '查看新输出' })).toBeTruthy();
@@ -282,27 +341,35 @@ it('reveals the focused compact terminal input when unread output and completion
   expect(output.scrollTop).toBe(40);
 });
 
-
 it('finishes an outgoing animation without stealing focus from an application selected during the animation', async () => {
   const user = userEvent.setup();
   render(<App />);
   const terminal = frame('终端');
-  Object.defineProperty(terminal, 'getBoundingClientRect', { value: () => ({ x: 756, y: 294, width: 510, height: 340 }) });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
+  });
   fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
   expect(screen.getByRole('region', { name: '终端' })).toBe(terminal);
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
-  act(() => { gsap.getTweensOf(terminal).forEach(tween => tween.progress(1)); });
+  act(() => {
+    gsap.getTweensOf(terminal).forEach((tween) => tween.progress(1));
+  });
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   expect(document.activeElement).toBe(frame('我的项目'));
   expect(dock('我的项目').getAttribute('aria-current')).toBe('true');
 });
 
 it('finishes window actions immediately when motion is disabled, even if the window has measurable geometry', () => {
-  window.localStorage.setItem('honestos.preferences.v1', JSON.stringify({ schemaVersion: 1, wallpaper: 'dusk', motionEnabled: false }));
+  window.localStorage.setItem(
+    'honestos.preferences.v1',
+    JSON.stringify({ schemaVersion: 1, wallpaper: 'dusk', motionEnabled: false }),
+  );
   render(<App />);
   const terminal = frame('终端');
-  Object.defineProperty(terminal, 'getBoundingClientRect', { value: () => ({ width: 510, height: 340 }) });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ width: 510, height: 340 }),
+  });
   fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   expect(gsap.getTweensOf(terminal)).toHaveLength(0);
@@ -311,7 +378,9 @@ it('finishes window actions immediately when motion is disabled, even if the win
 it('completes a pending window action when the user switches motion off during its animation', () => {
   render(<App />);
   const terminal = frame('终端');
-  Object.defineProperty(terminal, 'getBoundingClientRect', { value: () => ({ x: 756, y: 294, width: 510, height: 340 }) });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
+  });
   fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
   expect(screen.getByRole('region', { name: '终端' })).toBe(terminal);
   fireEvent.click(dock('桌面设置'));

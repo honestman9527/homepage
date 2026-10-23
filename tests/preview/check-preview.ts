@@ -9,21 +9,41 @@ try {
   assert.ok(address && typeof address !== 'string');
   const origin = `http://127.0.0.1:${address.port}`;
   const html = await readFile('dist/index.html', 'utf8');
-  const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match => match[1]!);
-  assets.push(...(await readdir('dist/assets')).filter(name => /\.(js|css|svg)$/.test(name)).map(name => `/assets/${name}`));
-  const paths = ['/', '/avatar.webp', '/hm-light.svg', '/hm-dark.svg', '/favicon.svg', ...new Set(assets)];
-  await Promise.all(paths.map(async path => {
-    const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(5000) });
-    assert.equal(response.status, 200, path);
-    const expected = await readFile(path === '/' ? 'dist/index.html' : `dist${path}`);
-    assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected, path);
-  }));
-  for (const path of ['/wrangler.json', '/wrangler.jsonc', '/missing-asset', '/assets/missing.js']) {
+  const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map((match) => match[1]!);
+  assets.push(
+    ...(await readdir('dist/assets'))
+      .filter((name) => /\.(js|css|svg)$/.test(name))
+      .map((name) => `/assets/${name}`),
+  );
+  const paths = [
+    '/',
+    '/avatar.webp',
+    '/hm-light.svg',
+    '/hm-dark.svg',
+    '/favicon.svg',
+    ...new Set(assets),
+  ];
+  await Promise.all(
+    paths.map(async (path) => {
+      const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(5000) });
+      assert.equal(response.status, 200, path);
+      const expected = await readFile(path === '/' ? 'dist/index.html' : `dist${path}`);
+      assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected, path);
+    }),
+  );
+  for (const path of [
+    '/wrangler.json',
+    '/wrangler.jsonc',
+    '/missing-asset',
+    '/assets/missing.js',
+  ]) {
     const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(5000) });
     assert.equal(response.status, 404, path);
     await response.body?.cancel();
   }
-  console.log(`Vite preview: ${paths.length} built assets verified; configuration and missing paths return 404.`);
+  console.log(
+    `Vite preview: ${paths.length} built assets verified; configuration and missing paths return 404.`,
+  );
 } finally {
   await server.close();
 }

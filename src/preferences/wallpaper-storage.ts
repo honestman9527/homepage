@@ -22,7 +22,9 @@ export const localWallpaperStorage: WallpaperStorage = {
         request.onsuccess = () => resolve(request.result instanceof Blob ? request.result : null);
         request.onerror = () => reject(request.error);
       });
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   },
   async write(image) {
     const db = await database();
@@ -30,17 +32,21 @@ export const localWallpaperStorage: WallpaperStorage = {
       await new Promise<void>((resolve, reject) => {
         const tx = db.transaction('wallpaper', 'readwrite');
         const store = tx.objectStore('wallpaper');
-        if (image) store.put(image, 'custom'); else store.delete('custom');
+        if (image) store.put(image, 'custom');
+        else store.delete('custom');
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(tx.error);
       });
-    } finally { db.close(); }
+    } finally {
+      db.close();
+    }
   },
 };
 export const MAX_WALLPAPER_BYTES = 10 * 1024 * 1024;
 export function wallpaperFileError(file: Blob): string | null {
-  if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)) return '请选择 JPG、PNG、WebP 或 AVIF 图片。';
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type))
+    return '请选择 JPG、PNG、WebP 或 AVIF 图片。';
   if (!file.size || file.size > MAX_WALLPAPER_BYTES) return '请选择不超过 10 MB 的图片。';
   return null;
 }
@@ -56,5 +62,7 @@ export async function verifyWallpaperImage(file: Blob): Promise<void> {
       image.onerror = () => reject(new Error('无法读取这张图片，请换一张。'));
       image.src = url;
     });
-  } finally { URL.revokeObjectURL(url); }
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

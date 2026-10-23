@@ -17,9 +17,9 @@ export type ContactIconName = SocialIconName | 'email' | 'link';
 
 export function socialBrand(hostname: string) {
   const host = hostname.toLowerCase().replace(/^www\./, '');
-  return socialBrands.find(brand => (brand.hosts as readonly string[]).includes(host));
+  return socialBrands.find((brand) => (brand.hosts as readonly string[]).includes(host));
 }
 
 export function isContactIcon(value: unknown): value is ContactIconName {
-  return value === 'email' || value === 'link' || socialBrands.some(brand => brand.id === value);
+  return value === 'email' || value === 'link' || socialBrands.some((brand) => brand.id === value);
 }

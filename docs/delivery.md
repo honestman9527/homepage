@@ -9,12 +9,14 @@
 - 提交 hook 仅检查暂存内容的 import 位置和空白错误；日志为可选记录，不再要求工作区指纹或最近一次凭据。
 - PR 自动检查；main push 检查通过后部署同一构建，保留手动 check / deploy。
 - AppId 与运行时应用 ID 列表从注册表派生；测试命令统一为 `pnpm test`。
+- 新增 `pnpm format` / `pnpm format:check`，统一源码、测试和配置排版；格式检查纳入 CI。
 - 现行设计统一到 [HonestOS 设计](design/honestos.md)，旧方案与阶段证据移入 [历史归档](history/)。
 
 ## 本轮验证
 
 - 工具、配置、桌面、终端与搜索定向测试：7 个文件、38 项通过。
-- `pnpm verify -- check`：import 检查、类型检查、24 个文件的 92 项测试、生产构建与 Vite HTTP 预览通过；预览核对 22 个页面/资产路径，未知资源与配置路径返回 404。
+- 格式化前 `prettier --debug-check src build tests` 通过，检查格式化不会改变解析结构。
+- 格式化后 `pnpm verify -- check`：格式检查、import 检查、类型检查、24 个文件的 92 项测试、生产构建与 Vite HTTP 预览通过；预览核对 22 个页面/资产路径，未知资源与配置路径返回 404。
 - 普通 Vite 开发服务器：HTML、TSX、HMR 客户端与静态头像 HTTP 请求通过，确认未加载 Cloudflare 插件。
 - actionlint 1.7.12 工作流静态检查、冻结锁文件安装与文档本地链接检查通过。
 - `pnpm verify -- deploy:dry-run`：根 Wrangler 配置通过，读取已有静态产物，未上传。

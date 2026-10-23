@@ -32,14 +32,21 @@ export function updateTerminalInput(session: TerminalSession, input: string): Te
 }
 
 /** Returns window/wallpaper intents for the shared desktop/preference operations. */
-export function submitTerminalInput(session: TerminalSession, environment: CommandEnvironment): { session: TerminalSession; intents: TerminalIntent[] } {
+export function submitTerminalInput(
+  session: TerminalSession,
+  environment: CommandEnvironment,
+): { session: TerminalSession; intents: TerminalIntent[] } {
   const result = executeCommand(session.input, environment);
   if (session.input.length > MAX_INPUT_LENGTH) {
     let nextRecordId = session.nextRecordId;
     return {
       session: {
-        ...session, nextRecordId: nextRecordId + result.records.length,
-        records: [...session.records, ...result.records.map(record => ({ ...record, id: nextRecordId++ }))].slice(-MAX_RECORDS),
+        ...session,
+        nextRecordId: nextRecordId + result.records.length,
+        records: [
+          ...session.records,
+          ...result.records.map((record) => ({ ...record, id: nextRecordId++ })),
+        ].slice(-MAX_RECORDS),
       },
       intents: [],
     };
@@ -49,14 +56,21 @@ export function submitTerminalInput(session: TerminalSession, environment: Comma
   const records: TerminalRecord[] = [
     ...session.records,
     { id: nextRecordId++, kind: 'input', text: session.input },
-    ...result.records.map(record => ({ ...record, id: nextRecordId++ })),
+    ...result.records.map((record) => ({ ...record, id: nextRecordId++ })),
   ];
   return {
     session: {
-      ...session, input: '', draft: '', historyIndex: null, history: [...session.history, session.input].slice(-MAX_HISTORY), nextRecordId,
-      records: result.intents.some(intent => intent.type === 'clear') ? [] : records.slice(-MAX_RECORDS),
+      ...session,
+      input: '',
+      draft: '',
+      historyIndex: null,
+      history: [...session.history, session.input].slice(-MAX_HISTORY),
+      nextRecordId,
+      records: result.intents.some((intent) => intent.type === 'clear')
+        ? []
+        : records.slice(-MAX_RECORDS),
     },
-    intents: result.intents.filter(intent => intent.type !== 'clear'),
+    intents: result.intents.filter((intent) => intent.type !== 'clear'),
   };
 }
 
@@ -75,8 +89,15 @@ export interface TerminalKey {
 
 /** Guard Enter from a native key event plus the input's composition state. */
 export function shouldSubmitTerminal(event: TerminalKey): boolean {
-  return event.key === 'Enter' && !event.isComposing && !event.composing && event.keyCode !== 229
-    && !event.ctrlKey && !event.metaKey && !event.altKey;
+  return (
+    event.key === 'Enter' &&
+    !event.isComposing &&
+    !event.composing &&
+    event.keyCode !== 229 &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey
+  );
 }
 export interface TerminalKeyResult {
   session: TerminalSession;
@@ -86,34 +107,75 @@ export interface TerminalKeyResult {
 }
 
 /** Apply a native input key; the UI owns preventDefault and actual submission. */
-export function handleTerminalKey(session: TerminalSession, event: TerminalKey, apps: readonly AppDefinition[]): TerminalKeyResult {
-  const result: TerminalKeyResult = { session, preventDefault: false, submit: false, suggestions: [] };
-  if (event.isComposing || event.composing || event.keyCode === 229 || event.ctrlKey || event.metaKey || event.altKey) return result;
+export function handleTerminalKey(
+  session: TerminalSession,
+  event: TerminalKey,
+  apps: readonly AppDefinition[],
+): TerminalKeyResult {
+  const result: TerminalKeyResult = {
+    session,
+    preventDefault: false,
+    submit: false,
+    suggestions: [],
+  };
+  if (
+    event.isComposing ||
+    event.composing ||
+    event.keyCode === 229 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey
+  )
+    return result;
   if (shouldSubmitTerminal(event)) return { ...result, preventDefault: true, submit: true };
   if (event.key === 'Tab' && !event.shiftKey) {
     const match = /^(\s*)(\S*)(?:([ \t]+)(\S*))?$/.exec(session.input);
     if (!match) return { ...result, preventDefault: true };
     const [, leading = '', command = '', separator, argument = ''] = match;
-    const candidates = !separator ? commandNames
-      : command.toLowerCase() === 'open' ? apps.map(app => app.id)
-      : command.toLowerCase() === 'theme' ? wallpapers.map(wallpaper => wallpaper.id)
-      : command.toLowerCase() === 'cat' ? ['README.md'] : [];
+    const candidates = !separator
+      ? commandNames
+      : command.toLowerCase() === 'open'
+        ? apps.map((app) => app.id)
+        : command.toLowerCase() === 'theme'
+          ? wallpapers.map((wallpaper) => wallpaper.id)
+          : command.toLowerCase() === 'cat'
+            ? ['README.md']
+            : [];
     const prefix = separator ? argument : command;
-    const suggestions = candidates.filter(candidate => candidate.toLowerCase().startsWith(prefix.toLowerCase()));
+    const suggestions = candidates.filter((candidate) =>
+      candidate.toLowerCase().startsWith(prefix.toLowerCase()),
+    );
     let completion = suggestions[0];
     if (completion === undefined) return { ...result, preventDefault: true };
     for (const suggestion of suggestions.slice(1)) {
       while (!suggestion.startsWith(completion)) completion = completion.slice(0, -1);
     }
     const input = `${leading}${separator ? command + separator : ''}${completion}${suggestions.length === 1 ? ' ' : ''}`;
-    return { ...result, preventDefault: true, suggestions, session: updateTerminalInput(session, input) };
+    return {
+      ...result,
+      preventDefault: true,
+      suggestions,
+      session: updateTerminalInput(session, input),
+    };
   }
   if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && session.history.length) {
-    const historyIndex = event.key === 'ArrowUp'
-      ? Math.max(0, (session.historyIndex ?? session.history.length) - 1)
-      : session.historyIndex === null || session.historyIndex >= session.history.length - 1 ? null : session.historyIndex + 1;
+    const historyIndex =
+      event.key === 'ArrowUp'
+        ? Math.max(0, (session.historyIndex ?? session.history.length) - 1)
+        : session.historyIndex === null || session.historyIndex >= session.history.length - 1
+          ? null
+          : session.historyIndex + 1;
     const draft = session.historyIndex === null ? session.input : session.draft;
-    return { ...result, preventDefault: true, session: { ...session, historyIndex, draft, input: historyIndex === null ? draft : session.history[historyIndex]! } };
+    return {
+      ...result,
+      preventDefault: true,
+      session: {
+        ...session,
+        historyIndex,
+        draft,
+        input: historyIndex === null ? draft : session.history[historyIndex]!,
+      },
+    };
   }
   return result;
 }

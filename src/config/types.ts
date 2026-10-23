@@ -2,7 +2,10 @@ import type { AppId } from './registry.ts';
 import type { ContactIconName } from './social-links.ts';
 
 export type IconName = 'user' | 'folder' | 'book' | 'terminal' | 'sliders';
-export interface Size { width: number; height: number }
+export interface Size {
+  width: number;
+  height: number;
+}
 export interface AppDefinition<Id extends string = AppId> {
   id: Id;
   name: string;
@@ -21,7 +24,12 @@ export interface WallpaperDefinition {
   image?: string;
 }
 
-export interface PublicLink { label: string; url: string; kind?: 'web' | 'email'; icon?: ContactIconName }
+export interface PublicLink {
+  label: string;
+  url: string;
+  kind?: 'web' | 'email';
+  icon?: ContactIconName;
+}
 export interface Profile {
   name: string;
   alias: string;

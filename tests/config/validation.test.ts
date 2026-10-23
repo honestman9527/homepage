@@ -1,14 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { appRegistry, siteConfig, profileLinks, publicUrl, validateConfig } from '../../src/config/index.ts';
+import {
+  appRegistry,
+  siteConfig,
+  profileLinks,
+  publicUrl,
+  validateConfig,
+} from '../../src/config/index.ts';
 
 describe('public content configuration', () => {
   it('rejects duplicate app identities before navigation can diverge', () => {
-    expect(validateConfig(siteConfig, [...appRegistry, appRegistry[0]!])).toContain('apps: duplicate id about');
+    expect(validateConfig(siteConfig, [...appRegistry, appRegistry[0]!])).toContain(
+      'apps: duplicate id about',
+    );
   });
 
   it('never turns unsafe, local, or placeholder addresses into public links', () => {
-    const invalid = ['javascript:alert(1)', 'data:text/html,x', '/projects', 'https://example.com/demo', 'https://blog.example.org', 'https://localhost/', 'https://127.0.0.1/', 'https://user:pass@honestman.me', 'not a URL', 'mailto:author@honestman.me'];
-    expect(invalid.map(url => publicUrl(url))).toEqual(Array(invalid.length).fill(undefined));
+    const invalid = [
+      'javascript:alert(1)',
+      'data:text/html,x',
+      '/projects',
+      'https://example.com/demo',
+      'https://blog.example.org',
+      'https://localhost/',
+      'https://127.0.0.1/',
+      'https://user:pass@honestman.me',
+      'not a URL',
+      'mailto:author@honestman.me',
+    ];
+    expect(invalid.map((url) => publicUrl(url))).toEqual(Array(invalid.length).fill(undefined));
     expect(publicUrl('https://honestman.me/projects')).toBe('https://honestman.me/projects');
     expect(publicUrl('http://honestman.me')).toBe('http://honestman.me/');
   });
@@ -25,22 +44,34 @@ describe('public content configuration', () => {
     config.profile.links = [{ label: 'GitHub', url: 'javascript:alert(1)' }];
     config.projects = [{ ...config.projects[0]!, status: 'live' }];
     config.blog.url = 'https://example.com';
-    expect(validateConfig(config, appRegistry)).toEqual(expect.arrayContaining([
-      'profile.links.0: invalid public URL',
-      'projects.honestos: live project requires a public URL',
-      'blog: invalid public URL',
-    ]));
+    expect(validateConfig(config, appRegistry)).toEqual(
+      expect.arrayContaining([
+        'profile.links.0: invalid public URL',
+        'projects.honestos: live project requires a public URL',
+        'blog: invalid public URL',
+      ]),
+    );
   });
 
   it('prevents duplicate projects and prototype sample articles from being published', () => {
     const config = structuredClone(siteConfig);
     config.projects = [config.projects[0]!, config.projects[0]!];
-    config.blog.posts = [{ id: 'sample', title: '示例文章', summary: '', url: 'https://example.com/post', sample: true }];
-    expect(validateConfig(config, appRegistry)).toEqual(expect.arrayContaining([
-      'projects: duplicate id honestos',
-      'blog.posts.sample: sample content cannot be published',
-      'blog.posts.sample: invalid public URL',
-    ]));
+    config.blog.posts = [
+      {
+        id: 'sample',
+        title: '示例文章',
+        summary: '',
+        url: 'https://example.com/post',
+        sample: true,
+      },
+    ];
+    expect(validateConfig(config, appRegistry)).toEqual(
+      expect.arrayContaining([
+        'projects: duplicate id honestos',
+        'blog.posts.sample: sample content cannot be published',
+        'blog.posts.sample: invalid public URL',
+      ]),
+    );
   });
 
   it('accepts empty projects and an unconfigured blog without inventing destinations', () => {
@@ -55,7 +86,13 @@ describe('public content configuration', () => {
 });
 
 it('normalizes compact author addresses while preserving explicit link labels and validation', () => {
-  expect(profileLinks(['mailto:hello@honestman.me', 'https://honestman.me', { label: '代码', url: 'https://github.com/honestman9527' }])).toEqual([
+  expect(
+    profileLinks([
+      'mailto:hello@honestman.me',
+      'https://honestman.me',
+      { label: '代码', url: 'https://github.com/honestman9527' },
+    ]),
+  ).toEqual([
     { label: 'hello@honestman.me', url: 'mailto:hello@honestman.me', kind: 'email', icon: 'email' },
     { label: 'honestman.me', url: 'https://honestman.me', kind: 'web', icon: 'link' },
     { label: '代码', url: 'https://github.com/honestman9527', kind: 'web', icon: 'github' },
@@ -66,14 +103,16 @@ it('normalizes compact author addresses while preserving explicit link labels an
 });
 
 it('recognizes social hosts without branding look-alikes and supports explicit instance icons', () => {
-  expect(profileLinks([
-    'https://www.GITHUB.com/honestman9527',
-    'https://github.com.honestman.me/profile',
-    'https://honestman.me/github.com',
-    'https://space.bilibili.com/123',
-    { label: '我的实例', url: 'https://social.honestman.me/@me', icon: 'mastodon' },
-    { label: '联系我', url: 'mailto:hello@honestman.me?subject=Hello' },
-  ])).toEqual([
+  expect(
+    profileLinks([
+      'https://www.GITHUB.com/honestman9527',
+      'https://github.com.honestman.me/profile',
+      'https://honestman.me/github.com',
+      'https://space.bilibili.com/123',
+      { label: '我的实例', url: 'https://social.honestman.me/@me', icon: 'mastodon' },
+      { label: '联系我', url: 'mailto:hello@honestman.me?subject=Hello' },
+    ]),
+  ).toEqual([
     expect.objectContaining({ label: 'GitHub', icon: 'github' }),
     expect.objectContaining({ label: 'github.com.honestman.me', icon: 'link' }),
     expect.objectContaining({ label: 'honestman.me', icon: 'link' }),
@@ -82,6 +121,12 @@ it('recognizes social hosts without branding look-alikes and supports explicit i
     expect.objectContaining({ label: '联系我', kind: 'email', icon: 'email' }),
   ]);
   const config = structuredClone(siteConfig);
-  config.profile.links = [{ label: 'GitHub', url: 'https://github.com/honestman9527', icon: 'missing' } as unknown as import('../../src/config/types.ts').PublicLink];
+  config.profile.links = [
+    {
+      label: 'GitHub',
+      url: 'https://github.com/honestman9527',
+      icon: 'missing',
+    } as unknown as import('../../src/config/types.ts').PublicLink,
+  ];
   expect(validateConfig(config, appRegistry)).toContain('profile.links.0: unknown contact icon');
 });

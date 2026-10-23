@@ -5,7 +5,10 @@ import { AppContent } from '../../src/apps/content';
 import { siteConfig } from '../../src/config/index.ts';
 
 const configuredLinks = siteConfig.profile.links;
-afterEach(() => { cleanup(); siteConfig.profile.links = configuredLinks; });
+afterEach(() => {
+  cleanup();
+  siteConfig.profile.links = configuredLinks;
+});
 
 describe('application navigation', () => {
   it('offers project navigation and explicit terminal input focus from the confirmed introduction', () => {
@@ -35,7 +38,11 @@ it('renders configured contact logos and labels while keeping email and external
   const github = screen.getByRole('link', { name: '代码主页（新标签打开）' });
   expect(github.getAttribute('target')).toBe('_blank');
   expect(github.getAttribute('rel')).toBe('noopener noreferrer');
-  expect(github.querySelector<HTMLElement>('.contact-brand')?.style.maskImage).toContain('github.svg');
-  expect(screen.getByRole('link', { name: '独立站（新标签打开）' }).querySelector('svg')).not.toBeNull();
+  expect(github.querySelector<HTMLElement>('.contact-brand')?.style.maskImage).toContain(
+    'github.svg',
+  );
+  expect(
+    screen.getByRole('link', { name: '独立站（新标签打开）' }).querySelector('svg'),
+  ).not.toBeNull();
   expect(screen.queryByRole('link', { name: /无效链接/ })).toBeNull();
 });

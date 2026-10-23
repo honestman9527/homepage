@@ -13,7 +13,7 @@ pnpm dev
 
 按改动执行 `pnpm test tests/config`、`pnpm test tests/preferences` 或对应交互测试；类型检查用 `pnpm typecheck`，import 位置检查用 `pnpm lint`。提交约定和可选日志见 [验证与提交](agents/verification.md)。
 
-`pnpm check` 是 CI 和发布前集合：源码检查、类型检查、Vitest 行为测试、生产构建和 Vite HTTP 预览。HTTP 检查不启动浏览器；视觉、布局、辅助技术和真机按 [人工验收清单](manual-acceptance.md) 验证。平时小改动不强制执行整个集合。
+`pnpm check` 是 CI 和发布前集合：格式检查、源码检查、类型检查、Vitest 行为测试、生产构建和 Vite HTTP 预览。HTTP 检查不启动浏览器；视觉、布局、辅助技术和真机按 [人工验收清单](manual-acceptance.md) 验证。平时小改动不强制执行整个集合。
 
 ```sh
 pnpm build            # 生成纯静态 dist
@@ -23,6 +23,10 @@ pnpm deploy:dry-run   # 验证根 Wrangler 配置及已有产物，不上传
 ```
 
 `vite.config.ts` 负责 React、HTML 生成与延迟加载约束；`vitest.config.ts` 独立管理测试。Workers 仅用于部署，`wrangler.jsonc` 直接指向 `dist`，详见 [发布说明](deployment.md)。
+
+## 代码格式
+
+`pnpm format` 统一格式化源码、测试与配置，`pnpm format:check` 只检查格式。需要限定文件时运行 `pnpm exec prettier --write <文件>`。格式使用 `.prettierrc.json`；图片、锁文件、生成物和 Markdown 不参与格式化。提交 hook 不自动改写或暂存文件。
 
 ## 目录职责
 

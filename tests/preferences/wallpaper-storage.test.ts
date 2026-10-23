@@ -1,6 +1,10 @@
 import 'fake-indexeddb/auto';
 import { expect, it } from 'vitest';
-import { localWallpaperStorage, wallpaperFileError, MAX_WALLPAPER_BYTES } from '../../src/preferences/wallpaper-storage.ts';
+import {
+  localWallpaperStorage,
+  wallpaperFileError,
+  MAX_WALLPAPER_BYTES,
+} from '../../src/preferences/wallpaper-storage.ts';
 
 it('stores, replaces, reads and removes an image in browser-local storage', async () => {
   await localWallpaperStorage.write(null);
@@ -18,5 +22,7 @@ it('rejects unsupported or oversized files before decoding or storing them', () 
   expect(wallpaperFileError(new Blob(['<svg/>'], { type: 'image/svg+xml' }))).toContain('JPG');
   expect(wallpaperFileError(new Blob(['<html/>'], { type: 'text/html' }))).toContain('JPG');
   expect(wallpaperFileError(new Blob([], { type: 'image/webp' }))).toContain('10 MB');
-  expect(wallpaperFileError(new Blob([new Uint8Array(MAX_WALLPAPER_BYTES + 1)], { type: 'image/jpeg' }))).toContain('10 MB');
+  expect(
+    wallpaperFileError(new Blob([new Uint8Array(MAX_WALLPAPER_BYTES + 1)], { type: 'image/jpeg' })),
+  ).toContain('10 MB');
 });

@@ -24,7 +24,12 @@ describe('project application session', () => {
 
   it('keeps independent safe project links and usable text when an image fails', () => {
     const projects = [
-      { ...siteConfig.projects[0]!, image: '/missing-project.png', url: 'https://honestman.me', sourceUrl: 'https://github.com/honestman9527/homepage' },
+      {
+        ...siteConfig.projects[0]!,
+        image: '/missing-project.png',
+        url: 'https://honestman.me',
+        sourceUrl: 'https://github.com/honestman9527/homepage',
+      },
       { ...siteConfig.projects[1]!, sourceUrl: 'javascript:alert(1)' },
     ];
     render(<ProjectsApp projects={projects} onOpen={() => {}} />);
@@ -32,7 +37,9 @@ describe('project application session', () => {
     expect(screen.queryByAltText('HonestOS 项目预览')).toBeNull();
     expect(screen.getByText('把个人主页，变成一张可以探索的桌面。')).toBeDefined();
     expect(screen.queryByRole('link', { name: /在线访问/ })).toBeNull();
-    expect(screen.getByRole('link', { name: /查看源码/ }).getAttribute('href')).toBe('https://github.com/honestman9527/homepage');
+    expect(screen.getByRole('link', { name: /查看源码/ }).getAttribute('href')).toBe(
+      'https://github.com/honestman9527/homepage',
+    );
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
@@ -40,7 +47,12 @@ describe('project application session', () => {
     const onOpen = vi.fn();
     const { rerender } = render(<ProjectsApp projects={siteConfig.projects} onOpen={onOpen} />);
     fireEvent.click(screen.getByRole('button', { name: '了解小小宇宙' }));
-    rerender(<ProjectsApp projects={siteConfig.projects.filter(project => project.id !== 'universe')} onOpen={onOpen} />);
+    rerender(
+      <ProjectsApp
+        projects={siteConfig.projects.filter((project) => project.id !== 'universe')}
+        onOpen={onOpen}
+      />,
+    );
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: '我的项目' }));
     expect(screen.getByRole('button', { name: '了解HonestOS' })).toBeDefined();
     rerender(<ProjectsApp projects={[]} onOpen={onOpen} />);
@@ -52,7 +64,10 @@ describe('project application session', () => {
     render(<ProjectsApp projects={siteConfig.projects} onOpen={() => {}} />);
     const scroller = screen.getByRole('region', { name: '项目内容' });
     let viewportHeight = 120;
-    Object.defineProperty(scroller, 'clientHeight', { configurable: true, get: () => viewportHeight });
+    Object.defineProperty(scroller, 'clientHeight', {
+      configurable: true,
+      get: () => viewportHeight,
+    });
     fireEvent.click(screen.getByRole('button', { name: '了解小小宇宙' }));
     scroller.scrollTop = 85;
     fireEvent.scroll(scroller);

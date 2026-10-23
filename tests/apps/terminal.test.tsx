@@ -9,10 +9,23 @@ afterEach(cleanup);
 
 function renderTerminal() {
   const onOpen = vi.fn();
-  render(<PreferencesProvider storage={null} motionQuery={null}><TerminalApp onOpen={onOpen} /></PreferencesProvider>);
+  render(
+    <PreferencesProvider storage={null} motionQuery={null}>
+      <TerminalApp onOpen={onOpen} />
+    </PreferencesProvider>,
+  );
   const input = screen.getByRole('textbox', { name: '终端命令' }) as HTMLInputElement;
-  const run = (text: string) => { fireEvent.change(input, { target: { value: text } }); fireEvent.keyDown(input, { key: 'Enter' }); };
-  return { input, run, onOpen, output: screen.getByRole('log', { name: '终端输出' }), scroller: screen.getByLabelText('终端记录与输入') };
+  const run = (text: string) => {
+    fireEvent.change(input, { target: { value: text } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+  };
+  return {
+    input,
+    run,
+    onOpen,
+    output: screen.getByRole('log', { name: '终端输出' }),
+    scroller: screen.getByLabelText('终端记录与输入'),
+  };
 }
 
 describe('terminal application session', () => {

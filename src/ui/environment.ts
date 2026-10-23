@@ -12,7 +12,13 @@ export function useVisualViewport() {
       root.dataset.keyboard = String(!!viewport && viewport.height < window.innerHeight - 100);
       root.dataset.compactViewport = String(compact);
       const focused = document.activeElement;
-      if (compact && keepInputVisible && focused instanceof HTMLElement && focused.matches('[data-terminal-input]') && !focused.closest('[hidden],[inert]')) {
+      if (
+        compact &&
+        keepInputVisible &&
+        focused instanceof HTMLElement &&
+        focused.matches('[data-terminal-input]') &&
+        !focused.closest('[hidden],[inert]')
+      ) {
         // CSS has just made the window's scrollport fit the visual viewport. Retain
         // existing input focus and reveal it; never focus a terminal on resize.
         focused.scrollIntoView?.({ block: 'nearest' });

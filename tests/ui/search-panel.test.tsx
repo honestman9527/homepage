@@ -8,7 +8,12 @@ import { SearchPanel } from '../../src/ui/search-panel.tsx';
 afterEach(cleanup);
 function SearchProbe() {
   const [selected, setSelected] = useState('');
-  return <><output data-testid="selection">{selected}</output><SearchPanel onCancel={() => setSelected('cancel')} onOpen={setSelected} /></>;
+  return (
+    <>
+      <output data-testid="selection">{selected}</output>
+      <SearchPanel onCancel={() => setSelected('cancel')} onOpen={setSelected} />
+    </>
+  );
 }
 it('focuses search, navigates results and never opens a stale selection after a no-result query', async () => {
   const user = userEvent.setup();

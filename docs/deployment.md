@@ -11,7 +11,7 @@ pnpm check
 pnpm deploy:dry-run
 ```
 
-`check` 检查源码、类型、行为测试、生产构建与 Vite HTTP 预览。`deploy:dry-run` 显式读取根目录 `wrangler.jsonc`，验证部署配置，不上传、不重新构建。日常小改动按影响范围执行定向检查，见 [验证与提交](agents/verification.md)。
+`check` 检查格式、源码、类型、行为测试、生产构建与 Vite HTTP 预览。`deploy:dry-run` 显式读取根目录 `wrangler.jsonc`，验证部署配置，不上传、不重新构建。日常小改动按影响范围执行定向检查，见 [验证与提交](agents/verification.md)。
 
 Wrangler 版本固定在 `package.json`，依赖图由锁文件维护；不单独覆盖 Miniflare/workerd 版本。它们可能仍作为 Wrangler 的传递依赖安装，但 `dev`、`build`、`preview` 不启动它们。`pnpm-workspace.yaml` 仅保留必要的依赖安装脚本允许列表。
 

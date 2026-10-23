@@ -4,10 +4,12 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { App } from '../../src/App.tsx';
 const gate = vi.hoisted(() => {
   let resolve!: () => void;
-  const promise = new Promise<void>(done => { resolve = done; });
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
   return { promise, resolve, calls: 0 };
 });
-vi.mock('../../src/apps/projects.tsx', async original => {
+vi.mock('../../src/apps/projects.tsx', async (original) => {
   gate.calls++;
   await gate.promise;
   return original<typeof import('../../src/apps/projects.tsx')>();
@@ -23,7 +25,9 @@ it('opens a closable window before download completes and never revives a closed
   expect(screen.getByRole('region', { name: '我的项目' })).toBeDefined();
   expect(screen.getByRole('status').textContent).toContain('正在加载');
   fireEvent.click(screen.getByRole('button', { name: '关闭我的项目' }));
-  await act(async () => { gate.resolve(); });
+  await act(async () => {
+    gate.resolve();
+  });
   expect(screen.queryByRole('region', { name: '我的项目' })).toBeNull();
   fireEvent.click(dock.getByRole('button', { name: /打开我的项目/ }));
   const content = await screen.findByRole('region', { name: '项目内容' });

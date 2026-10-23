@@ -10,34 +10,51 @@ const names = (buffer: Buffer) => buffer.toString().split('\0').filter(Boolean);
 const sourceFile = /\.[cm]?[jt]sx?$/;
 
 export function importIssues(path: string, source: string): string[] {
-  const tree = parse(source, { sourceType: 'unambiguous', plugins: ['typescript', ...(/\.[jt]sx$/.test(path) ? ['jsx' as const] : [])] });
+  const tree = parse(source, {
+    sourceType: 'unambiguous',
+    plugins: ['typescript', ...(/\.[jt]sx$/.test(path) ? ['jsx' as const] : [])],
+  });
   let bodyStarted = false;
   const issues: string[] = [];
   for (const statement of tree.program.body) {
-    const imported = statement.type === 'ImportDeclaration' || statement.type === 'TSImportEqualsDeclaration';
-    if (imported && bodyStarted) issues.push(`${path}:${statement.loc?.start.line}: move imports before declarations`);
+    const imported =
+      statement.type === 'ImportDeclaration' || statement.type === 'TSImportEqualsDeclaration';
+    if (imported && bodyStarted)
+      issues.push(`${path}:${statement.loc?.start.line}: move imports before declarations`);
     if (!imported && statement.type !== 'EmptyStatement') bodyStarted = true;
   }
   return issues;
 }
 
 async function lint(staged = false, explicit: string[] = []) {
-  const paths = explicit.length ? explicit : staged
-    ? names(git('diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'))
-    : [...new Set(names(git('ls-files', '-z', '--cached', '--others', '--exclude-standard')))];
+  const paths = explicit.length
+    ? explicit
+    : staged
+      ? names(git('diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'))
+      : [...new Set(names(git('ls-files', '-z', '--cached', '--others', '--exclude-standard')))];
   const issues: string[] = [];
-  for (const path of paths.filter(path => sourceFile.test(path))) {
-    const source = staged ? git('show', `:${path}`).toString() : await readFile(path, 'utf8').catch(error => {
-      if (error.code === 'ENOENT') return null;
-      throw error;
-    });
+  for (const path of paths.filter((path) => sourceFile.test(path))) {
+    const source = staged
+      ? git('show', `:${path}`).toString()
+      : await readFile(path, 'utf8').catch((error) => {
+          if (error.code === 'ENOENT') return null;
+          throw error;
+        });
     if (source === null) continue;
     issues.push(...importIssues(path, source));
   }
   if (issues.length) throw new Error(issues.join('\n'));
 }
 
-type Receipt = { id: string; command: string[]; revision: string; startedAt: string; finishedAt?: string; exitCode: number | null; log: string };
+type Receipt = {
+  id: string;
+  command: string[];
+  revision: string;
+  startedAt: string;
+  finishedAt?: string;
+  exitCode: number | null;
+  log: string;
+};
 
 async function guard() {
   await lint(true);
@@ -46,35 +63,68 @@ async function guard() {
 
 async function verify(args: string[]) {
   const [script, ...parameters] = args;
-  const pkg = JSON.parse(await readFile('package.json', 'utf8')) as { scripts: Record<string, string> };
+  const pkg = JSON.parse(await readFile('package.json', 'utf8')) as {
+    scripts: Record<string, string>;
+  };
   if (!script || !(script in pkg.scripts) || ['verify', 'hooks:install'].includes(script)) {
     throw new Error('Usage: pnpm verify -- <package-script> [args], e.g. test tests/apps');
   }
   const id = `${Date.now()}-${process.pid}`;
   const directory = `.artifacts/verification/${id}`;
   await mkdir(directory, { recursive: true });
-  const receipt: Receipt = { id, command: ['pnpm', script, ...parameters], revision: git('rev-parse', 'HEAD').toString().trim(), startedAt: new Date().toISOString(), exitCode: null, log: `${directory}/output.log` };
+  const receipt: Receipt = {
+    id,
+    command: ['pnpm', script, ...parameters],
+    revision: git('rev-parse', 'HEAD').toString().trim(),
+    startedAt: new Date().toISOString(),
+    exitCode: null,
+    log: `${directory}/output.log`,
+  };
   const save = async () => {
-    await writeFile(`${directory}/result.json`, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600 });
+    await writeFile(`${directory}/result.json`, `${JSON.stringify(receipt, null, 2)}\n`, {
+      mode: 0o600,
+    });
   };
   await writeFile(receipt.log, '', { mode: 0o600 });
   await save();
   let code = 1;
   try {
     const log = createWriteStream(receipt.log, { flags: 'a' });
-    code = await new Promise<number>(done => {
+    code = await new Promise<number>((done) => {
       const child = spawn('pnpm', [script, ...parameters], { stdio: ['inherit', 'pipe', 'pipe'] });
-      child.stdout.on('data', data => { process.stdout.write(data); log.write(data); });
-      child.stderr.on('data', data => { process.stderr.write(data); log.write(data); });
-      child.on('error', error => { log.write(String(error)); });
-      const interrupt = () => { child.kill('SIGINT'); };
-      const terminate = () => { child.kill('SIGTERM'); };
+      child.stdout.on('data', (data) => {
+        process.stdout.write(data);
+        log.write(data);
+      });
+      child.stderr.on('data', (data) => {
+        process.stderr.write(data);
+        log.write(data);
+      });
+      child.on('error', (error) => {
+        log.write(String(error));
+      });
+      const interrupt = () => {
+        child.kill('SIGINT');
+      };
+      const terminate = () => {
+        child.kill('SIGTERM');
+      };
       process.on('SIGINT', interrupt);
       process.on('SIGTERM', terminate);
       child.on('close', (status, signal) => {
         process.off('SIGINT', interrupt);
         process.off('SIGTERM', terminate);
-        log.end(() => done(status !== null && status >= 0 ? status : signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 1));
+        log.end(() =>
+          done(
+            status !== null && status >= 0
+              ? status
+              : signal === 'SIGINT'
+                ? 130
+                : signal === 'SIGTERM'
+                  ? 143
+                  : 1,
+          ),
+        );
       });
     });
   } catch (error) {
@@ -91,16 +141,39 @@ async function verify(args: string[]) {
 
 async function main() {
   const args = process.argv.slice(2).filter((arg, index) => index !== 0 || arg !== '--');
-  if (args[0] === '--pre-commit') { await guard(); return 0; }
-  if (args[0] === '--lint') { await lint(false, args.slice(1)); return 0; }
+  if (args[0] === '--pre-commit') {
+    await guard();
+    return 0;
+  }
+  if (args[0] === '--lint') {
+    await lint(false, args.slice(1));
+    return 0;
+  }
   if (args[0] === '--install-hooks') {
-    const existing = (() => { try { return git('config', '--get', 'core.hooksPath').toString().trim(); } catch { return ''; } })();
-    if (existing && existing !== '.githooks') throw new Error(`Existing hooksPath ${existing}; keep it and invoke this guard from its pre-commit hook.`);
+    const existing = (() => {
+      try {
+        return git('config', '--get', 'core.hooksPath').toString().trim();
+      } catch {
+        return '';
+      }
+    })();
+    if (existing && existing !== '.githooks')
+      throw new Error(
+        `Existing hooksPath ${existing}; keep it and invoke this guard from its pre-commit hook.`,
+      );
     git('config', '--local', 'core.hooksPath', '.githooks');
-    console.log('Repository hooks enabled.'); return 0;
+    console.log('Repository hooks enabled.');
+    return 0;
   }
   return verify(args);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  main().then(code => { process.exitCode = code; }).catch(error => { console.error(String(error)); process.exitCode = 1; });
+  main()
+    .then((code) => {
+      process.exitCode = code;
+    })
+    .catch((error) => {
+      console.error(String(error));
+      process.exitCode = 1;
+    });
 }

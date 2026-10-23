@@ -7,7 +7,15 @@ import { WindowFrame } from '../../src/ui/window-frame.tsx';
 
 afterEach(cleanup);
 it('uses a nonmodal window with named controls and retains input focus on content pointerdown', () => {
-  render(<PreferencesProvider storage={null} motionQuery={null}><DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><input aria-label="editor" /></WindowFrame></DesktopProvider></PreferencesProvider>);
+  render(
+    <PreferencesProvider storage={null} motionQuery={null}>
+      <DesktopProvider>
+        <WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}>
+          <input aria-label="editor" />
+        </WindowFrame>
+      </DesktopProvider>
+    </PreferencesProvider>,
+  );
   expect(screen.getByRole('region', { name: '关于我' }).getAttribute('aria-modal')).toBeNull();
   const editor = screen.getByLabelText('editor');
   act(() => editor.focus());
@@ -24,7 +32,15 @@ function pointer(target: Element, type: string, x: number, y: number) {
 }
 
 it('commits title drag and resize, cancels partial gestures and restores maximized windows before dragging', () => {
-  render(<PreferencesProvider storage={null} motionQuery={null}><DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><p>content</p></WindowFrame></DesktopProvider></PreferencesProvider>);
+  render(
+    <PreferencesProvider storage={null} motionQuery={null}>
+      <DesktopProvider>
+        <WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}>
+          <p>content</p>
+        </WindowFrame>
+      </DesktopProvider>
+    </PreferencesProvider>,
+  );
   const frame = screen.getByRole('region', { name: '关于我' });
   const title = frame.querySelector('header')!;
   const before = frame.style.left;
@@ -53,7 +69,15 @@ it('commits title drag and resize, cancels partial gestures and restores maximiz
 });
 
 it('keeps a maximized window unchanged on title clicks and toggles once on a title double click', () => {
-  render(<PreferencesProvider storage={null} motionQuery={null}><DesktopProvider><WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}><p>content</p></WindowFrame></DesktopProvider></PreferencesProvider>);
+  render(
+    <PreferencesProvider storage={null} motionQuery={null}>
+      <DesktopProvider>
+        <WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}>
+          <p>content</p>
+        </WindowFrame>
+      </DesktopProvider>
+    </PreferencesProvider>,
+  );
   const frame = screen.getByRole('region', { name: '关于我' });
   const title = frame.querySelector('header')!;
   fireEvent.click(screen.getByRole('button', { name: '最大化关于我' }));

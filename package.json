@@ -16,11 +16,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:preview": "node tests/preview/check-preview.ts",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:preview",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:preview",
     "deploy:dry-run": "wrangler deploy --config wrangler.jsonc --dry-run",
     "verify": "node build/verification.ts",
     "lint": "node build/verification.ts --lint",
-    "hooks:install": "node build/verification.ts --install-hooks"
+    "hooks:install": "node build/verification.ts --install-hooks",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@gsap/react": "2.1.2",
@@ -39,6 +41,7 @@
     "@vitejs/plugin-react": "6.1.2",
     "fake-indexeddb": "6.2.6",
     "jsdom": "30.1.3",
+    "prettier": "3.9.10",
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "5.0.5",

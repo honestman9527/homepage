@@ -11,7 +11,7 @@ pnpm dev
 
 本地开发、构建和预览使用普通 Vite，无需 Cloudflare 账户或本地 Workers 运行时。`pnpm build` 生成 `dist/`，`pnpm preview` 预览已有产物。
 
-日常按改动检查，例如 `pnpm test tests/config` 或 `pnpm typecheck`。`pnpm check` 用于 CI 和发布前检查。提交 hook 仅检查暂存内容的 import 位置和空白错误；日志留存可选，见 [验证与提交](docs/agents/verification.md)。
+日常按改动检查，例如 `pnpm test tests/config` 或 `pnpm typecheck`。`pnpm format` 统一代码格式，`pnpm check` 用于 CI 和发布前检查。提交 hook 仅检查暂存内容的 import 位置和空白错误；日志留存可选，见 [验证与提交](docs/agents/verification.md)。
 
 桌面包含关于我、我的项目、随便写写、终端和桌面设置，通过 Dock 或 Ctrl / ⌘ K 搜索进入。桌面偏好保存在当前浏览器；应用会话保留到关闭或刷新。博客展示手动精选的文章外链。
 
