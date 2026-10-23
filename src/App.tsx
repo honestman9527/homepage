@@ -9,7 +9,12 @@ import {
 } from 'react';
 import { AppContent, retryAppLoad } from './apps/content.tsx';
 import { appById, appRegistry, type AppId } from './config/index.ts';
-import { DesktopProvider, getWindowPresentation, useDesktop } from './desktop/index.ts';
+import {
+  DesktopProvider,
+  getWindowPresentation,
+  STATUS_BAR_HEIGHT,
+  useDesktop,
+} from './desktop/index.ts';
 import { PreferencesProvider, usePreferenceValues, useReducedMotion } from './preferences/index.ts';
 import { AppBoundary } from './ui/app-boundary.tsx';
 import { useVisualViewport } from './ui/environment.ts';
@@ -19,6 +24,8 @@ import { Wallpaper } from './ui/wallpaper.tsx';
 import { WindowFrame } from './ui/window-frame.tsx';
 import { Brand } from './ui/brand.tsx';
 import { useDockMotion } from './ui/motion.ts';
+import { TopStatusBar } from './ui/status-bar.tsx';
+import { DesktopPopoverProvider, useDesktopPopover } from './ui/desktop-popover.tsx';
 
 function visibleTarget(target: HTMLElement | null): target is HTMLElement {
   if (!target?.isConnected || target.closest('[hidden],[inert]')) return false;
@@ -32,7 +39,16 @@ function visibleTarget(target: HTMLElement | null): target is HTMLElement {
 }
 
 export function DesktopShell() {
+  return (
+    <DesktopPopoverProvider>
+      <DesktopContents />
+    </DesktopPopoverProvider>
+  );
+}
+
+function DesktopContents() {
   const desktop = useDesktop();
+  const { dismiss: dismissPopover } = useDesktopPopover();
   const [search, setSearch] = useState(false);
   const [focusRequest, setFocusRequest] = useState<{
     appId: AppId | null;
@@ -44,11 +60,12 @@ export function DesktopShell() {
   useVisualViewport();
   const open = useCallback(
     (appId: AppId, options?: { focusTerminal?: boolean }) => {
+      dismissPopover();
       setSearch(false);
       desktop.open(appId);
       setFocusRequest({ appId, terminal: options?.focusTerminal });
     },
-    [desktop.open],
+    [desktop.open, dismissPopover],
   );
   function finish(appId: AppId, minimize = false) {
     const active = desktop.activeApp === appId;
@@ -59,12 +76,16 @@ export function DesktopShell() {
     if (active || focusInside) setFocusRequest({ appId: successor });
   }
   const arrange = useCallback(() => {
+    dismissPopover();
     desktop.arrange();
     setFocusRequest({ appId: desktop.state.mode === 'desktop' ? 'terminal' : 'about' });
-  }, [desktop.arrange, desktop.state.mode]);
+  }, [desktop.arrange, desktop.state.mode, dismissPopover]);
   function startSearch(trigger?: HTMLElement) {
-    searchTrigger.current =
+    const source =
       trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    searchTrigger.current =
+      source?.closest('.desktop-popover')?.querySelector<HTMLElement>('.status-button') ?? source;
+    dismissPopover();
     setRestoreSearch(false);
     setSearch(true);
   }
@@ -113,6 +134,7 @@ export function DesktopShell() {
     <DesktopAppearance mode={desktop.state.mode}>
       <div className="desktop-system" ref={shellRoot} inert={search}>
         <Wallpaper />
+        <TopStatusBar onAbout={() => open('about')} onArrange={arrange} onSearch={startSearch} />
         <main className="desktop-surface" aria-label="HonestOS 桌面" tabIndex={0}>
           <nav className="desktop-shortcuts" aria-label="桌面快捷入口">
             {(['projects', 'blog', 'about'] as const).map((id) => (
@@ -177,7 +199,12 @@ function DesktopAppearance({ mode, children }: { mode: string; children: ReactNo
       data-appearance={preferences.appearance}
       data-dock-size={preferences.preferences.dockSize}
       data-dock-autohide={preferences.preferences.dockAutoHide}
-      style={{ '--glass-alpha': preferences.preferences.glassOpacity / 100 } as CSSProperties}
+      style={
+        {
+          '--glass-alpha': preferences.preferences.glassOpacity / 100,
+          '--status-bar-height': `${STATUS_BAR_HEIGHT}px`,
+        } as CSSProperties
+      }
     >
       {children}
     </div>

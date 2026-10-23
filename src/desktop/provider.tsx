@@ -23,18 +23,27 @@ interface DesktopContextValue {
 }
 const DesktopContext = createContext<DesktopContextValue | null>(null);
 
+export const STATUS_BAR_HEIGHT = 36;
+
 /** Layout coordinates, unaffected by visualViewport / mobile software keyboards. */
 export function readLayoutViewport(): DesktopViewport {
   const width = typeof window === 'undefined' ? 1366 : window.innerWidth;
   const height = typeof window === 'undefined' ? 768 : window.innerHeight;
+  const safeTop =
+    typeof document === 'undefined'
+      ? 0
+      : Number.parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--safe-area-top'),
+        ) || 0;
+  const top = STATUS_BAR_HEIGHT + safeTop + 12;
   return {
     width,
     height,
     availableArea: {
       x: 12,
-      y: 12,
+      y: top,
       width: Math.max(1, width - 24),
-      height: Math.max(1, height - 106),
+      height: Math.max(1, height - top - 94),
     },
   };
 }
