@@ -60,7 +60,7 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck, core behavior tests and production build
+      - name: Typecheck, core behavior tests, production build and Cloudflare preview
         run: pnpm check
 
       - name: Record the checked bundle and revision
@@ -77,6 +77,7 @@ jobs:
             dist.sha256
             revision.txt
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
 
       - name: Deploy the checked static bundle

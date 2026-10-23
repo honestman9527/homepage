@@ -3,7 +3,6 @@ import { ProjectsApp } from './projects';
 import { BlogApp } from './blog';
 import { SettingsApp } from './settings';
 import { TerminalApp } from './terminal';
-import avatar from '../assets/brand/avatar.webp';
 import './apps.css';
 
 export interface AppContentProps {
@@ -21,7 +20,7 @@ export function AppContent({ appId, onOpen, onArrange }: AppContentProps) {
   const profile = siteConfig.profile;
   return <section className="app-content about-content">
     <div className="about-story">
-      <div className="about-identity"><img className="profile-avatar" src={avatar} alt={`${profile.name} 的头像`} /><div><strong>{profile.name}</strong><p className="app-muted">{profile.alias}</p></div></div>
+      <div className="about-identity"><img className="profile-avatar" src="/avatar.webp" alt={`${profile.name} 的头像`} /><div><strong>{profile.name}</strong><p className="app-muted">{profile.alias}</p></div></div>
       <h1>{profile.headline}</h1>
       <p className="about-introduction">{profile.introduction}</p>
       <p className="app-muted">{profile.description}</p>

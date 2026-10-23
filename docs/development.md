@@ -9,9 +9,33 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-按改动影响运行必要检查，例如配置调整运行 `pnpm test src/config`，偏好调整运行 `pnpm test src/preferences`，界面交互运行对应的 `src/apps/*.test.tsx` 或 `src/App.test.tsx`。类型检查为 `pnpm typecheck`，生产构建为 `pnpm build`，`pnpm preview` 预览已有 `dist`。不要混用 npm / yarn 或重新生成另一份锁文件。
+按改动影响运行必要检查，例如配置调整运行 `pnpm test src/config`，偏好调整运行 `pnpm test src/preferences`，界面交互运行对应的 `src/apps/*.test.tsx` 或 `src/App.test.tsx`。类型检查为 `pnpm typecheck`，生产构建为 `pnpm build`，`pnpm preview` 在 Cloudflare 本地环境预览已有 `dist`，不会重新构建。不要混用 npm / yarn 或重新生成另一份锁文件。
 
-`pnpm check` 是规格确认的发布前核心集合，依次执行类型检查、`pnpm test:core`（当前为 `vitest run src`）与生产构建。它不启动浏览器、不发布站点；平时小改动不强制执行整个集合。交互逻辑通过 Vitest / jsdom 验证，视觉、布局、辅助技术与真机仍按 [人工验收清单](manual-acceptance.md) 检查。
+`pnpm check` 是规格确认的发布前核心集合，依次执行类型检查、`pnpm test:core`（当前为 `vitest run src build`）、生产构建与 Cloudflare 本地预览回归检查。预览检查只发 HTTP 请求；它不启动浏览器、不发布站点；平时小改动不强制执行整个集合。交互逻辑通过 Vitest / jsdom 验证，视觉、布局、辅助技术与真机仍按 [人工验收清单](manual-acceptance.md) 检查。
+
+开发与预览通过 `@cloudflare/vite-plugin` 使用 Cloudflare 本地环境，React 保留热更新；站点仍只发布静态资产。`vite.config.ts` 负责 React、Cloudflare 与 HTML 内容生成，`vitest.config.ts` 单独负责测试，不启动 Cloudflare 运行时。
+
+```sh
+pnpm build            # 生成 dist 与对应 Wrangler 输出配置
+pnpm preview          # 预览已有构建
+pnpm test:preview     # HTTP 验证本地预览与真实构建资产
+pnpm deploy:dry-run   # Wrangler 校验同一份构建，不上传
+```
+
+Cloudflare 工具版本集中在 `pnpm-workspace.yaml` 的 catalog：Wrangler 4.151.3、Miniflare 5.20261019.1-beta、workerd 1.20261019.1。项目命令和 Cloudflare 插件通过定向 overrides 共用这组版本，避免重复运行时。升级时按 Wrangler 的依赖版本同步更新 catalog 与锁文件，核对插件兼容要求，并执行 `pnpm build && pnpm test:preview`。此次本地复现过旧 Miniflare 导致预览启动失败，统一版本后恢复；回归检查覆盖真实预览启动和资产响应。插件生成 `dist/wrangler.json` 和 `.wrangler/deploy/config.json`，Wrangler 自动定位输出配置；输入 `wrangler.jsonc` 不设置额外构建命令，发布阶段复用构建结果。[Cloudflare 开发方式](https://developers.cloudflare.com/workers/local-development/wrangler-vs-vite/)
+
+## 目录职责
+
+| 目录或文件 | 职责 |
+| --- | --- |
+| `src/config/` | 应用身份、公开内容、类型和内容校验；精选文章只在 `content.ts` 维护 |
+| `src/apps/` | 五个应用的呈现与各自交互 |
+| `src/desktop/`、`src/preferences/`、`src/terminal/`、`src/search/` | 窗口会话、偏好、终端与搜索逻辑 |
+| `src/ui/`、`src/styles.css` | 桌面呈现、窗口、导航、动效与共享样式 |
+| `public/` | 直接发布的头像、HM 标志、favicon 与壁纸 |
+| `build/site-html.ts` | 从同一公开内容生成页面元信息与无 JavaScript 导航 |
+| `vite.config.ts`、`vitest.config.ts`、`wrangler.jsonc` | 开发构建、定向测试和 Cloudflare 输入配置 |
+| `dist/`、`.wrangler/` | 自动生成的构建与本地运行数据，不提交 |
 
 ## 公开内容
 
@@ -21,7 +45,7 @@ pnpm dev
 | --- | --- |
 | `profile` | 更新姓名、别名、主标题、介绍、简介、兴趣与个人状态；介绍是独立文案，改名时一并核对 `introduction`。`links` 只添加本人确认公开的联系方式 |
 | `projects` | 每项提供稳定唯一 `id`、名称、摘要、说明、状态和标签；保留 ID 可避免维护时打断对应卡片身份。空数组会显示项目整理中的空态，并提供关于我入口 |
-| `blog` | 配置独立博客简介、可选入口 `url` 与可选 `posts` 元数据；未配置入口显示“独立博客筹备中”。文章只提供真实外链，不存正文；支持构建时读取 RSS/Atom 元数据快照，见下文 |
+| `blog` | 配置独立博客简介、可选入口 `url` 与可为空数组的 `posts` 元数据；未配置入口显示“独立博客筹备中”。文章只提供真实外链，不存正文；`posts` 由作者手动维护，见[手动精选文章](#手动精选文章) |
 | `site` | `title`、`description` 用于页面元信息；正式地址确认后填写绝对 `url`，可选 `shareImage` 为真实公开图片地址 |
 
 当前首批项目为 HonestOS（`building`，`currentSite: true`）、小小宇宙与实验室（`idea`）。项目状态仅有 `live`、`building`、`idea`、`archived`；“本站”是独立身份。只有真实上线且配置在线地址后才可标为 `live`，即使本站卡片不显示自链也需提供真实 `url`。项目的在线地址 `url` 和源码地址 `sourceUrl` 分别维护；构想项目不展示演示入口，不能用假地址装作已可访问。
@@ -36,7 +60,7 @@ pnpm dev
 
 `build/site-html.ts` 从同一配置生成 title、description、无 JavaScript 的品牌、简介与已配置有效导航。只有 `site.url` 配置后才添加 canonical 和 Open Graph；可选分享图须配置有效绝对地址。`index.html` 声明 `zh-CN`，favicon 位于 `public/favicon.svg`。地址与联系资料以本地 `src/config/content.ts` 为准；未配置时不生成相应导航或 canonical。用户未提交的公开配置保持原样。
 
-`src/assets/mountains.svg` 沿用初版山峦；`src/assets/brand/` 是本轮用户头像与明暗 HM 标志的构建副本，favicon 使用同一 HM 图形并跟随系统明暗。字体为系统字体栈，照片从本地静态文件加载；出处见 `public/wallpapers/CREDITS.md`。原始需求、交接包、完整原型应用及压缩包保持在提交之外。
+`src/assets/mountains.svg` 沿用初版山峦；头像与明暗 HM 标志只在 `public/avatar.webp`、`public/hm-light.svg`、`public/hm-dark.svg` 维护，应用直接引用这三个地址，不再另建构建副本。替换时保留文件名即可；favicon 使用 `public/favicon.svg` 中跟随系统明暗的 HM 图形。字体为系统字体栈，照片从本地静态文件加载；出处见 `public/wallpapers/CREDITS.md`。原始需求、交接包、完整原型应用及压缩包保持在提交之外。
 
 ## 应用身份、偏好与会话
 
@@ -54,17 +78,41 @@ pnpm dev
 
 当前配置待补资料与实际验证范围见 [交付记录](delivery.md)；内容上线、发布凭据、域名与回退分别按 [发布说明](deployment.md) 处理。
 
-## RSS / Atom 文章列表
+## 手动精选文章
 
-在 `src/blog/config.ts` 填写真实订阅地址 `url`，或在构建环境提供 `HONESTOS_RSS_URL`；不从博客域名猜测 feed 路径。首次配置后建议运行：
+编辑 `src/config/content.ts` 中 `siteConfig.blog` 的 `url` 和 `posts`。`url` 是“打开独立博客”的地址；`posts` 是精选文章数组，按填写顺序展示，不按日期重新排序。将最想推荐的文章放在第一项。
 
-```sh
-pnpm blog:sync https://your-blog-domain/rss.xml
+```ts
+blog: {
+  title: '随便写写',
+  description: '代码之外，也想留下生活和思考的痕迹。',
+  url: 'https://blog.honestman.me',
+  posts: [
+    {
+      id: 'my-first-featured-post',
+      title: '替换为真实文章标题',
+      summary: '用一两句话介绍这篇文章；这里填写纯文本。',
+      url: 'https://blog.honestman.me/替换为真实文章路径',
+      date: '2026-10-23',
+    },
+  ],
+},
 ```
 
-该命令只在读取成功后更新 `src/blog/snapshot.json`，审阅后提交它，作为未来构建失败时的回退。占位域名不能作为真实配置。当前 RSS 地址未配置，已探测的博客地址返回 403，快照为空，没有示例文章。
+上例仅说明字段，先替换为真实文章再发布，不会自动写入正式配置。`id` 保持唯一且稳定；`title`、`summary` 和 `url` 按真实文章填写，摘要可设为空字符串。`date` 可省略，推荐使用 `YYYY-MM-DD`；界面日期按 UTC 展示，避免时区使日期偏移。标题和摘要按纯文本呈现。
 
-Vite 的 `blogFeedPlugin` 在开发启动/构建期间解析 RSS 2.0、RSS 1.0 或 Atom，输出虚拟模块 `virtual:blog-feed`。浏览器只获取打包后的标题、纯文本摘要、日期与安全文章外链，不读取跨域 feed、不携带解析器、不存正文。构建时的成功结果不会自动修改源码快照；维护者通过 `blog:sync` 明确保存更新。读取限时 8 秒、限制 2 MB，并拒绝无效 XML/DOCTYPE，失败时使用同源快照；无快照仍保留博客入口。修改来源后不会混用旧源文章。
+暂时没有精选内容时保留 `posts: []`，仍显示独立博客入口；移除 `blog.url` 表示博客未配置。文章链接在新标签打开。配置校验会阻止重复 ID、非法链接和 `sample: true` 的示例文章；真实文章及链接是否正确需维护者核对。
+
+维护后运行对应检查与预览：
+
+```sh
+pnpm test src/config src/apps/blog.test.tsx
+pnpm typecheck
+pnpm build
+pnpm preview
+```
+
+发布沿用 [手动发布流程](deployment.md)。精选文章变更随重新构建发布生效；站点不会在开发、构建或浏览器中抓取 RSS，不再使用 `blog:sync`、`HONESTOS_RSS_URL` 或文章快照。决策见 [ADR-0003](adr/0003-manually-curated-blog-posts.md)。
 
 ## 界面与动效
 

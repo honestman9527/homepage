@@ -1,3 +1,13 @@
 allowBuilds:
   esbuild: true
   workerd: true
+
+catalog:
+  wrangler: 4.151.3
+  miniflare: 5.20261019.1-beta
+  workerd: 1.20261019.1
+
+overrides:
+  '@cloudflare/vite-plugin>wrangler': 'catalog:'
+  '@cloudflare/vite-plugin>miniflare': 'catalog:'
+  '@cloudflare/vite-plugin>workerd': 'catalog:'

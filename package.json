@@ -16,9 +16,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:core": "vitest run src build",
-    "check": "pnpm typecheck && pnpm test:core && pnpm build",
-    "deploy:dry-run": "wrangler deploy --dry-run",
-    "blog:sync": "node build/sync-blog.ts"
+    "test:preview": "node build/check-preview.ts",
+    "check": "pnpm typecheck && pnpm test:core && pnpm build && pnpm test:preview",
+    "deploy:dry-run": "wrangler deploy --dry-run"
   },
   "dependencies": {
     "@gsap/react": "2.1.2",
@@ -27,6 +27,7 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "1.64.0",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",
     "@types/node": "24.19.2",
@@ -34,11 +35,10 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "fake-indexeddb": "6.2.6",
-    "fast-xml-parser": "5.11.2",
     "jsdom": "30.1.3",
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "5.0.5",
-    "wrangler": "4.151.3"
+    "wrangler": "catalog:"
   }
 }

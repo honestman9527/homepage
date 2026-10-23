@@ -1,6 +1,6 @@
 # 手动检查与发布
 
-本项目部署到 Cloudflare Workers Static Assets。`wrangler.jsonc` 仅配置 `name`、`compatibility_date` 和 `assets.directory: ./dist`，没有业务 Worker、SSR、远程绑定或构建命令。根页面中的应用切换不增加路由，因此不配置 SPA 的任意路径回退。[Cloudflare 静态资产说明](https://developers.cloudflare.com/workers/static-assets/binding/)
+本项目部署到 Cloudflare Workers Static Assets。`wrangler.jsonc` 维护 `name` 与 `compatibility_date`；Cloudflare Vite 插件在构建时生成 `dist/wrangler.json`，其中 `assets.directory` 指向本次静态产物。没有业务 Worker、SSR、远程绑定或额外构建命令。根页面中的应用切换不增加路由，因此不配置 SPA 的任意路径回退。[Cloudflare 静态资产说明](https://developers.cloudflare.com/workers/static-assets/binding/)
 
 ## 本地检查
 
@@ -10,9 +10,9 @@ pnpm check
 pnpm deploy:dry-run
 ```
 
-`check` 包含严格类型检查、`src` 中的核心逻辑与 DOM 行为测试、生产构建。这里的测试集合用于发布前验证，平时修改按影响范围执行定向测试。`deploy:dry-run` 使用项目本地固定版本 Wrangler，只校验已有 `dist`，不执行真实部署，也不重新构建。[Wrangler 命令](https://developers.cloudflare.com/workers/wrangler/commands/workers/)
+`check` 包含严格类型检查、`src` 中的核心逻辑与 DOM 行为测试、生产构建和 Cloudflare 本地预览 HTTP 回归检查。这里的测试集合用于发布前验证，平时修改按影响范围执行定向测试。`deploy:dry-run` 使用项目本地固定版本 Wrangler，只校验已有 `dist`，不执行真实部署，也不重新构建。[Wrangler 命令](https://developers.cloudflare.com/workers/wrangler/commands/workers/)
 
-Wrangler **4.151.3** 于 2026-10-22 从 npm registry 稳定版本中选取，已锁定到 `package.json` 与 `pnpm-lock.yaml`。本地与 Actions 共用 Node 24.21.0、pnpm 12.14.0。`pnpm-workspace.yaml` 仅允许 Wrangler 所需的 `esbuild` 与 `workerd` 运行安装脚本，使全新环境可重复安装；依赖升级时需复核该允许列表。[pnpm 构建脚本配置](https://pnpm.io/cli/approve-builds)
+Wrangler **4.151.3** 的唯一版本来源为 `pnpm-workspace.yaml` 中的 `catalog.wrangler`；`package.json` 与 Cloudflare Vite 插件通过 catalog 复用，并提交 `pnpm-lock.yaml`。Cloudflare Vite 插件固定为 **1.64.0**；Miniflare 和 workerd 在同一 catalog 按 Wrangler 的依赖对齐，避免旧运行时导致预览启动失败。开发、预览与发布共用同一 Cloudflare 配置。本地与 Actions 共用 Node 24.21.0、pnpm 12.14.0。`pnpm-workspace.yaml` 仅允许 Wrangler 所需的 `esbuild` 与 `workerd` 运行安装脚本，使全新环境可重复安装；依赖升级时需复核该允许列表。[pnpm 构建脚本配置](https://pnpm.io/cli/approve-builds)
 
 完整应用的本地检查与资产测量已记录在 [交付验证记录](delivery.md)；视觉、辅助技术与真机体验仍按 [人工验收清单](manual-acceptance.md) 执行。数据对应记录中的构建基线，资源变化后需重测。
 
@@ -25,7 +25,7 @@ Wrangler **4.151.3** 于 2026-10-22 从 npm registry 稳定版本中选取，已
 | `check`（默认） | 可以选开发分支；安装锁定依赖、检查、构建并保存 artifact，不读取部署凭据、不调用部署命令 |
 | `deploy` | 首先检查选定 ref 必须是 `github.event.repository.default_branch`（当前为 `main`）；不匹配直接失败。检查、构建成功后才部署 |
 
-工作流显式 checkout 触发时的 `github.sha`，只构建一次。构建后记录 `dist.sha256` 与 `revision.txt`，并保存包含这三项的 artifact。部署前核对哈希，Wrangler 直接发布这份 `dist`，版本消息记录 GitHub commit。检查或 artifact 保存失败，后续部署步骤不会运行。
+工作流显式 checkout 触发时的 `github.sha`，只构建一次。构建后记录 `dist.sha256` 与 `revision.txt`，并保存包含这三项的 artifact。部署前核对哈希，Wrangler 通过 `.wrangler/deploy/config.json` 自动定位这份 `dist/wrangler.json` 并发布，版本消息记录 GitHub commit。artifact 同时保留隐藏的 `dist/.assetsignore`，使输出配置不会被当成站点资产发布。检查或 artifact 保存失败，后续部署步骤不会运行。
 
 生产运行共享固定 concurrency group，`cancel-in-progress: false`，因此进行中的发布不会被新请求中断。GitHub 默认仅保留一个 pending 运行，更新的请求会替换此前等待中的请求，排队不保证按派发时间先后；需要发布某一指定 commit 时确认其运行记录。当前 GitHub 文档还提供 `queue: max`，但本次 actionlint 1.7.12 尚不支持，因此本配置使用上述兼容形式。[GitHub concurrency 文档](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
 
