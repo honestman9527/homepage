@@ -1,3 +1,5 @@
+import type { ContactIconName } from './social-links.ts';
+
 export const appIds = ['about', 'projects', 'blog', 'terminal', 'settings'] as const;
 export type AppId = (typeof appIds)[number];
 export type IconName = 'user' | 'folder' | 'book' | 'terminal' | 'sliders';
@@ -20,7 +22,7 @@ export interface WallpaperDefinition {
   image?: string;
 }
 
-export interface PublicLink { label: string; url: string; kind?: 'web' | 'email' }
+export interface PublicLink { label: string; url: string; kind?: 'web' | 'email'; icon?: ContactIconName }
 export interface Profile {
   name: string;
   alias: string;

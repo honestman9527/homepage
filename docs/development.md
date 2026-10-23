@@ -15,6 +15,8 @@ pnpm dev
 
 开发与预览通过 `@cloudflare/vite-plugin` 使用 Cloudflare 本地环境，React 保留热更新；站点仍只发布静态资产。`vite.config.ts` 负责 React、Cloudflare 与 HTML 内容生成，`vitest.config.ts` 单独负责测试，不启动 Cloudflare 运行时。
 
+当前开发入口是 **`pnpm dev`**（`vite` + Cloudflare 插件），默认访问 `http://localhost:5173`，端口占用时以命令输出为准。无需先构建，也无需另外启动 `wrangler dev`。构建采用 **Workers Static Assets**：`pnpm build` 生成静态文件及含 `assets.directory` 的 `dist/wrangler.json`，Wrangler 读取这份配置发布；没有自定义 Worker 请求处理脚本。该方式遵循 [Cloudflare Vite 静态资产说明](https://developers.cloudflare.com/workers/vite-plugin/reference/static-assets/)。
+
 ```sh
 pnpm build            # 生成 dist 与对应 Wrangler 输出配置
 pnpm preview          # 预览已有构建
@@ -54,7 +56,23 @@ Cloudflare 工具版本集中在 `pnpm-workspace.yaml` 的 catalog：Wrangler 4.
 
 ## 地址、图片与元信息
 
-普通公开链接只接受绝对 http / https。邮箱在 `profile.links` 中设置 `{ label, url, kind: 'email' }`；也兼容直接填写 `mailto:` 字符串，网页地址字符串会以域名为标签。推荐对象格式以明确控制标签。未知地址保持字段未配置，不使用 `#`、空字符串、示例域名或推断的个人账号。`publicUrl()` 返回有效地址或 `undefined`，界面据此隐藏无效链接；构建执行 `validateConfig()`，阻止重复身份、非法地址、缺少在线地址的 live 项目与示例文章。校验不证明域名所有权、内容真实性或网站当前可访问，发布前须人工核实。
+普通公开链接只接受绝对 http / https。邮箱在 `profile.links` 中设置 `{ label, url, kind: 'email' }`，也支持直接填写 `mailto:` 字符串；邮箱打开邮件客户端。网页地址字符串优先以已识别的平台名称为标签，其他地址使用域名；网页链接在新标签打开。推荐对象格式以明确控制标签。未知地址保持字段未配置，不使用 `#`、空字符串、示例域名或推断的个人账号。`publicUrl()` 返回有效地址或 `undefined`，界面据此隐藏无效链接；构建执行 `validateConfig()`，阻止重复身份、非法地址、缺少在线地址的 live 项目与示例文章。校验不证明域名所有权、内容真实性或网站当前可访问，发布前须人工核实。
+
+### 联系方式与社交标志
+
+编辑 `src/config/content.ts` 的 `profile.links`。现有 `links: ["mailto:hello@honestman.me"]` 会显示信封和邮箱；只有添加实际社交账号后才展示对应入口。例如下面的账号和实例域名需要先替换为自己的真实地址：
+
+```ts
+links: [
+  'mailto:hello@honestman.me',
+  'https://github.com/替换为你的账号',
+  { label: '我的长毛象', url: 'https://替换为实例域名/@替换为账号', icon: 'mastodon' },
+],
+```
+
+支持 GitHub、GitLab、X/Twitter、Bluesky、Mastodon、Telegram、哔哩哔哩、YouTube、知乎和 Discord。常见官方域名自动选择品牌图标；自建 GitLab、Mastodon 等实例用对象的 `icon` 显式指定。可用值为 `github / gitlab / x / bluesky / mastodon / telegram / bilibili / youtube / zhihu / discord / email / link`，未知图标会阻止构建。识别按精确域名匹配，不按路径或域名片段猜测；其他网站使用通用链接图标。
+
+品牌图形直接引用 [Simple Icons](https://github.com/simple-icons/simple-icons#usage) 中各品牌的 SVG 文件，随本站静态资产发布，浏览器只请求实际显示的品牌图标；开发和生产均不导入完整图标库，也不加载远程图标或整套字体。图标跟随文字颜色，保留可见标签；图形不重复加入无障碍名称。增加新的受支持品牌时，在 `src/config/social-links.ts` 登记名称与域名，并在 `src/ui/contact-icon.tsx` 引入对应图形。
 
 可选 `project.image` 可以指向仓库本地图片：将适量优化后的图片放入 `public/projects/`，配置 `/projects/文件名.webp` 等站内路径。图片使用延迟加载；加载失败后回到项目装饰图，不留下损坏图片。未配置图片时直接使用本地 CSS 装饰；当前没有外部项目预览图。添加图片后重新测量构建资产预算。
 

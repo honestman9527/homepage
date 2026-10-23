@@ -2,6 +2,7 @@ import { Suspense, memo } from 'react';
 import { createAppLoader } from './loading.ts';
 import { profileLinks, publicUrl, siteConfig, type AppId } from '../config/index.ts';
 import { TerminalApp } from './terminal';
+import { ContactIcon } from '../ui/contact-icon.tsx';
 import './apps.css';
 const ProjectsAppLoader = createAppLoader<Parameters<typeof import('./projects').ProjectsApp>[0]>(() => import('./projects').then(module => ({ default: module.ProjectsApp })));
 const BlogAppLoader = createAppLoader<Parameters<typeof import('./blog').BlogApp>[0]>(() => import('./blog').then(module => ({ default: module.BlogApp })));
@@ -46,7 +47,7 @@ function Content({ appId, onOpen, onArrange }: AppContentProps) {
       </div>
       {profile.links.length ? <nav className="profile-links" aria-label="公开联系方式">{profileLinks(profile.links).map(link => {
         const url = publicUrl(link.url, link.kind);
-        return url ? <a key={link.label} href={url} target="_blank" rel="noopener noreferrer">{link.label}<span className="app-sr-only">（新标签打开）</span></a> : null;
+        return url ? <a key={`${link.label}:${url}`} href={url} target={link.kind === 'email' ? undefined : '_blank'} rel={link.kind === 'email' ? undefined : 'noopener noreferrer'}><ContactIcon name={link.icon} />{link.label}{link.kind === 'email' ? null : <span className="app-sr-only">（新标签打开）</span>}</a> : null;
       })}</nav> : null}
     </div>
     <footer className="about-footer"><span><i aria-hidden="true" />{profile.status}</span><span>honestman.me</span></footer>

@@ -11,7 +11,7 @@ try {
   const origin = `http://127.0.0.1:${address.port}`;
   const html = await readFile('dist/index.html', 'utf8');
   const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match => match[1]!);
-  assets.push(...(await readdir('dist/assets')).filter(name => /\.(js|css)$/.test(name)).map(name => `/assets/${name}`));
+  assets.push(...(await readdir('dist/assets')).filter(name => /\.(js|css|svg)$/.test(name)).map(name => `/assets/${name}`));
   const paths = ['/', '/avatar.webp', '/hm-light.svg', '/hm-dark.svg', '/favicon.svg', ...new Set(assets)];
   await Promise.all(paths.map(async path => {
     const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(5000) });

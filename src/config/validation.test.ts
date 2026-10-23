@@ -56,11 +56,32 @@ describe('public content configuration', () => {
 
 it('normalizes compact author addresses while preserving explicit link labels and validation', () => {
   expect(profileLinks(['mailto:hello@honestman.me', 'https://honestman.me', { label: '代码', url: 'https://github.com/honestman9527' }])).toEqual([
-    { label: 'hello@honestman.me', url: 'mailto:hello@honestman.me', kind: 'email' },
-    { label: 'honestman.me', url: 'https://honestman.me', kind: 'web' },
-    { label: '代码', url: 'https://github.com/honestman9527' },
+    { label: 'hello@honestman.me', url: 'mailto:hello@honestman.me', kind: 'email', icon: 'email' },
+    { label: 'honestman.me', url: 'https://honestman.me', kind: 'web', icon: 'link' },
+    { label: '代码', url: 'https://github.com/honestman9527', kind: 'web', icon: 'github' },
   ]);
   const config = structuredClone(siteConfig);
   config.profile.links = ['javascript:alert(1)'];
   expect(validateConfig(config, appRegistry)).toContain('profile.links.0: invalid public URL');
+});
+
+it('recognizes social hosts without branding look-alikes and supports explicit instance icons', () => {
+  expect(profileLinks([
+    'https://www.GITHUB.com/honestman9527',
+    'https://github.com.honestman.me/profile',
+    'https://honestman.me/github.com',
+    'https://space.bilibili.com/123',
+    { label: '我的实例', url: 'https://social.honestman.me/@me', icon: 'mastodon' },
+    { label: '联系我', url: 'mailto:hello@honestman.me?subject=Hello' },
+  ])).toEqual([
+    expect.objectContaining({ label: 'GitHub', icon: 'github' }),
+    expect.objectContaining({ label: 'github.com.honestman.me', icon: 'link' }),
+    expect.objectContaining({ label: 'honestman.me', icon: 'link' }),
+    expect.objectContaining({ label: '哔哩哔哩', icon: 'bilibili' }),
+    expect.objectContaining({ label: '我的实例', icon: 'mastodon' }),
+    expect.objectContaining({ label: '联系我', kind: 'email', icon: 'email' }),
+  ]);
+  const config = structuredClone(siteConfig);
+  config.profile.links = [{ label: 'GitHub', url: 'https://github.com/honestman9527', icon: 'missing' } as unknown as import('./types.ts').PublicLink];
+  expect(validateConfig(config, appRegistry)).toContain('profile.links.0: unknown contact icon');
 });

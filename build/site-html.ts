@@ -36,7 +36,8 @@ export function siteHtml(): Plugin {
         if (blog.url) links.push({ label: '独立博客', url: blog.url });
         const navigation = links.flatMap(link => {
           const url = publicUrl(link.url, link.kind);
-          return url ? [`<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a></li>`] : [];
+          const external = link.kind === 'email' ? '' : ' target="_blank" rel="noopener noreferrer"';
+          return url ? [`<li><a href="${escapeHtml(url)}"${external}>${escapeHtml(link.label)}</a></li>`] : [];
         });
         const fallback = `<main style="max-width:45rem;margin:8vh auto;padding:2rem;background:#fcfaf7;border-radius:12px;color:#292830;font:16px/1.7 system-ui,sans-serif">
           <p>HonestOS</p><h1>${escapeHtml(profile.headline)}</h1>
