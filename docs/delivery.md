@@ -30,7 +30,9 @@
 - #11 同一集成提交的 `pnpm --config.verifyDepsBeforeRun=false typecheck`、`pnpm --config.verifyDepsBeforeRun=false build` 通过；对该实现改动文件显式运行 `lint` 与 `exec prettier --check` 均通过（不是全仓检查）。
 - #10 另在 `TZ=America/New_York` 下运行日历定向测试：4 项通过，补充验证本地日期行为，不假定 UTC 等于访客时区。
 - #12 文档检查：现行设计、玻璃实现说明、人工验收清单与交付状态的 16 处本地链接均存在；`git diff --check` 通过。核对材质与浮层实现后更新现行行为，未改运行时代码；未执行全量测试、自动浏览器视觉流程或新的真机验收。
-- 最终 Standards / Spec 双轴 code-review 由协调代理在文档集成后安排，当前待执行；此处不表示最终审阅已通过。
+- 文档集成后的 Standards / Spec 双轴审阅指出两项问题，现已修复：退出视觉副本保留菜单整行布局与日历今日标记所需属性，同时继续移除身份与引用并保持 `inert` / `aria-hidden`；桌面、窗口与浮层共用环境中断订阅，浮层入口也在可视视口滚动及页面可见性变化时取消动画并保留当前菜单与焦点。
+- 审阅修复采用现有 App 交互入口补充回归，先复现菜单退出样式丢失及两类入口动画遗漏中断，再验证修复。2026-10-24 运行上述同一组定向测试：11 个文件、58 项通过；`pnpm --config.verifyDepsBeforeRun=false typecheck` 通过，对 `src/ui/motion.ts` 与 `tests/app/App.status-bar.test.tsx` 定向 `lint` 与 `exec prettier --check` 通过，`git diff --check` 通过。样式探针只读取 jsdom 的计算样式，未执行自动浏览器或视觉验收，未重复生产构建或全量测试。
+- 上述记录表示审阅发现已修复；修复后的独立 Standards / Spec 复审仍待协调，不表示已通过复审。
 
 ## 此前基线验证（保留记录）
 

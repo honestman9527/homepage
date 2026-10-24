@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import gsap from 'gsap';
 import { App } from '../../src/App.tsx';
+import { readFileSync } from 'node:fs';
 
 beforeEach(() => {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1366 });
@@ -13,6 +14,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   document.documentElement.style.removeProperty('--safe-area-top');
+  Object.defineProperty(window, 'visualViewport', { configurable: true, value: undefined });
 });
 
 function bar() {
@@ -198,3 +200,102 @@ it('removes closing menu controls immediately and preserves reopened focus while
   expect(document.activeElement).toBe(within(current).getByRole('menuitem', { name: '关于本站' }));
   expect(screen.getAllByRole('menu')).toHaveLength(1);
 });
+
+it('preserves the closing menu layout and calendar today highlight while hiding copied controls and identity', () => {
+  const styles = document.createElement('style');
+  styles.textContent = ['../../src/styles.css', '../../src/ui/status-controls.css']
+    .map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'))
+    .join('\n');
+  document.head.append(styles);
+  try {
+    render(<App />);
+    const menuTrigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
+    fireEvent.click(menuTrigger);
+    const menu = screen.getByRole('menu');
+    const menuItem = within(menu).getByRole('menuitem', { name: '关于本站' });
+    expect(getComputedStyle(menuItem).display).toBe('block');
+    Object.defineProperty(menu, 'getBoundingClientRect', {
+      value: () => ({ x: 8, y: 40, width: 220, height: 90 }),
+    });
+    fireEvent.keyDown(menu, { key: 'Escape' });
+    const copiedItem = screen.getByText('关于本站');
+    const menuStyle = getComputedStyle(copiedItem);
+    expect([menuStyle.display, menuStyle.width, menuStyle.minHeight, menuStyle.padding]).toEqual([
+      'block',
+      '100%',
+      '36px',
+      '6px 12px',
+    ]);
+    expect(copiedItem.closest('[inert][aria-hidden="true"]')).toBeTruthy();
+    expect(copiedItem.getAttribute('tabindex')).toBe('-1');
+    expect(screen.queryByRole('menuitem')).toBeNull();
+    expect(document.activeElement).toBe(menuTrigger);
+    expect(document.getElementById(menu.id)).toBeNull();
+
+    const clock = within(bar()).getByRole('button', { name: /日期与时间/ });
+    fireEvent.click(clock);
+    const calendar = screen.getByRole('dialog', { name: /日期与时间/ });
+    const today = within(calendar)
+      .getAllByRole('cell')
+      .find((cell) => cell.getAttribute('aria-current') === 'date')!;
+    expect(getComputedStyle(today).fontWeight).toBe('700');
+    const date = today.textContent!;
+    Object.defineProperty(calendar, 'getBoundingClientRect', {
+      value: () => ({ x: 1040, y: 40, width: 300, height: 360 }),
+    });
+    fireEvent.keyDown(calendar, { key: 'Escape' });
+    const copiedToday = screen.getByText(date, { selector: 'td' });
+    expect(getComputedStyle(copiedToday).fontWeight).toBe('700');
+    expect(getComputedStyle(copiedToday).borderRadius).toBe('50%');
+    const shell = copiedToday.closest('[inert][aria-hidden="true"]')!;
+    expect(
+      shell.querySelector('[id], [for], [aria-controls], [aria-labelledby], [aria-describedby]'),
+    ).toBeNull();
+    expect(screen.queryByRole('dialog', { name: /日期与时间/ })).toBeNull();
+    expect(document.activeElement).toBe(clock);
+  } finally {
+    styles.remove();
+  }
+});
+
+it.each(['window resize', 'visual viewport resize', 'visual viewport scroll', 'page visibility'])(
+  'settles an opening HM menu on %s without dismissing it or moving focus',
+  (interruption) => {
+    const viewport = Object.assign(new EventTarget(), {
+      width: 1366,
+      height: 768,
+      offsetTop: 0,
+      offsetLeft: 0,
+      scale: 1,
+    });
+    Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
+    const measure = HTMLElement.prototype.getBoundingClientRect;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return this.getAttribute('role') === 'menu'
+        ? new DOMRect(8, 40, 220, 90)
+        : measure.call(this);
+    });
+    render(<App />);
+    const trigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
+    fireEvent.click(trigger);
+    const menu = screen.getByRole('menu');
+    const focusedItem = within(menu).getByRole('menuitem', { name: '关于本站' });
+    const opening = gsap.getTweensOf(menu);
+    expect(opening.length).toBeGreaterThan(0);
+    act(() => opening.forEach((tween) => tween.pause().progress(0.5)));
+    expect(menu.style.transform).not.toBe('');
+    act(() => {
+      if (interruption === 'window resize') window.dispatchEvent(new Event('resize'));
+      else if (interruption === 'page visibility')
+        document.dispatchEvent(new Event('visibilitychange'));
+      else viewport.dispatchEvent(new Event(interruption.endsWith('scroll') ? 'scroll' : 'resize'));
+    });
+    expect(gsap.getTweensOf(menu)).toHaveLength(0);
+    expect([menu.style.transform, menu.style.opacity]).toEqual(['', '']);
+    expect(screen.getByRole('menu')).toBe(menu);
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(focusedItem);
+  },
+);

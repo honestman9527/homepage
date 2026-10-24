@@ -23,13 +23,16 @@ function exitFeedback(node: HTMLElement, key: string, vars: gsap.TweenVars) {
   const copy = node.cloneNode(true) as HTMLElement;
   const sources = [node, ...node.querySelectorAll<HTMLElement>('*')];
   const copies = [copy, ...copy.querySelectorAll<HTMLElement>('*')];
+  // Keep visual state (for example menu roles and today markers); the inert,
+  // aria-hidden shell isolates semantics while identities and references are removed.
   copies.forEach((element, index) => {
     for (const attribute of [...element.attributes]) {
       if (
         attribute.name === 'id' ||
         attribute.name === 'for' ||
-        attribute.name === 'role' ||
-        attribute.name.startsWith('aria-') ||
+        /^aria-(activedescendant|controls|describedby|details|errormessage|flowto|labelledby|owns)$/.test(
+          attribute.name,
+        ) ||
         attribute.name.startsWith('data-')
       )
         element.removeAttribute(attribute.name);
@@ -88,6 +91,21 @@ function exitFeedback(node: HTMLElement, key: string, vars: gsap.TweenVars) {
   tween = gsap.to(shell, { ...vars, onComplete: dispose });
 }
 
+function subscribeToInterruptions(settle: () => void) {
+  const viewport = window.visualViewport;
+  window.addEventListener('resize', settle);
+  viewport?.addEventListener('resize', settle);
+  viewport?.addEventListener('scroll', settle);
+  document.addEventListener('visibilitychange', settle);
+  return () => {
+    settle();
+    window.removeEventListener('resize', settle);
+    viewport?.removeEventListener('resize', settle);
+    viewport?.removeEventListener('scroll', settle);
+    document.removeEventListener('visibilitychange', settle);
+  };
+}
+
 /** All transient presentation is canceled on environment changes, never flushed as actions. */
 export function useDesktopMotion(root: RefObject<HTMLElement | null>, reduced: boolean) {
   useEffect(() => {
@@ -98,17 +116,7 @@ export function useDesktopMotion(root: RefObject<HTMLElement | null>, reduced: b
     const owner = root.current?.closest('.honestos') ?? null;
     const cancel = () => cancelFeedback(owner);
     cancel();
-    window.addEventListener('resize', cancel);
-    window.visualViewport?.addEventListener('resize', cancel);
-    window.visualViewport?.addEventListener('scroll', cancel);
-    document.addEventListener('visibilitychange', cancel);
-    return () => {
-      cancel();
-      window.removeEventListener('resize', cancel);
-      window.visualViewport?.removeEventListener('resize', cancel);
-      window.visualViewport?.removeEventListener('scroll', cancel);
-      document.removeEventListener('visibilitychange', cancel);
-    };
+    return subscribeToInterruptions(cancel);
   }, [root, reduced]);
 }
 
@@ -225,17 +233,7 @@ export function useWindowMotion(
       geometryFrom.current = null;
       cancel();
     };
-    window.addEventListener('resize', settle);
-    window.visualViewport?.addEventListener('resize', settle);
-    window.visualViewport?.addEventListener('scroll', settle);
-    document.addEventListener('visibilitychange', settle);
-    return () => {
-      settle();
-      window.removeEventListener('resize', settle);
-      window.visualViewport?.removeEventListener('resize', settle);
-      window.visualViewport?.removeEventListener('scroll', settle);
-      document.removeEventListener('visibilitychange', settle);
-    };
+    return subscribeToInterruptions(settle);
   }, []);
   function animateAction(action: () => void, minimize: boolean) {
     const node = root.current;
@@ -290,12 +288,9 @@ export function usePopoverMotion(root: RefObject<HTMLElement | null>, reduced: b
       entrance?.kill();
       if (entrance) gsap.set(node, { clearProps: 'transform,opacity' });
     };
-    window.addEventListener('resize', settle);
-    window.visualViewport?.addEventListener('resize', settle);
+    const unsubscribe = subscribeToInterruptions(settle);
     return () => {
-      settle();
-      window.removeEventListener('resize', settle);
-      window.visualViewport?.removeEventListener('resize', settle);
+      unsubscribe();
       if (!latestReduction.current && node.isConnected)
         exitFeedback(node, 'popover', {
           opacity: 0,
