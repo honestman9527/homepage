@@ -1,8 +1,13 @@
 # 交付状态
 
-更新日期：2026-10-23。
+更新日期：2026-10-24。
 
 ## 当前实现
+
+- #8 顶部状态栏已接入 HM 菜单、活动应用名、复用搜索、控制中心与本地日期时间；手机使用精简布局。控制中心与设置共享现有偏好，日历只读并支持月份浏览及回到今天，不新增应用会话或持久化字段。
+- 窗口、最大化、默认布局、快捷入口和紧凑呈现避开顶栏；已有应用会话、关闭和最小化语义保留。
+- 状态栏、Dock、窗口标题栏与浮层使用柔和玻璃，正文保持稳定底色；静态位移贴图只用于装饰层。实色、磨砂与轻微边缘折射逐级增强，系统减少透明度使用实色。实现与兼容边界见 [玻璃与动效实现说明](design/glass-material.md)。
+- GSAP 提供窗口开关、向 Dock 最小化与恢复、最大化、菜单和 Dock 反馈；中断取消过时动画，动作与焦点立即生效，空闲不循环，系统减弱动态效果优先。
 
 - 本地开发、构建与预览使用普通 Vite，移除 Cloudflare Vite 插件和运行时版本覆盖。
 - 保留 Wrangler 的 Workers Static Assets 部署，根配置直接发布 `dist`。
@@ -12,7 +17,24 @@
 - 新增 `pnpm format` / `pnpm format:check`，统一源码、测试和配置排版；格式检查纳入 CI。
 - 现行设计统一到 [HonestOS 设计](design/honestos.md)，旧方案与阶段证据移入 [历史归档](history/)。
 
-## 本轮验证
+## #8 实现验证
+
+以下为实现阶段已执行并由协调记录的结果，集成基准为 `aea22f2`（包含 #9、#10、#11）。本次 #12 仅更新文档，不重复运行相同运行时检查，也不将旧基线结果计入本轮。
+
+- #11 集成后受影响定向测试：11 个文件、53 项通过；覆盖状态栏、浮层、控制中心、日历、窗口与动效相关行为及受影响依赖。执行命令如下（`aea22f2`，2026-10-24）：
+
+  ```sh
+  pnpm --config.verifyDepsBeforeRun=false test tests/app/App.test.tsx tests/app/App.status-bar.test.tsx tests/app/App.controls.test.tsx tests/app/App.calendar.test.tsx tests/app/App.isolation.test.tsx tests/app/App.loading.test.tsx tests/ui/window-frame.test.tsx tests/ui/search-panel.test.tsx tests/ui/environment.test.tsx tests/desktop/desktop.test.ts tests/preferences/provider.test.tsx
+  ```
+
+- #11 同一集成提交的 `pnpm --config.verifyDepsBeforeRun=false typecheck`、`pnpm --config.verifyDepsBeforeRun=false build` 通过；对该实现改动文件显式运行 `lint` 与 `exec prettier --check` 均通过（不是全仓检查）。
+- #10 另在 `TZ=America/New_York` 下运行日历定向测试：4 项通过，补充验证本地日期行为，不假定 UTC 等于访客时区。
+- #12 文档检查：现行设计、玻璃实现说明、人工验收清单与交付状态的 16 处本地链接均存在；`git diff --check` 通过。核对材质与浮层实现后更新现行行为，未改运行时代码；未执行全量测试、自动浏览器视觉流程或新的真机验收。
+- 最终 Standards / Spec 双轴 code-review 由协调代理在文档集成后安排，当前待执行；此处不表示最终审阅已通过。
+
+## 此前基线验证（保留记录）
+
+以下证据属于此前工具链与文档整理阶段，不能证明 #8 新功能或当前全部检查已通过。
 
 - 工具、配置、桌面、终端与搜索定向测试：7 个文件、38 项通过。
 - 格式化前 `prettier --debug-check src build tests` 通过，检查格式化不会改变解析结构。
@@ -25,7 +47,7 @@
 
 ## 人工与线上边界
 
-2026-10-23 用户确认的人工验收属于此前产品基线，本轮没有重新运行浏览器或真机验收。[人工验收清单](manual-acceptance.md) 留作后续回归。
+2026-10-23 用户确认的人工验收属于此前产品基线，本轮没有重新运行浏览器或真机验收。#8 顶栏、浮层焦点与读屏、玻璃实际兼容效果、动效舒适度、手机及软键盘布局均未人工验收；[人工验收清单](manual-acceptance.md) 已独立列出未执行项目。jsdom 行为测试与类型检查不证明渲染、可读性或真机体验通过。
 
 本轮未推送、触发远程 Actions、读取生产凭据、部署或修改 DNS。GitHub Secrets、首次运行 URL、Cloudflare 版本 ID、正式域名与回退结果由真实执行者记录；配置说明见 [发布说明](deployment.md)。
 
