@@ -2,6 +2,9 @@ import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { AppId } from '../config/index.ts';
 import { searchApps } from '../search/index.ts';
 import { Icon } from './icon.tsx';
+import { GlassMaterial } from './glass-material.tsx';
+import { usePopoverMotion } from './motion.ts';
+import { useReducedMotion } from '../preferences/index.ts';
 import { Brand } from './brand.tsx';
 
 export function SearchPanel({
@@ -15,6 +18,7 @@ export function SearchPanel({
   const [selected, setSelected] = useState(0);
   const input = useRef<HTMLInputElement>(null);
   const panel = useRef<HTMLElement>(null);
+  usePopoverMotion(panel, useReducedMotion());
   const results = searchApps(query);
   const selection = Math.min(selected, Math.max(0, results.length - 1));
   useLayoutEffect(() => {
@@ -76,6 +80,7 @@ export function SearchPanel({
         aria-label="搜索应用"
         onKeyDown={keydown}
       >
+        <GlassMaterial />
         <div className="search-field">
           <Icon name="search" />
           <input

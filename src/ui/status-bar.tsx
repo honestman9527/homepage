@@ -3,6 +3,7 @@ import { appById } from '../config/index.ts';
 import { useDesktop } from '../desktop/index.ts';
 import { Brand } from './brand.tsx';
 import { DesktopPopover } from './desktop-popover.tsx';
+import { GlassMaterial } from './glass-material.tsx';
 import { Icon } from './icon.tsx';
 
 export function TopStatusBar({
@@ -19,6 +20,7 @@ export function TopStatusBar({
   const { activeApp } = useDesktop();
   return (
     <nav className="status-bar" aria-label="顶部状态栏">
+      <GlassMaterial />
       <DesktopPopover
         label="HM 菜单"
         trigger={<Brand />}

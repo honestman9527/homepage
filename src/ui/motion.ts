@@ -1,68 +1,311 @@
-import { useRef, type RefObject, type PointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, type RefObject, type PointerEvent } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import type { Geometry } from '../desktop/index.ts';
 
 gsap.registerPlugin(useGSAP);
 
+// A visual copy has no session, listeners or focus targets. Its owner outlives
+// the closed frame; completing it can only dispose that exact copy.
+const feedback = new WeakMap<Element, Map<string, () => void>>();
+function cancelFeedback(owner: Element | null, key?: string) {
+  if (!owner) return;
+  const entries = feedback.get(owner);
+  if (key !== undefined) entries?.get(key)?.();
+  else entries?.forEach((dispose) => dispose());
+}
+
+function exitFeedback(node: HTMLElement, key: string, vars: gsap.TweenVars) {
+  const owner = node.closest('.honestos');
+  const rect = node.getBoundingClientRect();
+  if (!owner || !rect.width || !rect.height) return;
+  cancelFeedback(owner, key);
+  const copy = node.cloneNode(true) as HTMLElement;
+  const sources = [node, ...node.querySelectorAll<HTMLElement>('*')];
+  const copies = [copy, ...copy.querySelectorAll<HTMLElement>('*')];
+  copies.forEach((element, index) => {
+    for (const attribute of [...element.attributes]) {
+      if (
+        attribute.name === 'id' ||
+        attribute.name === 'for' ||
+        attribute.name === 'role' ||
+        attribute.name.startsWith('aria-') ||
+        attribute.name.startsWith('data-')
+      )
+        element.removeAttribute(attribute.name);
+    }
+    element.removeAttribute('autofocus');
+    element.setAttribute('tabindex', '-1');
+    if (element instanceof HTMLInputElement && sources[index] instanceof HTMLInputElement)
+      element.value = (sources[index] as HTMLInputElement).value;
+  });
+  const shell = document.createElement('div');
+  shell.setAttribute('aria-hidden', 'true');
+  shell.setAttribute('inert', '');
+  shell.className = 'motion-feedback';
+  Object.assign(shell.style, {
+    position: 'fixed',
+    left: `${rect.x}px`,
+    top: `${rect.y}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+    pointerEvents: 'none',
+    zIndex: key === 'popover' ? '31' : '25',
+  });
+  Object.assign(copy.style, {
+    position: 'absolute',
+    left: '0',
+    top: '0',
+    margin: '0',
+    width: '100%',
+    height: '100%',
+    transform: 'none',
+    opacity: '1',
+  });
+  for (const [property, value] of Object.entries({
+    position: 'absolute',
+    left: '0',
+    top: '0',
+    width: '100%',
+    height: '100%',
+  }))
+    copy.style.setProperty(property, value, 'important');
+  shell.append(copy);
+  owner.append(shell);
+  copies.forEach((element, index) => {
+    element.scrollTop = sources[index]!.scrollTop;
+    element.scrollLeft = sources[index]!.scrollLeft;
+  });
+  const entries = feedback.get(owner) ?? new Map<string, () => void>();
+  feedback.set(owner, entries);
+  let tween: gsap.core.Tween | undefined;
+  const dispose = () => {
+    tween?.kill();
+    shell.remove();
+    if (entries.get(key) === dispose) entries.delete(key);
+  };
+  entries.set(key, dispose);
+  tween = gsap.to(shell, { ...vars, onComplete: dispose });
+}
+
+/** All transient presentation is canceled on environment changes, never flushed as actions. */
+export function useDesktopMotion(root: RefObject<HTMLElement | null>, reduced: boolean) {
+  useEffect(() => {
+    const owner = root.current?.closest('.honestos') ?? null;
+    return () => cancelFeedback(owner);
+  }, [root]);
+  useLayoutEffect(() => {
+    const owner = root.current?.closest('.honestos') ?? null;
+    const cancel = () => cancelFeedback(owner);
+    cancel();
+    window.addEventListener('resize', cancel);
+    window.visualViewport?.addEventListener('resize', cancel);
+    window.visualViewport?.addEventListener('scroll', cancel);
+    document.addEventListener('visibilitychange', cancel);
+    return () => {
+      cancel();
+      window.removeEventListener('resize', cancel);
+      window.visualViewport?.removeEventListener('resize', cancel);
+      window.visualViewport?.removeEventListener('scroll', cancel);
+      document.removeEventListener('visibilitychange', cancel);
+    };
+  }, [root, reduced]);
+}
+
+function dockOffset(node: HTMLElement) {
+  const rect = node.getBoundingClientRect();
+  const dock = document
+    .querySelector(`[data-dock-app="${node.dataset.appWindow}"]`)
+    ?.getBoundingClientRect();
+  if (!dock?.width || !dock.height || dock.y > window.innerHeight || dock.y < 0) return null;
+  return {
+    x: dock.x + dock.width / 2 - rect.x - rect.width / 2,
+    y: dock.y + dock.height / 2 - rect.y - rect.height / 2,
+  };
+}
+
 export function useWindowMotion(
   root: RefObject<HTMLElement | null>,
-  visible: boolean,
-  reduced: boolean,
+  {
+    visible,
+    reduced,
+    minimized,
+    maximized,
+    geometry,
+    layout,
+  }: {
+    visible: boolean;
+    reduced: boolean;
+    minimized: boolean;
+    maximized: boolean;
+    geometry: Geometry;
+    layout: string;
+  },
 ) {
-  const pending = useRef<(() => void) | null>(null);
-  const { contextSafe } = useGSAP(
-    () => {
-      if (reduced && pending.current) {
-        const action = pending.current;
-        pending.current = null;
-        action();
-      }
-      if (!visible) pending.current = null;
-      const node = root.current;
-      if (!node || !visible || reduced || !node.getBoundingClientRect().width) return;
-      gsap.fromTo(
+  const previous = useRef<{ visible: boolean; minimized: boolean } | null>(null);
+  const tween = useRef<gsap.core.Tween | null>(null);
+  const geometryFrom = useRef<DOMRect | null>(null);
+  const ownsGeometry = useRef(false);
+  const finalGeometry = useRef(geometry);
+  finalGeometry.current = geometry;
+  function cancel() {
+    if (!tween.current && !ownsGeometry.current) return;
+    tween.current?.kill();
+    tween.current = null;
+    const node = root.current;
+    if (!node) return;
+    gsap.set(node, { clearProps: 'transform,opacity' });
+    if (ownsGeometry.current) {
+      const final = finalGeometry.current;
+      Object.assign(node.style, {
+        left: `${final.x}px`,
+        top: `${final.y}px`,
+        width: `${final.width}px`,
+        height: `${final.height}px`,
+      });
+      ownsGeometry.current = false;
+    }
+  }
+  useLayoutEffect(() => {
+    const before = previous.current;
+    previous.current = { visible, minimized };
+    const from = geometryFrom.current;
+    geometryFrom.current = null;
+    cancel();
+    const node = root.current;
+    if (!node || !visible) return;
+    cancelFeedback(node.closest('.honestos'), `window:${node.dataset.appWindow}`);
+    if (reduced || !node.getBoundingClientRect().width) return;
+    if (from) {
+      ownsGeometry.current = true;
+      // Interpolate geometry rather than scaling readable app content.
+      tween.current = gsap.fromTo(
         node,
-        { opacity: 0, scale: 0.96, y: 12 },
+        { left: from.x, top: from.y, width: from.width, height: from.height },
+        {
+          left: geometry.x,
+          top: geometry.y,
+          width: geometry.width,
+          height: geometry.height,
+          duration: 0.28,
+          ease: 'power3.out',
+        },
+      );
+    } else if (!before || !before.visible) {
+      const offset = before?.minimized ? dockOffset(node) : null;
+      tween.current = gsap.fromTo(
+        node,
+        { opacity: 0, scale: offset ? 0.14 : 0.97, x: offset?.x ?? 0, y: offset?.y ?? 10 },
         {
           opacity: 1,
           scale: 1,
+          x: 0,
           y: 0,
-          duration: 0.28,
-          ease: 'power3.out',
+          duration: offset ? 0.3 : 0.26,
+          ease: 'back.out(1.05)',
           clearProps: 'transform,opacity',
         },
       );
-    },
-    { scope: root, dependencies: [visible, reduced], revertOnUpdate: true },
-  );
-  return contextSafe((action: () => void, minimize: boolean) => {
-    const node = root.current;
-    if (!node || reduced || !node.getBoundingClientRect().width) {
-      action();
-      return;
     }
-    if (pending.current) return;
-    pending.current = action;
-    const rect = node.getBoundingClientRect();
-    const dock = document
-      .querySelector(`[data-dock-app="${node.dataset.appWindow}"]`)
-      ?.getBoundingClientRect();
-    gsap.to(node, {
-      opacity: 0,
-      scale: minimize ? 0.14 : 0.96,
-      x: minimize && dock ? dock.x + dock.width / 2 - rect.x - rect.width / 2 : 0,
-      y: minimize && dock ? dock.y - rect.y - rect.height / 2 : 8,
-      duration: minimize ? 0.3 : 0.16,
-      ease: 'power2.in',
-      overwrite: true,
-      onComplete: () => {
-        const finish = pending.current;
-        pending.current = null;
-        gsap.set(node, { clearProps: 'transform,opacity' });
-        finish?.();
-      },
-    });
-  });
+    // Cleanup only live presentation: the outgoing copy belongs to the desktop.
+    return cancel;
+  }, [
+    visible,
+    reduced,
+    minimized,
+    maximized,
+    layout,
+    geometry.x,
+    geometry.y,
+    geometry.width,
+    geometry.height,
+  ]);
+  useEffect(() => {
+    const settle = () => {
+      geometryFrom.current = null;
+      cancel();
+    };
+    window.addEventListener('resize', settle);
+    window.visualViewport?.addEventListener('resize', settle);
+    window.visualViewport?.addEventListener('scroll', settle);
+    document.addEventListener('visibilitychange', settle);
+    return () => {
+      settle();
+      window.removeEventListener('resize', settle);
+      window.visualViewport?.removeEventListener('resize', settle);
+      window.visualViewport?.removeEventListener('scroll', settle);
+      document.removeEventListener('visibilitychange', settle);
+    };
+  }, []);
+  function animateAction(action: () => void, minimize: boolean) {
+    const node = root.current;
+    cancel();
+    if (node && !reduced) {
+      const offset = minimize ? dockOffset(node) : null;
+      exitFeedback(node, `window:${node.dataset.appWindow}`, {
+        opacity: 0,
+        scale: offset ? 0.14 : 0.97,
+        x: offset?.x ?? 0,
+        y: offset?.y ?? 8,
+        duration: minimize ? 0.28 : 0.16,
+        ease: 'power2.in',
+      });
+    }
+    action();
+  }
+  function animateGeometry(action: () => void) {
+    // Capture the current presentation before settling an interrupted transition.
+    const from = root.current?.getBoundingClientRect();
+    cancel();
+    geometryFrom.current = !reduced && from?.width ? from : null;
+    action();
+  }
+  return { animateAction, animateGeometry, cancel };
+}
+
+export function usePopoverMotion(root: RefObject<HTMLElement | null>, reduced: boolean) {
+  const latestReduction = useRef(reduced);
+  latestReduction.current = reduced;
+  useLayoutEffect(() => {
+    const node = root.current;
+    if (!node) return;
+    const owner = node.closest('.honestos');
+    cancelFeedback(owner, 'popover');
+    if (reduced) return;
+    const entrance = node.getBoundingClientRect().width
+      ? gsap.fromTo(
+          node,
+          { opacity: 0, y: -5, scale: 0.98 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.18,
+            ease: 'power3.out',
+            clearProps: 'transform,opacity',
+          },
+        )
+      : null;
+    const settle = () => {
+      entrance?.kill();
+      if (entrance) gsap.set(node, { clearProps: 'transform,opacity' });
+    };
+    window.addEventListener('resize', settle);
+    window.visualViewport?.addEventListener('resize', settle);
+    return () => {
+      settle();
+      window.removeEventListener('resize', settle);
+      window.visualViewport?.removeEventListener('resize', settle);
+      if (!latestReduction.current && node.isConnected)
+        exitFeedback(node, 'popover', {
+          opacity: 0,
+          y: -4,
+          scale: 0.98,
+          duration: 0.12,
+          ease: 'power2.in',
+        });
+    };
+  }, [reduced]);
 }
 
 export function useDockMotion(root: RefObject<HTMLElement | null>, reduced: boolean) {
@@ -98,8 +341,8 @@ export function useDockMotion(root: RefObject<HTMLElement | null>, reduced: bool
       const rect = control.slot.getBoundingClientRect();
       const distance = Math.abs(event.clientX - rect.x - rect.width / 2);
       const strength = Math.max(0, 1 - distance / 100);
-      control.scale(1 + strength * 0.24);
-      control.y(-strength * 7);
+      control.scale(1 + strength * 0.18);
+      control.y(-strength * 5);
     });
   }
   return { move, restore };

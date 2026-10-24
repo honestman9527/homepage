@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { useState } from 'react';
+import { PreferencesProvider } from '../../src/preferences/index.ts';
 import { SearchPanel } from '../../src/ui/search-panel.tsx';
 
 afterEach(cleanup);
@@ -17,7 +18,7 @@ function SearchProbe() {
 }
 it('focuses search, navigates results and never opens a stale selection after a no-result query', async () => {
   const user = userEvent.setup();
-  render(<SearchProbe />);
+  render(<SearchProbe />, { wrapper: PreferencesProvider });
   const input = screen.getByRole('combobox');
   expect(document.activeElement).toBe(input);
   await user.keyboard('{ArrowDown}');
@@ -31,7 +32,7 @@ it('focuses search, navigates results and never opens a stale selection after a 
 });
 it('keeps Tab inside search and cancels with Escape', async () => {
   const user = userEvent.setup();
-  render(<SearchProbe />);
+  render(<SearchProbe />, { wrapper: PreferencesProvider });
   await user.keyboard('{Shift>}{Tab}{/Shift}');
   expect(document.activeElement?.closest('[role="dialog"]')).not.toBeNull();
   await user.keyboard('{Escape}');
@@ -39,7 +40,7 @@ it('keeps Tab inside search and cancels with Escape', async () => {
 });
 
 it('ignores Enter while an input method is composing', () => {
-  render(<SearchProbe />);
+  render(<SearchProbe />, { wrapper: PreferencesProvider });
   fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Enter', isComposing: true });
   expect(screen.getByTestId('selection').textContent).toBe('');
 });

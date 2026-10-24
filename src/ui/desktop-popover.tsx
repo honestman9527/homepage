@@ -9,7 +9,13 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type ComponentProps,
+  type RefObject,
 } from 'react';
+
+import { GlassMaterial } from './glass-material.tsx';
+import { useReducedMotion } from '../preferences/index.ts';
+import { usePopoverMotion } from './motion.ts';
 
 const PopoverContext = createContext<{
   active: string | null;
@@ -108,7 +114,7 @@ export function DesktopPopover({
         {trigger}
       </button>
       {open && (
-        <div
+        <PopoverPanel
           ref={panel}
           id={`${id}-panel`}
           className="desktop-popover-panel"
@@ -138,9 +144,18 @@ export function DesktopPopover({
             }
           }}
         >
+          <GlassMaterial />
           {children(dismiss)}
-        </div>
+        </PopoverPanel>
       )}
     </div>
   );
+}
+
+function PopoverPanel({
+  ref,
+  ...props
+}: ComponentProps<'div'> & { ref: RefObject<HTMLDivElement | null> }) {
+  usePopoverMotion(ref, useReducedMotion());
+  return <div {...props} ref={ref} />;
 }

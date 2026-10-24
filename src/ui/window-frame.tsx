@@ -14,6 +14,7 @@ import {
   useDesktop,
   type Geometry,
 } from '../desktop/index.ts';
+import { GlassMaterial } from './glass-material.tsx';
 import { Icon } from './icon.tsx';
 import { useReducedMotion } from '../preferences/index.ts';
 import { useWindowMotion } from './motion.ts';
@@ -49,7 +50,18 @@ export function WindowFrame({
   const app = appById[appId];
   const record = desktop.state.windows[appId];
   const presentation = getWindowPresentation(desktop.state, appId);
-  const animateAction = useWindowMotion(root, presentation.visible, reducedMotion);
+  const {
+    animateAction,
+    animateGeometry,
+    cancel: cancelMotion,
+  } = useWindowMotion(root, {
+    visible: presentation.visible,
+    reduced: reducedMotion,
+    minimized: record.status === 'minimized',
+    maximized: record.maximized,
+    geometry: presentation.geometry,
+    layout: `${desktop.state.mode}:${desktop.state.viewport.width}:${desktop.state.viewport.height}`,
+  });
   const gesture = useRef<Gesture | null>(null);
   const previewRef = useRef<Geometry | null>(null);
   const [preview, setPreview] = useState<Geometry | null>(null);
@@ -93,6 +105,7 @@ export function WindowFrame({
     )
       return;
     event.preventDefault();
+    cancelMotion();
     gesture.current = {
       pointerId: event.pointerId,
       x: event.clientX,
@@ -179,9 +192,10 @@ export function WindowFrame({
             document.documentElement.dataset.compactViewport !== 'true' &&
             !(event.target as HTMLElement).closest('[data-window-controls]')
           )
-            desktop.toggleMaximize(appId);
+            animateGeometry(() => desktop.toggleMaximize(appId));
         }}
       >
+        <GlassMaterial />
         <div
           className="window-controls"
           data-window-controls
@@ -209,7 +223,7 @@ export function WindowFrame({
                 className="window-maximize"
                 onClick={() => {
                   if (document.documentElement.dataset.compactViewport !== 'true')
-                    desktop.toggleMaximize(appId);
+                    animateGeometry(() => desktop.toggleMaximize(appId));
                 }}
                 aria-label={`${record.maximized ? '还原' : '最大化'}${app.name}`}
               >
@@ -236,6 +250,7 @@ export function WindowFrame({
             const delta = event.shiftKey ? 40 : 10;
             if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
             event.preventDefault();
+            cancelMotion();
             desktop.commitGeometry(appId, {
               ...record.normalGeometry,
               width:

@@ -10,7 +10,11 @@ beforeEach(() => {
   Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 768 });
   window.localStorage.clear();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  Object.defineProperty(window, 'visualViewport', { configurable: true, value: undefined });
+  vi.unstubAllGlobals();
+});
 function dock(name: string) {
   return within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
     name: new RegExp(`打开${name}`),
@@ -341,7 +345,7 @@ it('reveals the focused compact terminal input when unread output and completion
   expect(output.scrollTop).toBe(40);
 });
 
-it('finishes an outgoing animation without stealing focus from an application selected during the animation', async () => {
+it('closes immediately and never steals focus from an application selected during outgoing feedback', async () => {
   const user = userEvent.setup();
   render(<App />);
   const terminal = frame('终端');
@@ -349,7 +353,7 @@ it('finishes an outgoing animation without stealing focus from an application se
     value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
   });
   fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
-  expect(screen.getByRole('region', { name: '终端' })).toBe(terminal);
+  expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   act(() => {
@@ -375,17 +379,156 @@ it('finishes window actions immediately when motion is disabled, even if the win
   expect(gsap.getTweensOf(terminal)).toHaveLength(0);
 });
 
-it('completes a pending window action when the user switches motion off during its animation', () => {
+it('keeps a closed session ended when the user switches motion off during outgoing feedback', async () => {
   render(<App />);
   const terminal = frame('终端');
   Object.defineProperty(terminal, 'getBoundingClientRect', {
     value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
   });
   fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
-  expect(screen.getByRole('region', { name: '终端' })).toBe(terminal);
+  expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   fireEvent.click(dock('桌面设置'));
-  fireEvent.click(within(frame('桌面设置')).getByRole('button', { name: '程序坞与动效' }));
+  fireEvent.click(await within(frame('桌面设置')).findByRole('button', { name: '程序坞与动效' }));
   fireEvent.click(screen.getByRole('checkbox', { name: '启用界面动效' }));
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   expect(document.activeElement).not.toBe(terminal);
+});
+
+it('ends a closed session immediately and ignores its outgoing completion after reopening', () => {
+  render(<App />);
+  const terminal = frame('终端');
+  const input = terminalInput();
+  fireEvent.change(input, { target: { value: 'old draft' } });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
+  });
+  const existing = new Set(gsap.globalTimeline.getChildren());
+  fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
+  const outgoing = gsap.globalTimeline.getChildren().filter((tween) => !existing.has(tween));
+  expect(outgoing.length).toBeGreaterThan(0);
+  outgoing.forEach((tween) => tween.pause());
+  expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
+  expect(dock('终端').getAttribute('aria-label')).not.toContain('运行中');
+  fireEvent.click(dock('终端'));
+  expect(terminalInput()).not.toBe(input);
+  expect(terminalInput().value).toBe('');
+  act(() => outgoing.forEach((tween) => tween.progress(1)));
+  expect(terminalInput().value).toBe('');
+  expect(document.activeElement).toBe(frame('终端'));
+});
+
+it('preserves the same minimized session when restored before outgoing feedback finishes', () => {
+  render(<App />);
+  const terminal = frame('终端');
+  const input = terminalInput();
+  fireEvent.change(input, { target: { value: 'draft survives' } });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
+  });
+  const existing = new Set(gsap.globalTimeline.getChildren());
+  fireEvent.click(screen.getByRole('button', { name: '最小化终端' }));
+  const outgoing = gsap.globalTimeline.getChildren().filter((tween) => !existing.has(tween));
+  expect(outgoing.length).toBeGreaterThan(0);
+  outgoing.forEach((tween) => tween.pause());
+  expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
+  expect(dock('终端').getAttribute('aria-label')).toContain('运行中');
+  fireEvent.click(dock('终端'));
+  act(() => outgoing.forEach((tween) => tween.progress(1)));
+  expect(terminalInput()).toBe(input);
+  expect(input.value).toBe('draft survives');
+  expect(document.activeElement).toBe(terminal);
+});
+
+it('settles a restoring window when the viewport changes without losing its session', () => {
+  render(<App />);
+  const terminal = frame('终端');
+  const input = terminalInput();
+  fireEvent.change(input, { target: { value: 'across viewports' } });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
+  });
+  fireEvent.click(screen.getByRole('button', { name: '最小化终端' }));
+  fireEvent.click(dock('终端'));
+  const pending = gsap.getTweensOf(terminal);
+  expect(pending.length).toBeGreaterThan(0);
+  pending.forEach((tween) => tween.pause());
+  resize(390, 844);
+  expect(gsap.getTweensOf(terminal)).toHaveLength(0);
+  expect(terminal.style.transform).toBe('');
+  act(() => pending.forEach((tween) => tween.progress(1)));
+  expect(terminalInput()).toBe(input);
+  expect(input.value).toBe('across viewports');
+});
+
+it('reverses a pending maximize and settles authoritative normal geometry when motion is disabled', async () => {
+  render(<App />);
+  const terminal = frame('终端');
+  const input = terminalInput();
+  fireEvent.change(input, { target: { value: 'keep through maximize' } });
+  const normal = [
+    terminal.style.left,
+    terminal.style.top,
+    terminal.style.width,
+    terminal.style.height,
+  ];
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({
+      x: parseFloat(terminal.style.left),
+      y: parseFloat(terminal.style.top),
+      width: parseFloat(terminal.style.width),
+      height: parseFloat(terminal.style.height),
+    }),
+  });
+  fireEvent.click(screen.getByRole('button', { name: '最大化终端' }));
+  const expanding = gsap.getTweensOf(terminal);
+  expect(expanding.length).toBeGreaterThan(0);
+  expanding.forEach((tween) => tween.pause());
+  fireEvent.click(screen.getByRole('button', { name: '还原终端' }));
+  const restoring = gsap.getTweensOf(terminal);
+  expect(restoring.length).toBeGreaterThan(0);
+  restoring.forEach((tween) => tween.pause());
+  fireEvent.click(dock('桌面设置'));
+  fireEvent.click(await within(frame('桌面设置')).findByRole('button', { name: '程序坞与动效' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: '启用界面动效' }));
+  expect([
+    terminal.style.left,
+    terminal.style.top,
+    terminal.style.width,
+    terminal.style.height,
+  ]).toEqual(normal);
+  expect(terminalInput()).toBe(input);
+  expect(input.value).toBe('keep through maximize');
+  expect(gsap.getTweensOf(terminal)).toHaveLength(0);
+});
+
+it('settles pending feedback when system reduced motion overrides the enabled site preference', () => {
+  const media = Object.assign(new EventTarget(), { matches: false });
+  vi.stubGlobal('matchMedia', (query: string) =>
+    query.includes('reduced-motion') ? media : Object.assign(new EventTarget(), { matches: false }),
+  );
+  render(<App />);
+  const terminal = frame('终端');
+  const input = terminalInput();
+  fireEvent.change(input, { target: { value: 'system reduction draft' } });
+  Object.defineProperty(terminal, 'getBoundingClientRect', {
+    value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
+  });
+  const existing = new Set(gsap.globalTimeline.getChildren());
+  fireEvent.click(screen.getByRole('button', { name: '最小化终端' }));
+  const pending = gsap.globalTimeline.getChildren().filter((tween) => !existing.has(tween));
+  expect(pending.length).toBeGreaterThan(0);
+  pending.forEach((tween) => tween.pause());
+  act(() => {
+    media.matches = true;
+    media.dispatchEvent(new Event('change'));
+  });
+  expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
+  fireEvent.click(dock('终端'));
+  expect(terminalInput()).toBe(input);
+  expect(input.value).toBe('system reduction draft');
+  expect(gsap.getTweensOf(terminal)).toHaveLength(0);
+  act(() => pending.forEach((tween) => tween.progress(1)));
+  expect(document.activeElement).toBe(terminal);
+  fireEvent.click(screen.getByRole('button', { name: '关闭终端' }));
+  expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
 });

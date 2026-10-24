@@ -18,12 +18,13 @@ import {
 import { PreferencesProvider, usePreferenceValues, useReducedMotion } from './preferences/index.ts';
 import { AppBoundary } from './ui/app-boundary.tsx';
 import { useVisualViewport } from './ui/environment.ts';
+import { GlassMaterial } from './ui/glass-material.tsx';
 import { Icon } from './ui/icon.tsx';
 import { SearchPanel } from './ui/search-panel.tsx';
 import { Wallpaper } from './ui/wallpaper.tsx';
 import { WindowFrame } from './ui/window-frame.tsx';
 import { Brand } from './ui/brand.tsx';
-import { useDockMotion } from './ui/motion.ts';
+import { useDesktopMotion, useDockMotion } from './ui/motion.ts';
 import { TopStatusBar } from './ui/status-bar.tsx';
 import { DesktopPopoverProvider, useDesktopPopover } from './ui/desktop-popover.tsx';
 
@@ -58,6 +59,7 @@ function DesktopContents() {
   const searchTrigger = useRef<HTMLElement | null>(null);
   const shellRoot = useRef<HTMLDivElement>(null);
   useVisualViewport();
+  useDesktopMotion(shellRoot, useReducedMotion());
   const open = useCallback(
     (appId: AppId, options?: { focusTerminal?: boolean }) => {
       dismissPopover();
@@ -231,6 +233,7 @@ function Dock({
         onPointerLeave={dockMotion.restore}
         onBlur={dockMotion.restore}
       >
+        <GlassMaterial />
         {appRegistry.map((app) => {
           const view = getWindowPresentation(desktop.state, app.id);
           return (

@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it } from 'vitest';
+import gsap from 'gsap';
 import { App } from '../../src/App.tsx';
 
 beforeEach(() => {
@@ -174,4 +175,26 @@ it('reserves the safe area above the status bar when maximizing and recalculatin
   });
   expect(about.style.top).toBe('72px');
   expect(about.style.height).toBe('734px');
+});
+
+it('removes closing menu controls immediately and preserves reopened focus while old feedback finishes', () => {
+  render(<App />);
+  const trigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
+  fireEvent.click(trigger);
+  const menu = screen.getByRole('menu');
+  Object.defineProperty(menu, 'getBoundingClientRect', {
+    value: () => ({ x: 8, y: 40, width: 220, height: 90 }),
+  });
+  const existing = new Set(gsap.globalTimeline.getChildren());
+  fireEvent.keyDown(menu, { key: 'Escape' });
+  const outgoing = gsap.globalTimeline.getChildren().filter((tween) => !existing.has(tween));
+  expect(outgoing.length).toBeGreaterThan(0);
+  outgoing.forEach((tween) => tween.pause());
+  expect(screen.queryByRole('menuitem')).toBeNull();
+  expect(document.activeElement).toBe(trigger);
+  fireEvent.click(trigger);
+  const current = screen.getByRole('menu');
+  act(() => outgoing.forEach((tween) => tween.progress(1)));
+  expect(document.activeElement).toBe(within(current).getByRole('menuitem', { name: '关于本站' }));
+  expect(screen.getAllByRole('menu')).toHaveLength(1);
 });
