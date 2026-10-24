@@ -1,0 +1,138 @@
+.status-controls .desktop-popover-panel {
+  width: min(320px, calc(100vw - 24px));
+}
+.control-center {
+  padding: 12px;
+}
+.control-center h2 {
+  margin: 0 0 16px;
+  font-size: 17px;
+}
+.control-appearance {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  display: flex;
+  gap: 12px;
+}
+.control-appearance legend {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.control-appearance label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.control-range {
+  display: block;
+  margin-bottom: 18px;
+}
+.control-range span,
+.control-motion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.control-range input {
+  width: 100%;
+  margin: 10px 0 0;
+}
+.control-range output,
+.control-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+.control-note {
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+.control-settings {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--line);
+}
+.status-calendar .desktop-popover-panel {
+  width: min(300px, calc(100vw - 24px));
+}
+.status-calendar time {
+  font-variant-numeric: tabular-nums;
+}
+.calendar-content {
+  padding: 10px;
+}
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.calendar-header h2 {
+  margin: 0 auto 0 0;
+  font-size: 16px;
+}
+.calendar-header button,
+.calendar-today {
+  min-width: 32px;
+  min-height: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+}
+.calendar-header button {
+  font-size: 22px;
+}
+.calendar-header button:hover,
+.calendar-today:hover,
+.control-settings:hover {
+  background: var(--selected);
+}
+.calendar-content table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-content th {
+  height: 28px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.calendar-content td {
+  height: 34px;
+}
+.calendar-content [aria-current='date'] {
+  border-radius: 50%;
+  background: var(--selected);
+  font-weight: 700;
+}
+.calendar-today {
+  display: block;
+  margin: 12px auto 0;
+  padding: 0 12px;
+}
+@media (max-width: 600px) {
+  .status-controls .desktop-popover-panel {
+    position: fixed;
+    top: calc(var(--visual-top, 0px) + var(--status-bar-height) + var(--safe-area-top) + 6px);
+    right: max(12px, env(safe-area-inset-right));
+  }
+  .control-appearance label,
+  .control-motion {
+    min-height: 44px;
+  }
+  .status-date {
+    display: none;
+  }
+  .calendar-header button,
+  .calendar-today {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

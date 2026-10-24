@@ -33,7 +33,10 @@ vi.mock('../../src/ui/motion.ts', async (original) => {
     },
   };
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 it('updates appearance and saving feedback without executing unrelated windows, terminal or Dock', async () => {
   window.localStorage.clear();
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1366 });
@@ -48,5 +51,16 @@ it('updates appearance and saving feedback without executing unrelated windows, 
   const before = { ...counts };
   fireEvent.change(slider, { target: { value: '80' } });
   expect(document.querySelector('.honestos')?.getAttribute('style')).toContain('0.8');
+  expect(counts).toEqual(before);
+});
+
+it('updates local clock minutes without executing application content, window frames or Dock', async () => {
+  vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+  vi.setSystemTime(new Date(2024, 1, 28, 23, 59, 30));
+  render(<App />);
+  await act(async () => {});
+  const before = { ...counts };
+  act(() => vi.advanceTimersByTime(30_000));
+  expect(screen.getByRole('button', { name: /日期与时间/ }).textContent).toContain('00:00');
   expect(counts).toEqual(before);
 });
