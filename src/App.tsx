@@ -27,6 +27,8 @@ import { Brand } from './ui/brand.tsx';
 import { useDesktopMotion, useDockMotion } from './ui/motion.ts';
 import { TopStatusBar } from './ui/status-bar.tsx';
 import { DesktopPopoverProvider, useDesktopPopover } from './ui/desktop-popover.tsx';
+import { ControlCenter } from './ui/control-center.tsx';
+import { StatusCalendar } from './ui/calendar.tsx';
 
 function visibleTarget(target: HTMLElement | null): target is HTMLElement {
   if (!target?.isConnected || target.closest('[hidden],[inert]')) return false;
@@ -136,7 +138,10 @@ function DesktopContents() {
     <DesktopAppearance mode={desktop.state.mode}>
       <div className="desktop-system" ref={shellRoot} inert={search}>
         <Wallpaper />
-        <TopStatusBar onAbout={() => open('about')} onArrange={arrange} onSearch={startSearch} />
+        <TopStatusBar onAbout={() => open('about')} onArrange={arrange} onSearch={startSearch}>
+          <ControlCenter onSettings={() => open('settings')} />
+          <StatusCalendar />
+        </TopStatusBar>
         <main className="desktop-surface" aria-label="HonestOS 桌面" tabIndex={0}>
           <nav className="desktop-shortcuts" aria-label="桌面快捷入口">
             {(['projects', 'blog', 'about'] as const).map((id) => (
