@@ -70,7 +70,24 @@ function ProjectIdentity({ project }: { project: Project }) {
         {statusNames[project.status]}
       </span>
       {project.currentSite ? <span className="project-site-badge">本站</span> : null}
+      {project.year ? <span className="project-year-badge">{project.year}</span> : null}
     </div>
+  );
+}
+
+function ProjectTags({ project, maxStack }: { project: Project; maxStack?: number }) {
+  const stack = maxStack !== undefined ? project.stack?.slice(0, maxStack) : project.stack;
+  return (
+    <ul className="project-tags">
+      {project.tags.map((tag) => (
+        <li key={tag}>{tag}</li>
+      ))}
+      {stack?.map((tech) => (
+        <li className="project-tech-chip" key={tech}>
+          {tech}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -137,7 +154,7 @@ export function ProjectsApp({
       }}
     >
       {selected ? (
-        <>
+        <div className="project-detail-view">
           <button className="app-button project-back" onClick={() => setSelectedId(null)}>
             返回项目列表
           </button>
@@ -148,13 +165,16 @@ export function ProjectsApp({
           <ProjectIdentity project={selected} />
           <p className="project-detail-summary">{selected.summary}</p>
           <p>{selected.description}</p>
-          <ul className="project-tags">
-            {selected.tags.map((tag) => (
-              <li key={tag}>{tag}</li>
-            ))}
-          </ul>
+          {selected.highlights?.length ? (
+            <ul className="project-highlights">
+              {selected.highlights.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+          <ProjectTags project={selected} />
           <ProjectLinks project={selected} />
-        </>
+        </div>
       ) : (
         <>
           <h2 ref={heading} tabIndex={-1}>
@@ -163,18 +183,18 @@ export function ProjectsApp({
           <p className="app-muted">把好奇心变成小东西，也为还在酝酿的想法留个位置。</p>
           {projects.length ? (
             <div className="project-list">
-              {projects.map((project) => (
-                <article className="project-card" key={project.id}>
+              {projects.map((project, index) => (
+                <article
+                  className="project-card"
+                  key={project.id}
+                  style={{ '--stagger-index': index } as React.CSSProperties}
+                >
                   <ProjectArt project={project} />
                   <div className="project-card-copy">
                     <h3>{project.name}</h3>
                     <ProjectIdentity project={project} />
                     <p className="app-muted">{project.summary}</p>
-                    <ul className="project-tags">
-                      {project.tags.map((tag) => (
-                        <li key={tag}>{tag}</li>
-                      ))}
-                    </ul>
+                    <ProjectTags project={project} maxStack={2} />
                     <button
                       className="app-button project-detail-action"
                       ref={(element) => {

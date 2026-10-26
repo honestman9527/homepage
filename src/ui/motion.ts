@@ -195,22 +195,22 @@ export function useWindowMotion(
           top: geometry.y,
           width: geometry.width,
           height: geometry.height,
-          duration: 0.28,
-          ease: 'power3.out',
+          duration: 0.3,
+          ease: 'expo.out',
         },
       );
     } else if (!before || !before.visible) {
       const offset = before?.minimized ? dockOffset(node) : null;
       tween.current = gsap.fromTo(
         node,
-        { opacity: 0, scale: offset ? 0.14 : 0.97, x: offset?.x ?? 0, y: offset?.y ?? 10 },
+        { opacity: 0, scale: offset ? 0.12 : 0.95, x: offset?.x ?? 0, y: offset?.y ?? 14 },
         {
           opacity: 1,
           scale: 1,
           x: 0,
           y: 0,
-          duration: offset ? 0.3 : 0.26,
-          ease: 'back.out(1.05)',
+          duration: offset ? 0.32 : 0.28,
+          ease: 'back.out(1.08)',
           clearProps: 'transform,opacity',
         },
       );
@@ -242,10 +242,10 @@ export function useWindowMotion(
       const offset = minimize ? dockOffset(node) : null;
       exitFeedback(node, `window:${node.dataset.appWindow}`, {
         opacity: 0,
-        scale: offset ? 0.14 : 0.97,
+        scale: offset ? 0.12 : 0.96,
         x: offset?.x ?? 0,
-        y: offset?.y ?? 8,
-        duration: minimize ? 0.28 : 0.16,
+        y: offset?.y ?? 10,
+        duration: minimize ? 0.28 : 0.18,
         ease: 'power2.in',
       });
     }
@@ -273,12 +273,12 @@ export function usePopoverMotion(root: RefObject<HTMLElement | null>, reduced: b
     const entrance = node.getBoundingClientRect().width
       ? gsap.fromTo(
           node,
-          { opacity: 0, y: -5, scale: 0.98 },
+          { opacity: 0, y: -6, scale: 0.97 },
           {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.18,
+            duration: 0.2,
             ease: 'power3.out',
             clearProps: 'transform,opacity',
           },
@@ -314,8 +314,8 @@ export function useDockMotion(root: RefObject<HTMLElement | null>, reduced: bool
       root.current?.querySelectorAll<HTMLElement>('.app-icon').forEach((icon) => {
         controls.current.push({
           slot: icon.parentElement!,
-          scale: gsap.quickTo(icon, 'scale', { duration: 0.2, ease: 'power2.out' }),
-          y: gsap.quickTo(icon, 'y', { duration: 0.2, ease: 'power2.out' }),
+          scale: gsap.quickTo(icon, 'scale', { duration: 0.22, ease: 'power3.out' }),
+          y: gsap.quickTo(icon, 'y', { duration: 0.22, ease: 'power3.out' }),
         });
       });
       return () => {
@@ -335,10 +335,28 @@ export function useDockMotion(root: RefObject<HTMLElement | null>, reduced: bool
     controls.current.forEach((control) => {
       const rect = control.slot.getBoundingClientRect();
       const distance = Math.abs(event.clientX - rect.x - rect.width / 2);
-      const strength = Math.max(0, 1 - distance / 100);
+      const ratio = Math.min(1, distance / 110);
+      // Smooth cosine bell curve within the 18% scale / 5px lift spec budget
+      const strength = Math.cos(ratio * (Math.PI / 2));
       control.scale(1 + strength * 0.18);
       control.y(-strength * 5);
     });
   }
-  return { move, restore };
+  function bounce(button: HTMLElement) {
+    if (reduced || !window.matchMedia?.('(hover: hover) and (pointer: fine)').matches) return;
+    if (!button.getBoundingClientRect().width) return;
+    gsap.fromTo(
+      button,
+      { y: 0 },
+      {
+        y: -5,
+        duration: 0.14,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.out',
+        overwrite: 'auto',
+      },
+    );
+  }
+  return { move, restore, bounce };
 }

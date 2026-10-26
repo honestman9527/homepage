@@ -64,19 +64,31 @@
   min-height: 30px;
   padding: 4px 12px;
   border: 1px solid var(--line, #0002);
-  border-radius: 6px;
+  border-radius: 7px;
   background: var(--raised, #fff);
-  box-shadow: 0 1px 2px #00000008;
+  box-shadow:
+    0 1px 2px #0000000a,
+    inset 0 1px 0 #ffffff66;
   text-align: center;
   font-size: 13px;
+  transition:
+    transform var(--t-press, 140ms) var(--ease-out, ease),
+    filter var(--t-hover, 180ms) ease,
+    background-color var(--t-hover, 180ms) ease;
 }
 .app-button:hover {
   filter: brightness(0.96);
+}
+.app-button:active {
+  transform: scale(0.97);
 }
 .app-content .app-primary {
   color: #fff;
   background: #007aff;
   border-color: #0071e3;
+  box-shadow:
+    0 2px 8px #007aff33,
+    inset 0 1px 0 #ffffff40;
 }
 .app-text-button {
   border-color: transparent;
@@ -90,7 +102,7 @@
 }
 .about-story {
   width: 100%;
-  max-width: 440px;
+  max-width: 468px;
 }
 .about-identity {
   display: flex;
@@ -98,16 +110,53 @@
   gap: 14px;
   margin-bottom: 22px;
 }
+.profile-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line, #0002);
+  background: var(--raised, #fff);
+}
 .profile-avatar {
   width: 56px;
   height: 56px;
   object-fit: cover;
   border-radius: 50%;
-  border: 1px solid var(--line, #0001);
+  border: 1.5px solid var(--paper, #fbfbfd);
+  display: block;
+}
+.profile-avatar-dot {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #30d158;
+  border: 2px solid var(--paper, #fbfbfd);
+}
+.about-identity-copy {
+  min-width: 0;
+}
+.about-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 .about-identity strong {
   font-size: 16px;
   font-weight: 600;
+}
+.about-role-pill {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--selected, #007aff14);
+  color: var(--blue, #0071e3);
+  font-size: 11px;
+  font-weight: 500;
 }
 .about-identity p {
   margin: 2px 0 0;
@@ -133,10 +182,33 @@
   flex-wrap: wrap;
   gap: 5px 14px;
   padding: 0;
-  margin: 12px 0 20px;
+  margin: 12px 0 16px;
   list-style: none;
   color: var(--muted, #68686e);
   font-size: 12px;
+}
+.about-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.about-highlight-card {
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--raised, #fff) 75%, var(--selected, #007aff14));
+  border: 1px solid var(--line, #0001);
+}
+.about-highlight-card dt {
+  font-size: 11px;
+  color: var(--muted, #68686e);
+  margin-bottom: 2px;
+}
+.about-highlight-card dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 .about-actions {
   display: flex;
@@ -299,7 +371,8 @@
   margin-bottom: 8px;
 }
 .project-status,
-.project-site-badge {
+.project-site-badge,
+.project-year-badge {
   padding: 1px 6px;
   background: var(--selected, #eef1f5);
   color: var(--muted, #68686e);
@@ -310,15 +383,36 @@
 .project-site-badge {
   color: var(--blue, #0071e3);
 }
+.project-year-badge {
+  background: transparent;
+  border: 1px solid var(--line, #0001);
+}
 .project-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  align-items: center;
+  gap: 5px 10px;
   list-style: none;
   padding: 0;
   margin: 10px 0;
   color: var(--muted, #68686e);
   font-size: 11px;
+}
+.project-tech-chip {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--raised, #fff) 70%, var(--line, #0001));
+  border: 1px solid var(--line, #0001);
+}
+.project-highlights {
+  margin: 12px 0 14px;
+  padding-left: 18px;
+  color: var(--text, #242426);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.project-highlights li + li {
+  margin-top: 4px;
 }
 .project-art img {
   width: 100%;
@@ -924,4 +1018,25 @@
   gap: 6px;
   min-height: 32px;
   font-size: 13px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .honestos[data-reduced-motion='false'] [style*='--stagger-index'] {
+    animation: app-item-rise 520ms var(--ease-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+    animation-delay: calc(var(--stagger-index, 0) * var(--stagger-item, 65ms));
+  }
+  .honestos[data-reduced-motion='false'] .project-detail-view {
+    animation: app-item-rise 380ms var(--ease-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  }
+}
+
+@keyframes app-item-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

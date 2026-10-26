@@ -8,27 +8,23 @@ import {
   type ReactNode,
 } from 'react';
 import { AppContent, retryAppLoad } from './apps/content.tsx';
-import { appById, appRegistry, type AppId } from './config/index.ts';
-import {
-  DesktopProvider,
-  getWindowPresentation,
-  STATUS_BAR_HEIGHT,
-  useDesktop,
-} from './desktop/index.ts';
+import { appRegistry, type AppId } from './config/index.ts';
+import { DesktopProvider, STATUS_BAR_HEIGHT, useDesktop } from './desktop/index.ts';
 import { PreferencesProvider, usePreferenceValues, useReducedMotion } from './preferences/index.ts';
 import { AppBoundary } from './ui/app-boundary.tsx';
+import { BootScreen } from './ui/boot-screen.tsx';
+import { StatusCalendar } from './ui/calendar.tsx';
+import { ControlCenter } from './ui/control-center.tsx';
+import { CustomCursor } from './ui/cursor.tsx';
+import { DesktopPopoverProvider, useDesktopPopover } from './ui/desktop-popover.tsx';
+import { DesktopShortcuts } from './ui/desktop-shortcuts.tsx';
+import { Dock } from './ui/dock.tsx';
 import { useVisualViewport } from './ui/environment.ts';
-import { GlassMaterial } from './ui/glass-material.tsx';
-import { Icon } from './ui/icon.tsx';
+import { useDesktopMotion } from './ui/motion.ts';
 import { SearchPanel } from './ui/search-panel.tsx';
+import { TopStatusBar } from './ui/status-bar.tsx';
 import { Wallpaper } from './ui/wallpaper.tsx';
 import { WindowFrame } from './ui/window-frame.tsx';
-import { Brand } from './ui/brand.tsx';
-import { useDesktopMotion, useDockMotion } from './ui/motion.ts';
-import { TopStatusBar } from './ui/status-bar.tsx';
-import { DesktopPopoverProvider, useDesktopPopover } from './ui/desktop-popover.tsx';
-import { ControlCenter } from './ui/control-center.tsx';
-import { StatusCalendar } from './ui/calendar.tsx';
 
 function visibleTarget(target: HTMLElement | null): target is HTMLElement {
   if (!target?.isConnected || target.closest('[hidden],[inert]')) return false;
@@ -136,6 +132,8 @@ function DesktopContents() {
   });
   return (
     <DesktopAppearance mode={desktop.state.mode}>
+      <BootScreen />
+      <CustomCursor />
       <div className="desktop-system" ref={shellRoot} inert={search}>
         <Wallpaper />
         <TopStatusBar onAbout={() => open('about')} onArrange={arrange} onSearch={startSearch}>
@@ -143,20 +141,7 @@ function DesktopContents() {
           <StatusCalendar />
         </TopStatusBar>
         <main className="desktop-surface" aria-label="HonestOS 桌面" tabIndex={0}>
-          <nav className="desktop-shortcuts" aria-label="桌面快捷入口">
-            {(['projects', 'blog', 'about'] as const).map((id) => (
-              <button key={id} onClick={() => open(id)}>
-                <span className={`shortcut-art shortcut-${id}`}>
-                  {id === 'about' ? (
-                    <span aria-hidden="true">md</span>
-                  ) : (
-                    <Icon name={appById[id].icon} />
-                  )}
-                </span>
-                <span>{id === 'about' ? 'README.md' : appById[id].name}</span>
-              </button>
-            ))}
-          </nav>
+          <DesktopShortcuts onOpen={open} />
           {appRegistry.map((app) => {
             const record = desktop.state.windows[app.id];
             if (record.sessionId === null) return null;
@@ -214,73 +199,6 @@ function DesktopAppearance({ mode, children }: { mode: string; children: ReactNo
       }
     >
       {children}
-    </div>
-  );
-}
-
-function Dock({
-  onOpen,
-  onSearch,
-}: {
-  onOpen: (id: AppId) => void;
-  onSearch: (trigger?: HTMLElement) => void;
-}) {
-  const desktop = useDesktop();
-  const dockRoot = useRef<HTMLElement>(null);
-  const dockMotion = useDockMotion(dockRoot, useReducedMotion());
-  return (
-    <div className="dock-wrap">
-      <nav
-        ref={dockRoot}
-        className="dock"
-        aria-label="应用程序坞"
-        onPointerMove={dockMotion.move}
-        onPointerLeave={dockMotion.restore}
-        onBlur={dockMotion.restore}
-      >
-        <GlassMaterial />
-        {appRegistry.map((app) => {
-          const view = getWindowPresentation(desktop.state, app.id);
-          return (
-            <div
-              className={`dock-slot ${app.id === 'settings' ? 'dock-separated' : ''}`}
-              key={app.id}
-            >
-              <button
-                data-dock-app={app.id}
-                aria-label={`打开${app.name}${view.running ? '（运行中）' : ''}`}
-                aria-current={view.active ? 'true' : undefined}
-                onClick={() => onOpen(app.id)}
-              >
-                <span className={`app-icon icon-${app.id}`}>
-                  {app.id === 'about' ? <Brand /> : <Icon name={app.icon} />}
-                </span>
-                <span
-                  className={`dock-indicator ${view.running ? 'running' : ''}`}
-                  aria-hidden="true"
-                />
-                <span className="dock-tooltip" aria-hidden="true">
-                  {app.name}
-                </span>
-              </button>
-            </div>
-          );
-        })}
-        <div className="dock-slot">
-          <button
-            data-dock-search
-            aria-label="搜索应用"
-            onClick={(event) => onSearch(event.currentTarget)}
-          >
-            <span className="app-icon icon-search">
-              <Icon name="search" />
-            </span>
-            <span className="dock-tooltip" aria-hidden="true">
-              搜索应用
-            </span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }

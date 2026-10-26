@@ -1,0 +1,130 @@
+:root {
+  --cursor-default:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4.2 2.6L19.4 11.4L12.1 13.1L15.3 20.1L12.5 21.4L9.3 14.3L4.2 18.8V2.6Z' fill='%23161822' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E")
+      4 2,
+    default;
+  --cursor-pointer:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M9 3.5a1.8 1.8 0 0 1 3.6 0v5.2h.9a1.7 1.7 0 0 1 1.7 1.5l.4-.1a1.7 1.7 0 0 1 1.7 1.5l.4-.1a1.7 1.7 0 0 1 1.7 1.7v3.2a6.2 6.2 0 0 1-6.2 6.1H10a5.5 5.5 0 0 1-4.6-2.5l-2.1-3.3a1.6 1.6 0 0 1 2.6-1.8L7.4 16V3.5Z' fill='%23161822' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E")
+      9 3,
+    pointer;
+  --cursor-grab:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M8.5 6a1.4 1.4 0 0 1 2.8 0v3.5V5a1.4 1.4 0 0 1 2.8 0v4.5V6.2a1.4 1.4 0 0 1 2.8 0v4.8V8.2a1.4 1.4 0 0 1 2.8 0v6.6a5.8 5.8 0 0 1-5.8 5.8h-2.5a5.5 5.5 0 0 1-4.8-2.8l-1.5-2.7a1.4 1.4 0 0 1 2.4-1.4l1 1.7V6Z' fill='%23161822' stroke='%23ffffff' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E")
+      12 10,
+    grab;
+  --cursor-grabbing:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M7 10.5a1.5 1.5 0 0 1 3 0v-.8a1.5 1.5 0 0 1 3 0v.4a1.5 1.5 0 0 1 3 0v.6a1.5 1.5 0 0 1 2.8.8v3.3a5.6 5.6 0 0 1-5.6 5.6h-2.4a5.2 5.2 0 0 1-4.8-3.2l-.9-2.2A1.5 1.5 0 0 1 7 13.3v-2.8Z' fill='%23161822' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E")
+      12 12,
+    grabbing;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .honestos {
+    cursor: var(--cursor-default);
+  }
+  .honestos :is(button, a, label, select, [role='menuitem']):not(:disabled):not(.window-resize) {
+    cursor: var(--cursor-pointer);
+  }
+  .honestos .window-resize {
+    cursor: nwse-resize;
+  }
+  .honestos .window-titlebar {
+    cursor: var(--cursor-grab);
+  }
+  .honestos .window-titlebar:active {
+    cursor: var(--cursor-grabbing);
+  }
+  .honestos .single-window .window-titlebar {
+    cursor: var(--cursor-default);
+  }
+}
+
+.desktop-cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .desktop-cursor-layer[data-cursor-visible='true'] {
+    opacity: 1;
+  }
+}
+.desktop-cursor-glow,
+.desktop-cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.desktop-cursor-glow {
+  width: 140px;
+  height: 140px;
+  margin-left: -70px;
+  margin-top: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #64aaff1c, #007aff08, transparent);
+  transition: opacity 220ms ease;
+}
+.desktop-cursor-ring {
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  margin-top: -12px;
+  border-radius: 50%;
+  border: 1px solid #ffffff78;
+  background: #ffffff0d;
+  box-shadow:
+    0 2px 10px #007aff18,
+    inset 0 0 6px #ffffff28;
+  transition:
+    width 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+[data-appearance='light'] .desktop-cursor-ring {
+  border-color: #0071e345;
+  background: #007aff08;
+}
+.desktop-cursor-layer[data-cursor-mode='interactive'] .desktop-cursor-ring {
+  width: 36px;
+  height: 36px;
+  margin-left: -18px;
+  margin-top: -18px;
+  border-color: #64aaff90;
+  background: #007aff14;
+}
+.desktop-cursor-layer[data-cursor-mode='grab'] .desktop-cursor-ring {
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  margin-top: -15px;
+  border-color: #ffffff96;
+  background: #ffffff18;
+}
+.desktop-cursor-layer[data-cursor-mode='text'] .desktop-cursor-ring {
+  width: 6px;
+  height: 22px;
+  margin-left: -3px;
+  margin-top: -11px;
+  border-radius: 999px;
+  border-color: #64aaff80;
+}
+.desktop-cursor-layer[data-cursor-pressed='true'] .desktop-cursor-ring {
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  margin-top: -9px;
+  background: #007aff26;
+}
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .desktop-cursor-layer {
+    display: none !important;
+  }
+}

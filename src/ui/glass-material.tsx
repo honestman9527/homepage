@@ -26,7 +26,7 @@ export function GlassMaterial() {
             <feDisplacementMap
               in="SourceGraphic"
               in2="edge-map"
-              scale="2.2"
+              scale="3.2"
               xChannelSelector="R"
               yChannelSelector="G"
             />
@@ -34,6 +34,7 @@ export function GlassMaterial() {
         </defs>
       </svg>
       <span className="glass-edge" />
+      <span className="glass-specular" />
     </span>
   );
 }
