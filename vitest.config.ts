@@ -7,5 +7,8 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.{ts,tsx}'],
     restoreMocks: true,
+    onConsoleLog(log) {
+      if (log.includes('scale not eligible for reset')) return false;
+    },
   },
 });

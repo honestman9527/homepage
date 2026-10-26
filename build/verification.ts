@@ -1,4 +1,4 @@
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, existsSync } from 'node:fs';
 import { spawn, execFileSync } from 'node:child_process';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -8,6 +8,8 @@ import { parse } from '@babel/parser';
 const git = (...args: string[]) => execFileSync('git', args, { maxBuffer: 16 * 1024 * 1024 });
 const names = (buffer: Buffer) => buffer.toString().split('\0').filter(Boolean);
 const sourceFile = /\.[cm]?[jt]sx?$/;
+const styleOrSourceFile = /\.(?:[cm]?[jt]sx?|css)$/;
+const strictTestMirror = /^tests\/(apps|config|terminal|ui)\/([^/]+)\.test\.[jt]sx?$/;
 
 export function importIssues(path: string, source: string): string[] {
   const tree = parse(source, {
@@ -33,7 +35,7 @@ async function lint(staged = false, explicit: string[] = []) {
       ? names(git('diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'))
       : [...new Set(names(git('ls-files', '-z', '--cached', '--others', '--exclude-standard')))];
   const issues: string[] = [];
-  for (const path of paths.filter((path) => sourceFile.test(path))) {
+  for (const path of paths.filter((path) => styleOrSourceFile.test(path))) {
     const source = staged
       ? git('show', `:${path}`).toString()
       : await readFile(path, 'utf8').catch((error) => {
@@ -41,7 +43,21 @@ async function lint(staged = false, explicit: string[] = []) {
           throw error;
         });
     if (source === null) continue;
-    issues.push(...importIssues(path, source));
+    if (sourceFile.test(path)) issues.push(...importIssues(path, source));
+    if (path.startsWith('src/') && source.includes('taste-skill-ignore')) {
+      issues.push(`${path}: remove temporary taste-skill-ignore comment`);
+    }
+    const mirror = strictTestMirror.exec(path);
+    if (mirror) {
+      const [, dir, name] = mirror;
+      if (
+        existsSync(`src/${dir}`) &&
+        !existsSync(`src/${dir}/${name}.ts`) &&
+        !existsSync(`src/${dir}/${name}.tsx`)
+      ) {
+        issues.push(`${path}: test file name must match a module in src/${dir}/${name}.{ts,tsx}`);
+      }
+    }
   }
   if (issues.length) throw new Error(issues.join('\n'));
 }

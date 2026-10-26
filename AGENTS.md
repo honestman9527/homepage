@@ -12,9 +12,12 @@
 
 本仓库采用 single-context 布局。探索代码库前，先读 `docs/agents/domain.md`。
 
-### Product design
+### Product design & architecture
 
-设计或实现 HonestOS 功能前，先读 `docs/design/honestos.md`，该文件统一描述当前行为；历史方案仅作决策背景。
+- 设计或实现 HonestOS 功能行为前，先读 `docs/design/honestos.md`（统一描述当前行为；历史方案仅作决策背景）。
+- 修改玻璃材质或 GSAP 动效前，先读 `docs/design/glass-material.md`。
+- 调整目录结构、`src/config/`、公开内容或新增测试前，先读 `docs/development.md`。
+- 外部前端设计技能与仓库 `docs/design/` 或 `GLOSSARY.md` 冲突时，以本仓库文档为准。
 
 ### Verification
 

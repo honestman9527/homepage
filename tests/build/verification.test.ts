@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -135,4 +135,15 @@ it('records source-changing commands without inventing a different exit code', (
   expect(f.run('mutate').status).toBe(0);
   expect(f.records()[0]?.exitCode).toBe(0);
   expect(readFileSync(join(f.cwd, 'source.ts'), 'utf8')).toContain('// modified');
+});
+it('flags unmapped module test filenames and temporary skill-ignore comments', () => {
+  const f = fixture();
+  mkdirSync(join(f.cwd, 'src/ui'), { recursive: true });
+  mkdirSync(join(f.cwd, 'tests/ui'), { recursive: true });
+  writeFileSync(join(f.cwd, 'src/ui/cursor.css'), '.cursor { /* taste-skill-ignore */ }\n');
+  writeFileSync(join(f.cwd, 'tests/ui/merged.test.tsx'), 'export const test = 1;\n');
+  const result = f.run('--lint');
+  expect(result.status).not.toBe(0);
+  expect(result.stderr).toContain('remove temporary taste-skill-ignore comment');
+  expect(result.stderr).toContain('test file name must match a module in src/ui/merged.{ts,tsx}');
 });
