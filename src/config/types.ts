@@ -63,19 +63,11 @@ export interface Project {
   sourceUrl?: string;
   image?: string;
 }
-export interface FeaturedPost {
-  id: string;
-  title: string;
-  summary: string;
-  url: string;
-  date?: string;
-  sample?: boolean;
-}
 export interface Blog {
   title: string;
   description: string;
   url?: string;
-  posts: readonly FeaturedPost[];
+  rssUrl?: string;
 }
 export interface BootStage {
   progress: number;

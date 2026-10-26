@@ -32,7 +32,7 @@ pnpm deploy:dry-run   # 验证根 Wrangler 配置及已有产物，不上传
 
 | 目录或文件 | 职责 |
 | --- | --- |
-| `src/config/` | 应用身份、公开内容、类型和内容校验；个人资料、项目、精选文章与桌面启动/快捷入口分别在 `profile.ts`、`projects.ts`、`blog.ts`、`system.ts` 维护，由 `content.ts` 聚合为 `siteConfig` |
+| `src/config/` | 应用身份、公开内容、类型和内容校验；个人资料、项目、博客入口与 RSS 地址、桌面启动/快捷入口分别在 `profile.ts`、`projects.ts`、`blog.ts`、`system.ts` 维护，由 `content.ts` 聚合为 `siteConfig` |
 | `src/apps/` | 五个应用的呈现与各自交互 |
 | `src/desktop/`、`src/preferences/`、`src/terminal/`、`src/search/` | 窗口会话、偏好、终端与搜索逻辑 |
 | `src/ui/`、`src/styles.css` | 桌面呈现、窗口、导航、动效与共享样式 |
@@ -68,16 +68,16 @@ tests/
 | --- | --- |
 | `profile` | 更新姓名、别名、主标题、介绍、简介、兴趣与个人状态；介绍是独立文案，改名时一并核对 `introduction`。`links` 只添加本人确认公开的联系方式 |
 | `projects` | 每项提供稳定唯一 `id`、名称、摘要、说明、状态和标签；保留 ID 可避免维护时打断对应卡片身份。空数组会显示项目整理中的空态，并提供关于我入口 |
-| `blog` | 配置独立博客简介、可选入口 `url` 与可为空数组的 `posts` 元数据；未配置入口显示“独立博客筹备中”。文章只提供真实外链，不存正文；`posts` 由作者手动维护，见[手动精选文章](#手动精选文章) |
+| `blog` | 配置独立博客简介、可选入口 `url` 与 RSS 地址 `rssUrl`；未配置入口显示“独立博客筹备中”。文章由客户端直接加载，不存正文，见[RSS 文章加载](#rss-文章加载) |
 | `site` | `title`、`description` 用于页面元信息；正式地址确认后填写绝对 `url`，可选 `shareImage` 为真实公开图片地址 |
 
 当前首批项目为 HonestOS（`building`，`currentSite: true`）、小小宇宙与实验室（`idea`）。项目状态仅有 `live`、`building`、`idea`、`archived`；“本站”是独立身份。只有真实上线且配置在线地址后才可标为 `live`，即使本站卡片不显示自链也需提供真实 `url`。项目的在线地址 `url` 和源码地址 `sourceUrl` 分别维护；构想项目不展示演示入口，不能用假地址装作已可访问。
 
-项目卡片上的“了解项目”进入同一应用内的详情；返回恢复列表位置与触发卡片的焦点。外链是独立操作，在新标签打开。精选文章使用唯一 ID、真实标题、摘要和 `url`，可选 `date`；标记 `sample: true` 的内容会导致构建校验失败，原型示例不发布。
+项目卡片上的“了解项目”进入同一应用内的详情；返回恢复列表位置与触发卡片的焦点。外链是独立操作，在新标签打开。订阅源文章展示标题、纯文本摘要、有效外链与可选日期，保留 RSS 顺序；重复链接、缺失标题或非法链接的条目会被过滤。
 
 ## 地址、图片与元信息
 
-普通公开链接只接受绝对 http / https。邮箱在 `profile.links` 中设置 `{ label, url, kind: 'email' }`，也支持直接填写 `mailto:` 字符串；邮箱打开邮件客户端。网页地址字符串优先以已识别的平台名称为标签，其他地址使用域名；网页链接在新标签打开。推荐对象格式以明确控制标签。未知地址保持字段未配置，不使用 `#`、空字符串、示例域名或推断的个人账号。`publicUrl()` 返回有效地址或 `undefined`，界面据此隐藏无效链接；构建执行 `validateConfig()`，阻止重复身份、非法地址、缺少在线地址的 live 项目与示例文章。校验不证明域名所有权、内容真实性或网站当前可访问，发布前须人工核实。
+普通公开链接只接受绝对 http / https。邮箱在 `profile.links` 中设置 `{ label, url, kind: 'email' }`，也支持直接填写 `mailto:` 字符串；邮箱打开邮件客户端。网页地址字符串优先以已识别的平台名称为标签，其他地址使用域名；网页链接在新标签打开。推荐对象格式以明确控制标签。未知地址保持字段未配置，不使用 `#`、空字符串、示例域名或推断的个人账号。`publicUrl()` 返回有效地址或 `undefined`，界面据此隐藏无效链接；构建执行 `validateConfig()`，阻止重复身份、非法地址、缺少在线地址的 live 项目与非法 RSS 地址。校验不证明域名所有权、内容真实性或网站当前可访问，发布前须人工核实。
 
 ### 联系方式与社交标志
 
@@ -117,41 +117,33 @@ links: [
 
 当前配置待补资料与实际验证范围见 [交付记录](delivery.md)；内容上线、发布凭据、域名与回退分别按 [发布说明](deployment.md) 处理。
 
-## 手动精选文章
+## RSS 文章加载
 
-编辑 `src/config/blog.ts`（聚合于 `src/config/content.ts` 的 `siteConfig.blog`）中的 `url` 和 `posts`。`url` 是“打开独立博客”的地址；`posts` 是精选文章数组，按填写顺序展示，不按日期重新排序。将最想推荐的文章放在第一项。
+编辑 `src/config/blog.ts`（聚合于 `siteConfig.blog`）中的 `url` 和 `rssUrl`：
 
 ```ts
-blog: {
+export const blogConfig: Blog = {
   title: '随便写写',
-  description: '代码之外，也想留下生活和思考的痕迹。',
+  description: '代码之外，也想留下生活和思考的痕迹。主站负责相遇，博客负责慢慢聊。',
   url: 'https://blog.honestman.me',
-  posts: [
-    {
-      id: 'my-first-featured-post',
-      title: '替换为真实文章标题',
-      summary: '用一两句话介绍这篇文章；这里填写纯文本。',
-      url: 'https://blog.honestman.me/替换为真实文章路径',
-      date: '2026-10-23',
-    },
-  ],
-},
+  rssUrl: 'https://blog.honestman.me/rss.xml',
+};
 ```
 
-上例仅说明字段，先替换为真实文章再发布，不会自动写入正式配置。`id` 保持唯一且稳定；`title`、`summary` 和 `url` 按真实文章填写，摘要可设为空字符串。`date` 可省略，推荐使用 `YYYY-MM-DD`；界面日期按 UTC 展示，避免时区使日期偏移。标题和摘要按纯文本呈现。
+`url` 是“打开独立博客”的地址，`rssUrl` 是浏览器直接请求的 RSS 2.0 订阅源。二者独立可选，移除 `rssUrl` 后不发起请求，博客入口仍可使用；不再维护 `posts` 数组。
 
-暂时没有精选内容时保留 `posts: []`，仍显示独立博客入口；移除 `blog.url` 表示博客未配置。文章链接在新标签打开。配置校验会阻止重复 ID、非法链接和 `sample: true` 的示例文章；真实文章及链接是否正确需维护者核对。
+博客应用打开后在客户端加载 RSS，按订阅源顺序展示 `item` 的 `title`、`description`、`link` 和可选 `pubDate`。摘要去除 HTML 并截断到 240 字符，标题按纯文本渲染；日期有效时按 UTC 展示。无标题、缺少有效 http/https 链接及重复链接的条目会被忽略，文章在新标签打开。
 
-维护后运行对应检查与预览：
+请求不携带凭据，15 秒后超时；加载中、空列表和失败均有状态提示，失败可点击“重新加载文章”，博客入口始终独立可用。最小化或切到后台保留结果；关闭应用取消请求，重新打开重新读取。文章更新不需要重建主站，也不保存文章快照或正文。
+
+RSS 服务必须允许主站来源跨域读取，例如返回 `Access-Control-Allow-Origin: https://honestman.me` 或 `*`；本地开发也需要允许实际开发地址。本站不使用代理或 `no-cors` 绕过浏览器限制。维护地址后，人工确认线上 RSS 响应和 CORS，并运行相关检查：
 
 ```sh
-pnpm test tests/config tests/apps/blog.test.tsx
+pnpm test tests/config tests/apps/blog.test.tsx tests/apps/blog-feed.test.ts
 pnpm typecheck
-pnpm build
-pnpm preview
 ```
 
-发布沿用 [发布流程](deployment.md)。精选文章变更随重新构建发布生效；站点不会在开发、构建或浏览器中抓取 RSS，不再使用 `blog:sync`、`HONESTOS_RSS_URL` 或文章快照。决策见 [ADR-0003](adr/0003-manually-curated-blog-posts.md)。
+发布沿用 [发布流程](deployment.md)。本次决策取代手动精选方式，见 [ADR-0004](adr/0004-client-side-blog-rss.md)。
 
 ## 界面与动效
 

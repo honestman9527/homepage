@@ -67,6 +67,7 @@ export function validateConfig(config: SiteConfig, apps: readonly AppDefinition[
   checkUrl('site', config.site.url);
   checkUrl('site.shareImage', config.site.shareImage);
   checkUrl('blog', config.blog.url);
+  checkUrl('blog.rssUrl', config.blog.rssUrl);
   const projectsSeen = new Set<string>();
   for (const project of config.projects) {
     if (projectsSeen.has(project.id)) issues.push(`projects: duplicate id ${project.id}`);
@@ -76,13 +77,6 @@ export function validateConfig(config: SiteConfig, apps: readonly AppDefinition[
     if (project.status === 'live' && !publicUrl(project.url)) {
       issues.push(`projects.${project.id}: live project requires a public URL`);
     }
-  }
-  const postsSeen = new Set<string>();
-  for (const post of config.blog.posts) {
-    if (postsSeen.has(post.id)) issues.push(`blog.posts: duplicate id ${post.id}`);
-    postsSeen.add(post.id);
-    if (post.sample) issues.push(`blog.posts.${post.id}: sample content cannot be published`);
-    checkUrl(`blog.posts.${post.id}`, post.url);
   }
   if (config.system) {
     if (config.system.boot.durationMs < 200 || config.system.boot.durationMs > 5000) {

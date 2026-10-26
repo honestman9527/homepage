@@ -44,33 +44,22 @@ describe('public content configuration', () => {
     config.profile.links = [{ label: 'GitHub', url: 'javascript:alert(1)' }];
     config.projects = [{ ...config.projects[0]!, status: 'live' }];
     config.blog.url = 'https://example.com';
+    config.blog.rssUrl = 'javascript:alert(1)';
     expect(validateConfig(config, appRegistry)).toEqual(
       expect.arrayContaining([
         'profile.links.0: invalid public URL',
         'projects.honestos: live project requires a public URL',
         'blog: invalid public URL',
+        'blog.rssUrl: invalid public URL',
       ]),
     );
   });
 
-  it('prevents duplicate projects and prototype sample articles from being published', () => {
+  it('prevents duplicate projects from being published', () => {
     const config = structuredClone(siteConfig);
     config.projects = [config.projects[0]!, config.projects[0]!];
-    config.blog.posts = [
-      {
-        id: 'sample',
-        title: '示例文章',
-        summary: '',
-        url: 'https://example.com/post',
-        sample: true,
-      },
-    ];
     expect(validateConfig(config, appRegistry)).toEqual(
-      expect.arrayContaining([
-        'projects: duplicate id honestos',
-        'blog.posts.sample: sample content cannot be published',
-        'blog.posts.sample: invalid public URL',
-      ]),
+      expect.arrayContaining(['projects: duplicate id honestos']),
     );
   });
 
@@ -78,6 +67,7 @@ describe('public content configuration', () => {
     const config = structuredClone(siteConfig);
     config.projects = [];
     config.blog.url = undefined;
+    config.blog.rssUrl = undefined;
     expect(validateConfig(config, appRegistry)).toEqual([]);
     expect(publicUrl(config.blog.url)).toBeUndefined();
     expect(publicUrl(undefined)).toBeUndefined();
