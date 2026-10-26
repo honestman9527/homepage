@@ -6,9 +6,9 @@
 
 参考 [childrentime/liquid-glass 的 LiquidGlass.tsx](https://github.com/childrentime/liquid-glass/blob/345a3c4f3b07756239537f57ca88e29c0c04952b/src/LiquidGlass.tsx) 与 [技术说明](https://github.com/childrentime/liquid-glass/blob/345a3c4f3b07756239537f57ca88e29c0c04952b/LIQUID_GLASS_EFFECT_EN.md)，提取圆角矩形距离场、R/G 位移贴图和 SVG `feDisplacementMap` 的思路。未引入演示的拖动透镜、固定层级、指针驱动重绘或持续液态动画。
 
-`GlassMaterial` 是控件背后的独立装饰层，覆盖状态栏、Dock、标题栏、菜单、控制中心、日历和搜索。窗口正文使用稳定底色；终端保持深色。滤镜不应用到控件或正文节点。
+`GlassMaterial` 是控件背后的独立装饰层，覆盖状态栏、Dock、标题栏、菜单、控制中心、日历、搜索与入场卡片。窗口正文使用稳定底色；终端保持深色。滤镜不应用到控件或正文节点。
 
-`src/assets/glass-edge-map.png` 是独立生成的 128×128 静态 RGB 位移图：圆角矩形半宽 62、圆角半径 18，在内侧 7 像素边带沿距离场法线写入正弦位移；中部保持 R/G=128。位移强度为 90，B=128，SVG 最终位移量限制为 2.2 像素。所有表面复用同一图片、使用唯一滤镜 ID，伸缩贴图意味着边带比例随表面比例变化，不承诺像素一致的实体透镜。无需 Canvas、ResizeObserver、逐帧或指针计算。
+`src/assets/glass-edge-map.png` 是独立生成的 128×128 静态 RGB 位移图：圆角矩形半宽 62、圆角半径 18，在内侧 7 像素边带沿距离场法线写入正弦位移；中部保持 R/G=128。位移强度为 90，B=128，SVG 最终位移量设为 3.2 像素，并叠加多层静态内侧高光与 `.glass-specular` 柔光反射层。所有表面复用同一图片、使用唯一滤镜 ID，伸缩贴图意味着边带比例随表面比例变化，不承诺像素一致的实体透镜。无需 Canvas、ResizeObserver、逐帧或指针计算。
 
 渐进增强顺序为实色 → 标准/前缀背景磨砂 → 单独的 SVG 边缘层。CSS `@supports` 只判断声明可接受，不证明浏览器渲染正确；URL 滤镜失败时不影响磨砂底层。系统减少透明度时使用实色，关闭磨砂与边缘折射，终端正文也保持实色。
 

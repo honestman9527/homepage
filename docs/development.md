@@ -32,7 +32,7 @@ pnpm deploy:dry-run   # 验证根 Wrangler 配置及已有产物，不上传
 
 | 目录或文件 | 职责 |
 | --- | --- |
-| `src/config/` | 应用身份、公开内容、类型和内容校验；精选文章只在 `content.ts` 维护 |
+| `src/config/` | 应用身份、公开内容、类型和内容校验；个人资料、项目、精选文章与桌面启动/快捷入口分别在 `profile.ts`、`projects.ts`、`blog.ts`、`system.ts` 维护，由 `content.ts` 聚合为 `siteConfig` |
 | `src/apps/` | 五个应用的呈现与各自交互 |
 | `src/desktop/`、`src/preferences/`、`src/terminal/`、`src/search/` | 窗口会话、偏好、终端与搜索逻辑 |
 | `src/ui/`、`src/styles.css` | 桌面呈现、窗口、导航、动效与共享样式 |
@@ -62,7 +62,7 @@ tests/
 
 ## 公开内容
 
-公开内容集中在 `src/config/content.ts` 的 `siteConfig`，类型见 `src/config/types.ts`，调用方统一从 `src/config/index.ts` 导入。浏览器会收到这些内容，不能放入 token、账户凭据或私人资料。
+公开内容由 `src/config/profile.ts`、`src/config/projects.ts`、`src/config/blog.ts` 与 `src/config/system.ts` 分域维护，并在 `src/config/content.ts` 聚合为 `siteConfig`，类型见 `src/config/types.ts`，调用方统一从 `src/config/index.ts` 导入。浏览器会收到这些内容，不能放入 token、账户凭据或私人资料。
 
 | 配置 | 维护方式与约束 |
 | --- | --- |
@@ -81,7 +81,7 @@ tests/
 
 ### 联系方式与社交标志
 
-编辑 `src/config/content.ts` 的 `profile.links`。现有 `links: ["mailto:hello@honestman.me"]` 会显示信封和邮箱；只有添加实际社交账号后才展示对应入口。例如下面的账号和实例域名需要先替换为自己的真实地址：
+编辑 `src/config/profile.ts`（聚合于 `src/config/content.ts`）的 `profile.links`。现有 `links: ["mailto:hello@honestman.me"]` 会显示信封和邮箱；只有添加实际社交账号后才展示对应入口。例如下面的账号和实例域名需要先替换为自己的真实地址：
 
 ```ts
 links: [
@@ -119,7 +119,7 @@ links: [
 
 ## 手动精选文章
 
-编辑 `src/config/content.ts` 中 `siteConfig.blog` 的 `url` 和 `posts`。`url` 是“打开独立博客”的地址；`posts` 是精选文章数组，按填写顺序展示，不按日期重新排序。将最想推荐的文章放在第一项。
+编辑 `src/config/blog.ts`（聚合于 `src/config/content.ts` 的 `siteConfig.blog`）中的 `url` 和 `posts`。`url` 是“打开独立博客”的地址；`posts` 是精选文章数组，按填写顺序展示，不按日期重新排序。将最想推荐的文章放在第一项。
 
 ```ts
 blog: {
