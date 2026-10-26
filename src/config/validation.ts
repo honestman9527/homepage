@@ -84,5 +84,20 @@ export function validateConfig(config: SiteConfig, apps: readonly AppDefinition[
     if (post.sample) issues.push(`blog.posts.${post.id}: sample content cannot be published`);
     checkUrl(`blog.posts.${post.id}`, post.url);
   }
+  if (config.system) {
+    if (config.system.boot.durationMs < 200 || config.system.boot.durationMs > 5000) {
+      issues.push('system.boot.durationMs: duration must be between 200 and 5000 ms');
+    }
+    const shortcutsSeen = new Set<string>();
+    for (const shortcut of config.system.shortcuts) {
+      if (!seen.has(shortcut.appId)) {
+        issues.push(`system.shortcuts: unknown appId ${shortcut.appId}`);
+      }
+      if (shortcutsSeen.has(shortcut.appId)) {
+        issues.push(`system.shortcuts: duplicate appId ${shortcut.appId}`);
+      }
+      shortcutsSeen.add(shortcut.appId);
+    }
+  }
   return issues;
 }

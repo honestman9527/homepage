@@ -83,6 +83,25 @@ describe('public content configuration', () => {
     expect(publicUrl(undefined)).toBeUndefined();
     expect(publicUrl('')).toBeUndefined();
   });
+
+  it('validates system boot duration and desktop shortcut app references', () => {
+    const config = structuredClone(siteConfig);
+    if (config.system) {
+      config.system.boot.durationMs = 50;
+      config.system.shortcuts = [
+        { appId: 'projects' },
+        { appId: 'projects' },
+        { appId: 'unknown' as import('../../src/config/index.ts').AppId },
+      ];
+    }
+    expect(validateConfig(config, appRegistry)).toEqual(
+      expect.arrayContaining([
+        'system.boot.durationMs: duration must be between 200 and 5000 ms',
+        'system.shortcuts: duplicate appId projects',
+        'system.shortcuts: unknown appId unknown',
+      ]),
+    );
+  });
 });
 
 it('normalizes compact author addresses while preserving explicit link labels and validation', () => {
