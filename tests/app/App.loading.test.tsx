@@ -31,9 +31,10 @@ it('opens a closable window before download completes and never revives a closed
   expect(screen.queryByRole('region', { name: '我的项目' })).toBeNull();
   fireEvent.click(dock.getByRole('button', { name: /打开我的项目/ }));
   const content = await screen.findByRole('region', { name: '项目内容' });
-  fireEvent.click(within(content).getByRole('button', { name: '了解HonestOS' }));
+  expect(within(content).getByRole('heading', { name: '我的项目' })).toBeDefined();
+  content.scrollTop = 50;
   fireEvent.click(screen.getByRole('button', { name: '关闭我的项目' }));
   fireEvent.click(dock.getByRole('button', { name: /打开我的项目/ }));
-  expect(screen.queryByRole('button', { name: '返回项目列表' })).toBeNull();
+  expect(screen.getByRole('region', { name: '项目内容' }).scrollTop).toBe(0);
   expect(gate.calls).toBe(1);
 });

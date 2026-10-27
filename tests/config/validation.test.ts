@@ -63,6 +63,27 @@ describe('public content configuration', () => {
     );
   });
 
+  it.each([
+    'https://blog.honestman.me/posts/tool',
+    'http://blog.honestman.me/posts/tool',
+    undefined,
+  ])('accepts optional article links and projects without summaries (%j)', (articleUrl) => {
+    const config = structuredClone(siteConfig);
+    config.projects = [{ id: 'tool', name: '小工具', status: 'idea', articleUrl }];
+    expect(validateConfig(config, appRegistry)).toEqual([]);
+  });
+
+  it.each(['javascript:alert(1)', '/posts/tool', 'https://example.com/tool', ''])(
+    'rejects invalid article links before publishing (%j)',
+    (articleUrl) => {
+      const config = structuredClone(siteConfig);
+      config.projects = [{ id: 'tool', name: '小工具', status: 'idea', articleUrl }];
+      expect(validateConfig(config, appRegistry)).toContain(
+        'projects.tool.article: invalid public URL',
+      );
+    },
+  );
+
   it('accepts empty projects and an unconfigured blog without inventing destinations', () => {
     const config = structuredClone(siteConfig);
     config.projects = [];

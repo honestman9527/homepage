@@ -51,16 +51,13 @@ export type ProjectStatus = 'live' | 'building' | 'idea' | 'archived';
 export interface Project {
   id: string;
   name: string;
-  summary: string;
-  description: string;
+  summary?: string;
   status: ProjectStatus;
   currentSite?: boolean;
-  tags: readonly string[];
-  stack?: readonly string[];
-  highlights?: readonly string[];
   year?: string;
   url?: string;
   sourceUrl?: string;
+  articleUrl?: string;
   image?: string;
 }
 export interface Blog {

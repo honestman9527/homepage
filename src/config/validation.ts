@@ -74,6 +74,7 @@ export function validateConfig(config: SiteConfig, apps: readonly AppDefinition[
     projectsSeen.add(project.id);
     checkUrl(`projects.${project.id}`, project.url);
     checkUrl(`projects.${project.id}.source`, project.sourceUrl);
+    checkUrl(`projects.${project.id}.article`, project.articleUrl);
     if (project.status === 'live' && !publicUrl(project.url)) {
       issues.push(`projects.${project.id}: live project requires a public URL`);
     }

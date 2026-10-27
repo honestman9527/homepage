@@ -40,7 +40,6 @@ it('shares single application sessions across Dock, About and desktop shortcuts 
   expect(document.activeElement).not.toBe(terminalInput());
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
-  await user.click(within(frame('我的项目')).getByRole('button', { name: '了解HonestOS' }));
   await user.click(
     within(screen.getByRole('navigation', { name: '桌面快捷入口' })).getByRole('button', {
       name: '我的项目',
@@ -124,15 +123,20 @@ it('preserves focus when closing an inactive window and chooses an open MRU succ
   expect(screen.getByText(/桌面静下来了/)).toBeTruthy();
 });
 
-it('preserves project detail and reading position across hide/arrange/modes, restores list scroll and focus, and resets a closed session', async () => {
+it('preserves project list scroll across minimize/arrange/modes and resets a closed session', async () => {
   const user = userEvent.setup();
   render(<App />);
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   const content = within(frame('我的项目')).getByRole('region', { name: '项目内容' });
-  content.scrollTop = 120;
-  await user.click(within(content).getByRole('button', { name: '了解HonestOS' }));
+  Object.defineProperty(content, 'clientHeight', { configurable: true, value: 120 });
   content.scrollTop = 87;
+  fireEvent.scroll(content);
+  await user.click(screen.getByRole('button', { name: '最小化我的项目' }));
+  expect(screen.queryByRole('region', { name: '我的项目' })).toBeNull();
+  await user.click(dock('我的项目'));
+  expect(within(frame('我的项目')).getByRole('region', { name: '项目内容' })).toBe(content);
+  expect(content.scrollTop).toBe(87);
   await user.click(dock('桌面设置'));
   await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
@@ -147,15 +151,11 @@ it('preserves project detail and reading position across hide/arrange/modes, res
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(content.scrollTop).toBe(87);
   resize(1366, 768);
-  await user.click(within(content).getByRole('button', { name: '返回项目列表' }));
-  expect(content.scrollTop).toBe(120);
-  expect(document.activeElement).toBe(
-    within(content).getByRole('button', { name: '了解HonestOS' }),
-  );
+  expect(content.scrollTop).toBe(87);
   await user.click(screen.getByRole('button', { name: '关闭我的项目' }));
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
-  expect(within(frame('我的项目')).queryByRole('button', { name: '返回项目列表' })).toBeNull();
+  expect(within(frame('我的项目')).getByRole('heading', { name: '我的项目' })).toBeTruthy();
   expect(within(frame('我的项目')).getByRole('region', { name: '项目内容' }).scrollTop).toBe(0);
 });
 
@@ -203,7 +203,10 @@ it('starts only About on a small layout and arranges it without ending a backgro
   expect(screen.queryByRole('button', { name: '最小化关于我' })).toBeNull();
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
-  await user.click(within(frame('我的项目')).getByRole('button', { name: '了解小小宇宙' }));
+  const content = within(frame('我的项目')).getByRole('region', { name: '项目内容' });
+  Object.defineProperty(content, 'clientHeight', { configurable: true, value: 120 });
+  content.scrollTop = 45;
+  fireEvent.scroll(content);
   await user.click(dock('桌面设置'));
   await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
@@ -211,7 +214,8 @@ it('starts only About on a small layout and arranges it without ending a backgro
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
-  expect(within(frame('我的项目')).getByRole('heading', { name: '小小宇宙' })).toBeTruthy();
+  expect(within(frame('我的项目')).getByRole('region', { name: '项目内容' })).toBe(content);
+  expect(content.scrollTop).toBe(45);
 });
 
 it('restores cancelled search to the Dock when its original window trigger becomes hidden', async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Brand } from '../ui/brand.tsx';
 import { publicUrl, type AppId, type Project, type ProjectStatus } from '../config/index.ts';
 
@@ -26,18 +26,8 @@ function ProjectArt({ project }: { project: Project }) {
     <div className={`project-art project-art-${project.id}`} aria-hidden="true">
       {project.id === 'honestos' ? (
         <Brand className="project-monogram" />
-      ) : project.id === 'universe' ? (
-        <>
-          <span className="project-orbit" />
-          <span className="project-orbit orbit-two" />
-          <span className="project-orbit orbit-three" />
-          <span className="project-orb" />
-        </>
       ) : (
-        <>
-          <span className="project-grid" />
-          <span className="project-lab-mark">{'{ ? }'}</span>
-        </>
+        <span className="project-initial">{Array.from(project.name)[0]}</span>
       )}
     </div>
   );
@@ -47,7 +37,8 @@ function ProjectLinks({ project }: { project: Project }) {
   const online =
     !project.currentSite && project.status !== 'idea' ? publicUrl(project.url) : undefined;
   const source = publicUrl(project.sourceUrl);
-  return online || source ? (
+  const article = publicUrl(project.articleUrl);
+  return online || source || article ? (
     <nav className="project-links" aria-label={`${project.name}链接`}>
       {online ? (
         <a className="project-link-online" href={online} target="_blank" rel="noopener noreferrer">
@@ -83,6 +74,23 @@ function ProjectLinks({ project }: { project: Project }) {
           查看源码<span className="app-sr-only">（新标签打开）</span>
         </a>
       ) : null}
+      {article ? (
+        <a href={article} target="_blank" rel="noopener noreferrer">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Zm0 0v6h6M8 13h8m-8 4h5" />
+          </svg>
+          项目介绍<span className="app-sr-only">（新标签打开）</span>
+        </a>
+      ) : null}
     </nav>
   ) : null;
 }
@@ -99,22 +107,6 @@ function ProjectIdentity({ project }: { project: Project }) {
   );
 }
 
-function ProjectTags({ project, maxStack }: { project: Project; maxStack?: number }) {
-  const stack = maxStack !== undefined ? project.stack?.slice(0, maxStack) : project.stack;
-  return (
-    <ul className="project-tags">
-      {project.tags.map((tag) => (
-        <li key={tag}>{tag}</li>
-      ))}
-      {stack?.map((tech) => (
-        <li className="project-tech-chip" key={tech}>
-          {tech}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export function ProjectsApp({
   projects,
   onOpen,
@@ -122,13 +114,7 @@ export function ProjectsApp({
   projects: readonly Project[];
   onOpen: (appId: AppId) => void;
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = projects.find((project) => project.id === selectedId);
   const scroller = useRef<HTMLElement>(null);
-  const heading = useRef<HTMLHeadingElement>(null);
-  const detailHeading = useRef<HTMLHeadingElement>(null);
-  const actions = useRef(new Map<string, HTMLButtonElement>());
-  const returnTarget = useRef<{ id: string; top: number } | null>(null);
   const readingTop = useRef(0);
 
   useEffect(() => {
@@ -146,27 +132,6 @@ export function ProjectsApp({
     };
   }, []);
 
-  useLayoutEffect(() => {
-    if (!scroller.current) return;
-    if (selected) {
-      scroller.current.scrollTop = 0;
-      readingTop.current = 0;
-      detailHeading.current?.focus({ preventScroll: true });
-    } else if (returnTarget.current) {
-      scroller.current.scrollTop = returnTarget.current.top;
-      readingTop.current = returnTarget.current.top;
-      (actions.current.get(returnTarget.current.id) ?? heading.current)?.focus({
-        preventScroll: true,
-      });
-      returnTarget.current = null;
-    }
-  }, [selected?.id]);
-
-  function showDetail(project: Project) {
-    returnTarget.current = { id: project.id, top: scroller.current?.scrollTop ?? 0 };
-    setSelectedId(project.id);
-  }
-
   return (
     <section
       ref={scroller}
@@ -177,73 +142,33 @@ export function ProjectsApp({
           readingTop.current = event.currentTarget.scrollTop;
       }}
     >
-      {selected ? (
-        <div className="project-detail-view">
-          <button className="app-button project-back" onClick={() => setSelectedId(null)}>
-            返回项目列表
-          </button>
-          <ProjectArt project={selected} />
-          <h2 ref={detailHeading} tabIndex={-1}>
-            {selected.name}
-          </h2>
-          <ProjectIdentity project={selected} />
-          <p className="project-detail-summary">{selected.summary}</p>
-          <p>{selected.description}</p>
-          {selected.highlights?.length ? (
-            <ul className="project-highlights">
-              {selected.highlights.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          ) : null}
-          <ProjectTags project={selected} />
-          <ProjectLinks project={selected} />
+      <h2>我的项目</h2>
+      {projects.length ? (
+        <div className="project-list">
+          {projects.map((project, index) => (
+            <article
+              className="project-card"
+              key={project.id}
+              aria-labelledby={`project-${project.id}`}
+              style={{ '--stagger-index': index } as React.CSSProperties}
+            >
+              <ProjectArt project={project} />
+              <div className="project-card-copy">
+                <h3 id={`project-${project.id}`}>{project.name}</h3>
+                <ProjectIdentity project={project} />
+                {project.summary?.trim() ? <p className="app-muted">{project.summary}</p> : null}
+              </div>
+              <ProjectLinks project={project} />
+            </article>
+          ))}
         </div>
       ) : (
-        <>
-          <h2 ref={heading} tabIndex={-1}>
-            我的项目
-          </h2>
-          <p className="app-muted">把好奇心变成小东西，也为还在酝酿的想法留个位置。</p>
-          {projects.length ? (
-            <div className="project-list">
-              {projects.map((project, index) => (
-                <article
-                  className="project-card"
-                  key={project.id}
-                  style={{ '--stagger-index': index } as React.CSSProperties}
-                >
-                  <ProjectArt project={project} />
-                  <div className="project-card-copy">
-                    <h3>{project.name}</h3>
-                    <ProjectIdentity project={project} />
-                    <p className="app-muted">{project.summary}</p>
-                    <ProjectTags project={project} maxStack={2} />
-                    <button
-                      className="app-button project-detail-action"
-                      ref={(element) => {
-                        if (element) actions.current.set(project.id, element);
-                        else actions.current.delete(project.id);
-                      }}
-                      onClick={() => showDetail(project)}
-                      aria-label={`了解${project.name}`}
-                    >
-                      了解项目
-                    </button>
-                    <ProjectLinks project={project} />
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="app-empty">
-              <p>项目正在整理中，稍后再来看看。</p>
-              <button className="app-button" onClick={() => onOpen('about')}>
-                先认识一下我
-              </button>
-            </div>
-          )}
-        </>
+        <div className="app-empty">
+          <p>项目正在整理中，稍后再来看看。</p>
+          <button className="app-button" onClick={() => onOpen('about')}>
+            先认识一下我
+          </button>
+        </div>
       )}
     </section>
   );

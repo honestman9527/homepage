@@ -15,7 +15,7 @@ export const appRegistry = [
     name: '我的项目',
     icon: 'folder',
     aliases: ['Projects', '作品', '项目'],
-    keywords: ['HonestOS', '小小宇宙', '实验室', 'playground'],
+    keywords: ['HonestOS', '导航站', '实验室', 'playground'],
     defaultSize: { width: 820, height: 570 },
     minSize: { width: 360, height: 300 },
   },
