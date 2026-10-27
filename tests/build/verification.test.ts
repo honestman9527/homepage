@@ -138,12 +138,35 @@ it('records source-changing commands without inventing a different exit code', (
 });
 it('flags unmapped module test filenames and temporary skill-ignore comments', () => {
   const f = fixture();
-  mkdirSync(join(f.cwd, 'src/ui'), { recursive: true });
-  mkdirSync(join(f.cwd, 'tests/ui'), { recursive: true });
-  writeFileSync(join(f.cwd, 'src/ui/cursor.css'), '.cursor { /* taste-skill-ignore */ }\n');
-  writeFileSync(join(f.cwd, 'tests/ui/merged.test.tsx'), 'export const test = 1;\n');
+  mkdirSync(join(f.cwd, 'src/desktop/styles'), { recursive: true });
+  mkdirSync(join(f.cwd, 'tests/desktop/components'), { recursive: true });
+  writeFileSync(
+    join(f.cwd, 'src/desktop/styles/cursor.css'),
+    '.cursor { /* taste-skill-ignore */ }\n',
+  );
+  writeFileSync(
+    join(f.cwd, 'tests/desktop/components/Merged.test.tsx'),
+    'export const test = 1;\n',
+  );
   const result = f.run('--lint');
   expect(result.status).not.toBe(0);
   expect(result.stderr).toContain('remove temporary taste-skill-ignore comment');
-  expect(result.stderr).toContain('test file name must match a module in src/ui/merged.{ts,tsx}');
+  expect(result.stderr).toContain(
+    'test file name must match a module in src/desktop/components/Merged.{ts,tsx}',
+  );
+});
+
+it('accepts nested module tests and scenario suffixes but rejects tests without source modules', () => {
+  const f = fixture();
+  mkdirSync(join(f.cwd, 'src/apps/blog/model'), { recursive: true });
+  mkdirSync(join(f.cwd, 'tests/apps/blog/model'), { recursive: true });
+  writeFileSync(join(f.cwd, 'src/apps/blog/model/feed.ts'), 'export const feed = 1;\n');
+  writeFileSync(join(f.cwd, 'tests/apps/blog/model/feed.test.ts'), 'export const test = 1;\n');
+  writeFileSync(
+    join(f.cwd, 'tests/apps/blog/model/feed.errors.test.ts'),
+    'export const test = 1;\n',
+  );
+  expect(f.run('--lint').status).toBe(0);
+  writeFileSync(join(f.cwd, 'tests/apps/blog/model/missing.test.ts'), 'export const test = 1;\n');
+  expect(f.run('--lint').stderr).toContain('src/apps/blog/model/missing.{ts,tsx}');
 });

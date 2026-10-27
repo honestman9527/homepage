@@ -1,0 +1,12 @@
+.contact-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+.contact-brand {
+  display: inline-block;
+  background-color: currentColor;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}

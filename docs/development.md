@@ -28,37 +28,81 @@ pnpm deploy:dry-run   # 验证根 Wrangler 配置及已有产物，不上传
 
 `pnpm format` 统一格式化源码、测试与配置，`pnpm format:check` 只检查格式。需要限定文件时运行 `pnpm exec prettier --write <文件>`。格式使用 `.prettierrc.json`；图片、锁文件、生成物和 Markdown 不参与格式化。提交 hook 不自动改写或暂存文件。
 
-## 目录职责
+## 目录职责与文件约定
 
-| 目录或文件 | 职责 |
-| --- | --- |
-| `src/config/` | 应用身份、公开内容、类型和内容校验；个人资料、项目、博客入口与 RSS 地址、桌面启动/快捷入口分别在 `profile.ts`、`projects.ts`、`blog.ts`、`system.ts` 维护，由 `content.ts` 聚合为 `siteConfig` |
-| `src/apps/` | 五个应用的呈现与各自交互 |
-| `src/desktop/`、`src/preferences/`、`src/terminal/`、`src/search/` | 窗口会话、偏好、终端与搜索逻辑 |
-| `src/ui/`、`src/styles.css` | 桌面呈现、窗口、导航、动效与共享样式 |
-| `public/` | 直接发布的头像、HM 标志、favicon 与壁纸 |
-| `tests/` | 按模块组织的行为测试、整站交互测试和 HTTP 预览检查；不进入生产源码 |
-| `build/site-html.ts` | 从同一公开内容生成页面元信息与无 JavaScript 导航 |
-| `vite.config.ts`、`vitest.config.ts`、`wrangler.jsonc` | 开发构建、定向测试和 Workers 部署配置 |
-| `dist/`、`.wrangler/` | 自动生成的构建与本地运行数据，不提交 |
+按功能模块组织源码，模块内按职责区分文件；不建立全局 `tsx/`、`ts/` 或 `css/` 文件夹。修改一个应用时，界面、逻辑和样式能在该应用目录内找到。纯配置模块保持扁平，不为只有 `.ts` 文件的模块创建空分类目录。
 
-测试目录按被测模块组织，源文件与测试文件保留对应命名：
+```text
+src/
+├── main.tsx                         # 浏览器挂载入口
+├── app/                             # 组合各模块，不承载业务模型
+│   ├── App.tsx                      # Provider 装配
+│   ├── components/                   # DesktopShell、DesktopAppearance
+│   └── styles/index.css              # 全局样式加载顺序
+├── apps/
+│   ├── components/AppContent.tsx     # 应用选择、会话内容与 Suspense
+│   ├── model/loading.ts              # 延迟加载与失败重试
+│   ├── styles/                       # 应用共用正文样式、应用样式入口
+│   ├── about/                        # components/、styles/
+│   ├── projects/                     # components/、styles/
+│   ├── blog/                         # components/、model/feed.ts、styles/
+│   ├── settings/                     # components/、styles/
+│   └── terminal/                     # components/、model/、styles/、README.md
+├── desktop/
+│   ├── components/                   # 窗口、Dock、状态栏、浮层、壁纸、入场与指针
+│   ├── hooks/                        # 视口、分钟时钟、桌面动效
+│   ├── model/state.ts                # 窗口状态、会话与几何纯逻辑
+│   ├── providers/DesktopProvider.tsx # React 状态接口
+│   ├── styles/                       # 按窗口、Dock、状态栏等归属拆分的样式
+│   └── index.ts                      # 状态与 Provider 的公开入口
+├── preferences/
+│   ├── model/                        # 偏好状态、持久化与壁纸存储
+│   ├── providers/                    # PreferencesProvider 及其订阅 hooks
+│   └── index.ts                      # 偏好公开入口
+├── search/
+│   ├── components/SearchPanel.tsx
+│   ├── model/search.ts               # 纯匹配逻辑
+│   ├── styles/search.css
+│   └── index.ts                      # 仅导出纯匹配逻辑
+├── shared/
+│   ├── components/                   # Brand、Icon、ContactIcon、GlassMaterial、AppBoundary
+│   └── styles/                       # 基础、主题、共享组件样式
+├── config/                          # 公开内容、注册表、类型、校验与 index.ts
+└── assets/                          # 参与构建的山峦 SVG、玻璃位移贴图
+```
+
+- `components/` 使用 `PascalCase.tsx`，承载 JSX 与界面交互；`providers/` 使用 `PascalCase.tsx`，承载 Context 与状态订阅。与 Provider 紧密相关的订阅 hooks 可共置，避免拆分后互相依赖。
+- `model/` 使用语义明确的 `.ts` 文件，承载状态、命令、解析及存储等逻辑，不依赖界面组件。`loading.ts` 使用 React 的 `lazy`，没有 JSX，属于应用加载逻辑；`index.ts` 仅作有明确用途的公开导出，不执行初始化副作用。
+- `hooks/` 使用 `use` 开头的 `.ts` 文件，只承载 React 生命周期与订阅逻辑；本次将日历的分钟订阅独立为 `useLocalMinute.ts`。类型只在所属模块复用时提取，不建立汇集所有领域的全局 `types/` 或 `utils/`。
+- `styles/` 只放 `.css`，按所属功能命名。`src/app/styles/index.css` 明确基础、主题、桌面和响应式样式的顺序；`src/apps/styles/index.css` 提前加载共用及五个应用的样式。延迟打开应用不改变共享样式的加载顺序，新增规则优先放回所属模块。
+- `app` 负责装配；应用可使用配置、共享组件、偏好和自己的模型，不互相导入其他应用的实现。桌面模型与偏好模型不依赖 `app` 或应用界面；`shared` 不依赖桌面或具体应用。配置调用方继续从 `src/config/index.ts` 导入。
+- 相对模块导入明确写出 `.ts` / `.tsx` 扩展名。保留已有稳定的模块入口，不为每个文件额外增加 `index.ts` 转发，也不引入路径别名或新依赖。
+
+`public/` 保存直接发布的头像、HM 标志、favicon 与壁纸；`build/` 保存 HTML 与验证工具；项目根的 Vite / Vitest / Wrangler 文件保持工具默认位置。`dist/`、`.wrangler/` 为自动生成数据，不提交。
+
+### 测试目录
+
+`tests/` 镜像源码的模块及职责目录，整站测试集中在 `tests/app/`。例如：
 
 ```text
 tests/
-├── app/          # 整站导航、加载与渲染隔离
-├── apps/         # 五个应用及内容加载
-├── config/       # 公开内容与链接校验
-├── desktop/      # 窗口状态与 provider
-├── preferences/  # 偏好、持久化与壁纸竞态
-├── search/       # 应用搜索
-├── terminal/     # 命令与输入会话
-├── ui/           # 窗口、搜索面板与视口适配
-├── build/        # 验证工具的行为测试
-└── preview/      # Vite HTTP 预览脚本（独立命令）
+├── app/App.test.tsx
+├── app/App.controls.test.tsx
+├── apps/projects/components/ProjectsApp.test.tsx
+├── apps/blog/model/feed.test.ts
+├── apps/terminal/model/commands.test.ts
+├── desktop/model/state.test.ts
+├── desktop/components/WindowFrame.test.tsx
+├── preferences/providers/PreferencesProvider.test.tsx
+├── search/model/search.test.ts
+├── config/validation.test.ts
+├── build/verification.test.ts
+└── preview/check-preview.ts
 ```
 
-`pnpm test tests/preferences` 只运行指定模块；`pnpm test` 运行 Vitest 行为测试；`pnpm test:preview` 单独验证已有构建。Vitest 只发现 `tests/**/*.test.{ts,tsx}`，测试文件通过相对路径引用源码，TypeScript 同时检查源码、工具和测试。DOM 测试继续由文件头声明 jsdom 环境，其他测试使用 Node 环境。
+源码和测试的基础文件名对应；多个场景使用 `模块名.场景.test.tsx`，例如 `App.loading.test.tsx` 和 `PreferencesProvider.isolation.test.tsx`。静态检查会验证嵌套目录和场景后缀对应的源模块存在。测试通过相对路径使用模块接口，不进入生产源码。
+
+`pnpm test tests/apps/blog` 只运行博客模块；`pnpm test tests/preferences` 只运行偏好模块。Vitest 只发现 `tests/**/*.test.{ts,tsx}`；DOM 测试保留 jsdom 声明，其他测试使用 Node 环境。TypeScript 同时检查源码、工具和测试。`pnpm test:preview` 单独验证已有构建，不启动浏览器。
 
 ## 公开内容
 
@@ -93,9 +137,9 @@ links: [
 
 支持 GitHub、GitLab、X/Twitter、Bluesky、Mastodon、Telegram、哔哩哔哩、YouTube、知乎和 Discord。常见官方域名自动选择品牌图标；自建 GitLab、Mastodon 等实例用对象的 `icon` 显式指定。可用值为 `github / gitlab / x / bluesky / mastodon / telegram / bilibili / youtube / zhihu / discord / email / link`，未知图标会阻止构建。识别按精确域名匹配，不按路径或域名片段猜测；其他网站使用通用链接图标。
 
-品牌图形直接引用 [Simple Icons](https://github.com/simple-icons/simple-icons#usage) 中各品牌的 SVG 文件，随本站静态资产发布，浏览器只请求实际显示的品牌图标；开发和生产均不导入完整图标库，也不加载远程图标或整套字体。图标跟随文字颜色，保留可见标签；图形不重复加入无障碍名称。增加新的受支持品牌时，在 `src/config/social-links.ts` 登记名称与域名，并在 `src/ui/contact-icon.tsx` 引入对应图形。
+品牌图形直接引用 [Simple Icons](https://github.com/simple-icons/simple-icons#usage) 中各品牌的 SVG 文件，随本站静态资产发布，浏览器只请求实际显示的品牌图标；开发和生产均不导入完整图标库，也不加载远程图标或整套字体。图标跟随文字颜色，保留可见标签；图形不重复加入无障碍名称。增加新的受支持品牌时，在 `src/config/social-links.ts` 登记名称与域名，并在 `src/shared/components/ContactIcon.tsx` 引入对应图形。
 
-可选 `project.image` 可以指向仓库本地图片：将适量优化后的图片放入 `public/projects/`，配置 `/projects/文件名.webp` 等站内路径。图片使用延迟加载；加载失败后回到项目装饰图，不留下损坏图片。未配置图片时直接使用本地 CSS 装饰；当前没有外部项目预览图。添加图片后重新测量构建资产预算。
+可选 `project.image` 可以指向仓库本地图片：将适量优化后的图片放入 `public/projects/`，配置 `/projects/文件名.webp` 等站内路径。图片使用延迟加载；加载失败或未配置时显示本站标志或项目首字，不留下损坏图片。当前导航站使用已配置的外部预览图，其他项目无需预览图。添加图片后重新测量构建资产预算。
 
 `build/site-html.ts` 从同一配置生成 title、description、无 JavaScript 的品牌、简介与已配置有效导航。只有 `site.url` 配置后才添加 canonical 和 Open Graph；可选分享图须配置有效绝对地址。`index.html` 声明 `zh-CN`，通过 `#site-favicon` 声明标签页图标。地址与联系资料以本地 `src/config/content.ts` 为准；未配置时不生成相应导航或 canonical。用户未提交的公开配置保持原样。
 
@@ -139,7 +183,7 @@ export const blogConfig: Blog = {
 RSS 服务必须允许主站来源跨域读取，例如返回 `Access-Control-Allow-Origin: https://honestman.me` 或 `*`；本地开发也需要允许实际开发地址。本站不使用代理或 `no-cors` 绕过浏览器限制。维护地址后，人工确认线上 RSS 响应和 CORS，并运行相关检查：
 
 ```sh
-pnpm test tests/config tests/apps/blog.test.tsx tests/apps/blog-feed.test.ts
+pnpm test tests/config tests/apps/blog
 pnpm typecheck
 ```
 
@@ -147,7 +191,7 @@ pnpm typecheck
 
 ## 界面与动效
 
-本轮视觉与交互以 [macOS 风格细化](history/macos-refinement-design.md) 为准。Dock 是应用导航，整理入口在设置中；移除菜单栏后桌面几何重新扣除安全边距与 Dock。GSAP 与 `@gsap/react` 负责窗口进入、退出、最小化和 Dock 邻近缩放，组件作用域自动清理。减弱动态效果下直接完成操作；没有持续背景动画。终端记录与输入同区滚动，新输出提示浮在可见区域，避免在阅读历史时被移出屏幕。
+现行视觉与交互以 [HonestOS 当前设计](design/honestos.md) 为准。Dock 是应用导航，整理入口在设置和 HM 菜单中；桌面几何扣除顶部状态栏、安全边距与 Dock。GSAP 与 `@gsap/react` 负责窗口进入、退出、最小化和 Dock 邻近缩放，组件作用域自动清理。减弱动态效果下直接完成操作；没有持续背景动画。终端记录与输入同区滚动，新输出提示浮在可见区域，避免在阅读历史时被移出屏幕。
 
 ## 应用加载与偏好通知
 

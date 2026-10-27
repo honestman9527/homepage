@@ -1,0 +1,66 @@
+.desktop-shortcuts {
+  position: fixed;
+  z-index: 0;
+  right: max(16px, env(safe-area-inset-right));
+  top: calc(var(--status-bar-height) + 24px + var(--safe-area-top));
+  display: grid;
+  gap: 14px;
+}
+.desktop-shortcuts button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  width: 88px;
+  min-height: 88px;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #fff;
+  background: transparent;
+  text-shadow: 0 1px 4px #1119;
+  font-size: 12px;
+  transition:
+    transform var(--t-press) var(--ease-out),
+    background-color var(--t-hover) ease,
+    border-color var(--t-hover) ease;
+}
+.desktop-shortcuts button:hover {
+  background: #ffffff22;
+  border-color: #ffffff38;
+  backdrop-filter: blur(10px);
+}
+.desktop-shortcuts button:active {
+  transform: scale(0.95);
+}
+.shortcut-art {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 44px;
+  color: #d7eaff;
+  filter: drop-shadow(0 3px 3px #24203830);
+}
+.shortcut-art svg {
+  width: 48px;
+  height: 48px;
+  fill: #62b6ef;
+  stroke: #c5e7ff;
+  stroke-width: 1.2;
+}
+.shortcut-blog,
+.shortcut-about {
+  width: 36px;
+  background: linear-gradient(140deg, #fffcf4, #dedbd1);
+  color: #626476;
+  border-radius: 4px;
+  text-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.shortcut-blog svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: #717180;
+}

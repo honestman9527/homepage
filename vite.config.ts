@@ -19,7 +19,7 @@ export default defineConfig({
           if (chunk?.type !== 'chunk') return;
           if (
             Object.keys(chunk.modules).some((id) =>
-              /\/src\/apps\/(projects|blog|settings)\.tsx$/.test(id),
+              /\/src\/apps\/(projects|blog|settings)\/components\/[^/]+\.tsx$/.test(id),
             )
           ) {
             this.error(

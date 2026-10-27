@@ -1,0 +1,117 @@
+.app-content.terminal-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: transparent;
+  color: #d4d4df;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.terminal-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 14px 18px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff30 transparent;
+}
+.terminal-record {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-bottom: 5px;
+}
+.terminal-input {
+  color: #efeff5;
+  padding-top: 4px;
+}
+.terminal-error {
+  color: #ffaaa2;
+}
+.terminal-prompt {
+  color: #a5d9a5;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.terminal-host {
+  color: #bec8e9;
+}
+.terminal-path {
+  color: #e1c3e2;
+}
+.terminal-dollar {
+  color: #d4d4df;
+}
+.terminal-controls {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 6px 0 0;
+  min-height: 24px;
+}
+.terminal-controls input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: 22px;
+  padding: 0;
+  background: transparent;
+  color: #efeff5;
+  border: 0;
+  border-radius: 0;
+  caret-color: #dfdfe7;
+  outline: none;
+  font-size: 13px;
+  line-height: inherit;
+}
+.terminal-controls input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.terminal-submit:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  color: #ddd;
+  background: #ffffff15;
+  border: 1px solid #ffffff30;
+}
+.terminal-feedback {
+  margin: 4px 0;
+  color: #bbc7d4;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.terminal-new-output {
+  padding: 3px 9px;
+  border: 1px solid #ffffff25;
+  border-radius: 5px;
+  color: #e8e8f2;
+  background: #41414c;
+  font-size: 12px;
+}
+@container (max-width: 430px) {
+  .terminal-host {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .terminal-controls input {
+    font-size: 16px;
+    min-height: 30px;
+  }
+}
+@media (max-width: 600px) {
+  .terminal-scroll {
+    padding: 12px 14px 24px;
+  }
+}
+.terminal-unread {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 2;
+}

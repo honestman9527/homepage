@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { App } from '../../src/App.tsx';
+import { App } from '../../src/app/App.tsx';
 const gate = vi.hoisted(() => {
   let resolve!: () => void;
   const promise = new Promise<void>((done) => {
@@ -9,10 +9,10 @@ const gate = vi.hoisted(() => {
   });
   return { promise, resolve, calls: 0 };
 });
-vi.mock('../../src/apps/projects.tsx', async (original) => {
+vi.mock('../../src/apps/projects/components/ProjectsApp.tsx', async (original) => {
   gate.calls++;
   await gate.promise;
-  return original<typeof import('../../src/apps/projects.tsx')>();
+  return original<typeof import('../../src/apps/projects/components/ProjectsApp.tsx')>();
 });
 afterEach(cleanup);
 it('opens a closable window before download completes and never revives a closed loading session', async () => {

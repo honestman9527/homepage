@@ -9,7 +9,8 @@ const git = (...args: string[]) => execFileSync('git', args, { maxBuffer: 16 * 1
 const names = (buffer: Buffer) => buffer.toString().split('\0').filter(Boolean);
 const sourceFile = /\.[cm]?[jt]sx?$/;
 const styleOrSourceFile = /\.(?:[cm]?[jt]sx?|css)$/;
-const strictTestMirror = /^tests\/(apps|config|terminal|ui)\/([^/]+)\.test\.[jt]sx?$/;
+const strictTestMirror =
+  /^tests\/(app|apps|config|desktop|preferences|search|shared)\/(.+)\.test\.[jt]sx?$/;
 
 export function importIssues(path: string, source: string): string[] {
   const tree = parse(source, {
@@ -49,12 +50,10 @@ async function lint(staged = false, explicit: string[] = []) {
     }
     const mirror = strictTestMirror.exec(path);
     if (mirror) {
-      const [, dir, name] = mirror;
-      if (
-        existsSync(`src/${dir}`) &&
-        !existsSync(`src/${dir}/${name}.ts`) &&
-        !existsSync(`src/${dir}/${name}.tsx`)
-      ) {
+      const [, dir, scenario] = mirror;
+      // Scenario suffixes (App.loading, PreferencesProvider.isolation) share a source module.
+      const name = scenario!.replace(/\.[^/]+$/, '');
+      if (!existsSync(`src/${dir}/${name}.ts`) && !existsSync(`src/${dir}/${name}.tsx`)) {
         issues.push(`${path}: test file name must match a module in src/${dir}/${name}.{ts,tsx}`);
       }
     }

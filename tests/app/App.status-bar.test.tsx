@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import gsap from 'gsap';
-import { App } from '../../src/App.tsx';
+import { App } from '../../src/app/App.tsx';
 import { readFileSync } from 'node:fs';
 
 beforeEach(() => {
@@ -203,7 +203,10 @@ it('removes closing menu controls immediately and preserves reopened focus while
 
 it('preserves the closing menu layout and calendar today highlight while hiding copied controls and identity', () => {
   const styles = document.createElement('style');
-  styles.textContent = ['../../src/styles.css', '../../src/ui/status-controls.css']
+  styles.textContent = [
+    '../../src/desktop/styles/status-bar.css',
+    '../../src/desktop/styles/status-controls.css',
+  ]
     .map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'))
     .join('\n');
   document.head.append(styles);

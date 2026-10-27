@@ -1,0 +1,16 @@
+.app-error {
+  padding: 24px;
+  overflow: auto;
+  background: var(--paper);
+}
+.app-error h2 {
+  font-size: 20px;
+}
+.app-error button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  background: var(--raised);
+  border-radius: 6px;
+  padding: 4px 12px;
+  margin: 4px;
+}

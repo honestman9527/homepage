@@ -1,0 +1,6 @@
+@import './shared.css';
+@import '../about/styles/about.css';
+@import '../projects/styles/projects.css';
+@import '../blog/styles/blog.css';
+@import '../settings/styles/settings.css';
+@import '../terminal/styles/terminal.css';

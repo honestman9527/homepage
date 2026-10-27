@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { App, DesktopShell } from '../../src/App.tsx';
+import { App } from '../../src/app/App.tsx';
+import { DesktopShell } from '../../src/app/components/DesktopShell.tsx';
 import { DesktopProvider } from '../../src/desktop/index.ts';
 import { PreferencesProvider } from '../../src/preferences/index.ts';
 

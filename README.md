@@ -15,7 +15,7 @@ pnpm dev
 
 桌面包含关于我、我的项目、随便写写、终端和桌面设置，通过 Dock 或 Ctrl / ⌘ K 搜索进入。桌面偏好保存在当前浏览器；应用会话保留到关闭或刷新。博客展示手动精选的文章外链。
 
-公开资料、项目和精选文章维护于 `src/config/content.ts`；应用身份与窗口尺寸维护于 `src/config/registry.ts`。使用与内容编辑见 [开发说明](docs/development.md)。
+公开资料、项目和独立博客入口维护于 `src/config/content.ts`；应用身份与窗口尺寸维护于 `src/config/registry.ts`。源码按功能模块划分，组件、模型、hooks 和样式在模块内分类；目录与维护规范见 [开发说明](docs/development.md#目录职责与文件约定)。
 
 PR 自动检查；推送 main 检查成功后，通过 Wrangler 将同一份静态产物部署到 Cloudflare Workers Static Assets。保留手动 check / deploy，首次凭据和域名设置见 [发布说明](docs/deployment.md)。
 

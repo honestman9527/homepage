@@ -1,0 +1,183 @@
+.single-window {
+  position: fixed;
+  left: max(8px, env(safe-area-inset-left)) !important;
+  top: calc(
+    var(--visual-top, 0px) + var(--status-bar-height) + 8px + var(--safe-area-top)
+  ) !important;
+  width: calc(
+    100% - max(8px, env(safe-area-inset-left)) - max(8px, env(safe-area-inset-right))
+  ) !important;
+  height: calc(
+    var(--visual-height, 100dvh) - var(--status-bar-height) - 94px - var(--safe-area-top) -
+      env(safe-area-inset-bottom)
+  ) !important;
+}
+.single-window .window-titlebar {
+  cursor: default;
+}
+html[data-keyboard='true'] .terminal-frame {
+  top: calc(
+    var(--visual-top, 0px) + var(--status-bar-height) + 8px + var(--safe-area-top)
+  ) !important;
+  max-height: calc(
+    var(--visual-height, 100dvh) - var(--status-bar-height) - 94px - var(--safe-area-top) -
+      env(safe-area-inset-bottom)
+  );
+}
+@media (max-width: 1023px) {
+  .desktop-shortcuts {
+    display: none;
+  }
+  .honestos {
+    --icon-size: 40px !important;
+    --dock-height: 76px !important;
+  }
+  .dock {
+    gap: 2px;
+    padding-inline: 6px;
+  }
+  .dock-separated {
+    padding-left: 5px;
+    margin-left: 0;
+  }
+  .dock-tooltip {
+    display: none;
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .window-controls {
+    opacity: 1;
+  }
+  .window-titlebar {
+    flex-basis: 44px;
+    padding-inline: 104px;
+  }
+  .window-controls button {
+    width: 44px;
+    height: 44px;
+  }
+  .single-window .window-titlebar {
+    padding-inline: 64px;
+  }
+  .window-resize {
+    width: 44px;
+    height: 44px;
+  }
+  [data-dock-autohide='true'] .dock {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* Keyboard avoidance is presentation-only: keep the active session and geometry. */
+html[data-compact-viewport='true'] .desktop-system {
+  position: fixed;
+  inset: auto 0;
+  top: var(--visual-top, 0px);
+  height: var(--visual-height, 100dvh);
+  min-height: 0;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: grid;
+  grid-template-rows: var(--status-bar-height) minmax(56px, 1fr) 64px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+html[data-compact-viewport='true'] .desktop-shortcuts {
+  display: none;
+}
+html[data-compact-viewport='true'] .desktop-surface {
+  grid-row: 2;
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+html[data-compact-viewport='true'] .desktop-surface .app-window:not(.active-window) {
+  display: none;
+}
+html[data-compact-viewport='true'] .desktop-surface .app-window.active-window {
+  position: relative !important;
+  inset: auto !important;
+  margin: 4px 8px;
+  width: calc(100% - 16px) !important;
+  height: max(
+    140px,
+    calc(
+      var(--visual-height, 100dvh) - var(--status-bar-height) - 72px - var(--safe-area-top) -
+        env(safe-area-inset-bottom)
+    )
+  ) !important;
+  max-height: none;
+}
+html[data-compact-viewport='true'] .window-titlebar {
+  flex-basis: 36px;
+  cursor: default;
+  touch-action: auto;
+}
+html[data-compact-viewport='true'] :is(.window-resize, .window-maximize) {
+  display: none;
+}
+html[data-compact-viewport='true'] .dock-wrap {
+  grid-row: 3;
+  position: relative;
+  inset: auto;
+  top: auto;
+  height: 64px;
+  padding-block: 4px;
+}
+html[data-compact-viewport='true'] .dock {
+  transform: none;
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+html[data-compact-viewport='true'] .dock .app-icon {
+  width: 36px;
+  height: 36px;
+}
+html[data-compact-viewport='true'] .dock-slot > button {
+  width: 40px;
+  min-height: 48px;
+}
+html[data-compact-viewport='true'] .dock-tooltip {
+  display: none;
+}
+html[data-compact-viewport='true'] .search-backdrop {
+  top: var(--visual-top, 0px);
+  bottom: auto;
+  height: var(--visual-height, 100dvh);
+  padding: 4px 8px;
+}
+html[data-compact-viewport='true'] .search-panel {
+  max-height: max(88px, calc(var(--visual-height, 100dvh) - 8px));
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .app-window,
+  .dock,
+  .search-panel,
+  .status-bar,
+  .desktop-popover-panel {
+    background: var(--paper);
+  }
+  .terminal-frame {
+    background: #23232b;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .honestos {
+    --glass-alpha: 1 !important;
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  html[data-compact-viewport='true'] .window-titlebar {
+    flex-basis: 44px;
+  }
+}

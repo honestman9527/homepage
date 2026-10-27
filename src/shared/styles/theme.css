@@ -1,0 +1,35 @@
+.honestos {
+  --paper: #fbfbfd;
+  --text: #242426;
+  --muted: #68686e;
+  --line: #00000012;
+  --surface-rgb: 246 246 249;
+  --raised: #fff;
+  --blue: #0071e3;
+  --selected: #007aff14;
+  --icon-size: 44px;
+  --dock-height: 76px;
+  color: var(--text);
+  color-scheme: light;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+.honestos[data-appearance='dark'] {
+  --paper: #252527;
+  --text: #f3f3f5;
+  --muted: #b0b0b6;
+  --line: #ffffff17;
+  --surface-rgb: 38 38 42;
+  --raised: #323236;
+  --blue: #64aaff;
+  --selected: #0a84ff28;
+  color-scheme: dark;
+}
+.honestos[data-dock-size='small'] {
+  --icon-size: 36px;
+  --dock-height: 68px;
+}
+.honestos[data-dock-size='large'] {
+  --icon-size: 52px;
+  --dock-height: 84px;
+}

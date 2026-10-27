@@ -1,0 +1,14 @@
+.desktop-system,
+.desktop-surface {
+  min-height: 100dvh;
+}
+.desktop-empty {
+  position: fixed;
+  bottom: 120px;
+  left: 16px;
+  right: 16px;
+  text-align: center;
+  color: #fff;
+  font-size: 13px;
+  text-shadow: 0 1px 4px #0009;
+}

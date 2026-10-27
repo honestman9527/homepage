@@ -1,0 +1,11 @@
+@import '../../shared/styles/base.css';
+@import '../../shared/styles/theme.css';
+@import '../../desktop/styles/layout.css';
+@import '../../desktop/styles/status-bar.css';
+@import '../../desktop/styles/wallpaper.css';
+@import '../../desktop/styles/shortcuts.css';
+@import '../../desktop/styles/windows.css';
+@import '../../shared/styles/app-boundary.css';
+@import '../../desktop/styles/dock.css';
+@import '../../search/styles/search.css';
+@import '../../desktop/styles/responsive.css';

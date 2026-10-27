@@ -1,2 +1,2 @@
-export * from './state.ts';
-export * from './provider.tsx';
+export * from './model/state.ts';
+export * from './providers/PreferencesProvider.tsx';
