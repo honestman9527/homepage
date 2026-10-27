@@ -50,12 +50,36 @@ function ProjectLinks({ project }: { project: Project }) {
   return online || source ? (
     <nav className="project-links" aria-label={`${project.name}链接`}>
       {online ? (
-        <a href={online} target="_blank" rel="noopener noreferrer">
+        <a className="project-link-online" href={online} target="_blank" rel="noopener noreferrer">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M14 3h7v7m0-7L11 13M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
+          </svg>
           在线访问<span className="app-sr-only">（新标签打开）</span>
         </a>
       ) : null}
       {source ? (
         <a href={source} target="_blank" rel="noopener noreferrer">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18" />
+          </svg>
           查看源码<span className="app-sr-only">（新标签打开）</span>
         </a>
       ) : null}

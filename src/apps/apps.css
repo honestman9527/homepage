@@ -247,15 +247,41 @@
 .profile-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 16px;
   font-size: 12px;
 }
-.profile-links a {
+.app-content :is(.profile-links, .project-links) a {
   display: inline-flex;
-  gap: 6px;
-  min-height: 30px;
   align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 32px;
+  max-width: 100%;
+  padding: 5px 10px;
+  border: 1px solid var(--line, #00000012);
+  border-radius: 8px;
+  background: var(--raised, #fff);
+  color: var(--text, #242426);
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.app-content :is(.profile-links, .project-links) a:focus-visible {
+  color: var(--blue, #0071e3);
+  background: var(--selected, #007aff14);
+}
+@media (hover: hover) {
+  .app-content :is(.profile-links, .project-links) a:hover {
+    color: var(--blue, #0071e3);
+    border-color: color-mix(in srgb, var(--blue, #0071e3) 35%, transparent);
+    background: var(--selected, #007aff14);
+  }
+}
+.app-content :is(.profile-links, .project-links) a:active {
+  color: var(--blue, #0071e3);
+  background: color-mix(in srgb, var(--selected, #007aff14) 80%, var(--raised, #fff));
 }
 .contact-icon {
   width: 16px;
@@ -422,14 +448,18 @@
 .project-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 12px;
   font-size: 12px;
 }
-.project-links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
+.project-links svg {
+  width: 15px;
+  height: 15px;
+}
+.app-content .project-links .project-link-online {
+  color: var(--blue, #0071e3);
+  background: var(--selected, #007aff14);
+  border-color: transparent;
 }
 .project-back {
   margin-bottom: 18px;
@@ -988,8 +1018,7 @@
 }
 @media (hover: none), (pointer: coarse) {
   .app-button,
-  .profile-links a,
-  .project-links a,
+  .app-content :is(.profile-links, .project-links) a,
   .settings-sidebar button {
     min-height: 44px;
   }
