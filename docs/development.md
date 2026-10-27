@@ -97,9 +97,9 @@ links: [
 
 可选 `project.image` 可以指向仓库本地图片：将适量优化后的图片放入 `public/projects/`，配置 `/projects/文件名.webp` 等站内路径。图片使用延迟加载；加载失败后回到项目装饰图，不留下损坏图片。未配置图片时直接使用本地 CSS 装饰；当前没有外部项目预览图。添加图片后重新测量构建资产预算。
 
-`build/site-html.ts` 从同一配置生成 title、description、无 JavaScript 的品牌、简介与已配置有效导航。只有 `site.url` 配置后才添加 canonical 和 Open Graph；可选分享图须配置有效绝对地址。`index.html` 声明 `zh-CN`，favicon 位于 `public/favicon.svg`。地址与联系资料以本地 `src/config/content.ts` 为准；未配置时不生成相应导航或 canonical。用户未提交的公开配置保持原样。
+`build/site-html.ts` 从同一配置生成 title、description、无 JavaScript 的品牌、简介与已配置有效导航。只有 `site.url` 配置后才添加 canonical 和 Open Graph；可选分享图须配置有效绝对地址。`index.html` 声明 `zh-CN`，通过 `#site-favicon` 声明标签页图标。地址与联系资料以本地 `src/config/content.ts` 为准；未配置时不生成相应导航或 canonical。用户未提交的公开配置保持原样。
 
-`src/assets/mountains.svg` 沿用初版山峦；头像与明暗 HM 标志只在 `public/avatar.webp`、`public/hm-light.svg`、`public/hm-dark.svg` 维护，应用直接引用这三个地址，不再另建构建副本。替换时保留文件名即可；favicon 使用 `public/favicon.svg` 中跟随系统明暗的 HM 图形。字体为系统字体栈，照片从本地静态文件加载；出处见 `public/wallpapers/CREDITS.md`。原始需求、交接包、完整原型应用及压缩包保持在提交之外。
+`src/assets/mountains.svg` 沿用初版山峦；头像与明暗 HM 标志只在 `public/avatar.webp`、`public/hm-light.svg`、`public/hm-dark.svg` 维护，应用直接引用这三个地址，不再另建构建副本。替换时保留文件名即可；favicon 在应用启动后复用对应 HM 图标，跟随站内浅色、深色或“跟随系统”外观，包括恢复已保存的偏好。启动前及无 JavaScript 时使用 `public/favicon.svg` 跟随系统明暗。字体为系统字体栈，照片从本地静态文件加载；出处见 `public/wallpapers/CREDITS.md`。原始需求、交接包、完整原型应用及压缩包保持在提交之外。
 
 ## 应用身份、偏好与会话
 

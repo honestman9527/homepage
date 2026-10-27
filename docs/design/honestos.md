@@ -14,7 +14,7 @@ HonestOS 是 honestman 的桌面式个人主站，用于个人介绍、项目展
 
 - 保留暮色山峦、紧凑内容窗口、深色终端、桌面快捷入口与 Dock；顶部状态栏提供统一信息与控制入口，不显示背景大字或装饰性标语。
 - 系统字体栈，正文约 14px，内容标题 20–24px；手机输入字号 16px。玻璃效果集中于顶部状态栏、Dock、窗口标题栏和浮层，设置侧栏保持半透明层次，正文使用稳定底色，终端保持深色。
-- 使用 `public/` 中的头像、HM 明暗标志与 favicon，维护单一素材来源。当前公共文案由 `src/config/profile.ts`、`src/config/projects.ts`、`src/config/blog.ts` 与 `src/config/system.ts` 分域定义，并由 `src/config/content.ts` 聚合导出。
+- 使用 `public/` 中的头像、HM 明暗标志与 favicon，维护单一素材来源。标签页图标复用明暗 HM 标志，跟随站点的实际外观；应用启动前及无 JavaScript 时跟随系统明暗。当前公共文案由 `src/config/profile.ts`、`src/config/projects.ts`、`src/config/blog.ts` 与 `src/config/system.ts` 分域定义，并由 `src/config/content.ts` 聚合导出。
 - 首屏在未开启减弱动效时展示短时入场头像加载进度条（`BootScreen`），呈现头像光环、署名与阶段进度，支持指针或按键立即跳过，且不阻塞主桌面与辅助技术树。
 - 精细指针设备提供高对比度系统级矢量指针与轻微液态玻璃跟随光环（`CustomCursor`）；触屏与减弱动效环境自动停用跟随层。
 - Dock 提供五个应用和搜索；桌面快捷入口指向项目、博客和关于我（由 `system.shortcuts` 配置驱动）。点击活动应用只聚焦，不切换为关闭或最小化。

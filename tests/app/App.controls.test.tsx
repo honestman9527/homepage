@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { App, DesktopShell } from '../../src/App.tsx';
@@ -10,18 +11,33 @@ beforeEach(() => {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1366 });
   Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 768 });
   window.localStorage.clear();
+  const html = new DOMParser().parseFromString(readFileSync('index.html', 'utf8'), 'text/html');
+  document.head.append(html.querySelector('#site-favicon')!);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  document.querySelector('#site-favicon')?.remove();
+  vi.unstubAllGlobals();
+});
 
 function controls() {
   return screen.getByRole('dialog', { name: '控制中心' });
 }
 
 it('shares control center preferences with desktop settings in both directions and restores them after remounting', async () => {
+  const colorQuery = Object.assign(new EventTarget(), { matches: false });
+  vi.stubGlobal('matchMedia', (query: string) =>
+    query === '(prefers-color-scheme: dark)'
+      ? colorQuery
+      : Object.assign(new EventTarget(), { matches: false }),
+  );
+  const favicon = document.querySelector<HTMLLinkElement>('#site-favicon')!;
   const user = userEvent.setup();
   const app = render(<App />);
+  expect(favicon.getAttribute('href')).toBe('/hm-light.svg');
   await user.click(screen.getByRole('button', { name: '控制中心' }));
   await user.click(within(controls()).getByRole('radio', { name: '深色' }));
+  expect(favicon.getAttribute('href')).toBe('/hm-dark.svg');
   fireEvent.change(within(controls()).getByRole('slider', { name: /背景亮度/ }), {
     target: { value: '72' },
   });
@@ -38,6 +54,7 @@ it('shares control center preferences with desktop settings in both directions a
     (within(settings).getByRole('slider', { name: /玻璃不透明度/ }) as HTMLInputElement).value,
   ).toBe('85');
   await user.click(within(settings).getByRole('radio', { name: '浅色' }));
+  expect(favicon.getAttribute('href')).toBe('/hm-light.svg');
   await user.click(within(settings).getByRole('button', { name: '壁纸' }));
   expect(
     (within(settings).getByRole('slider', { name: /背景亮度/ }) as HTMLInputElement).value,
@@ -51,7 +68,9 @@ it('shares control center preferences with desktop settings in both directions a
     (within(controls()).getByRole('radio', { name: '浅色' }) as HTMLInputElement).checked,
   ).toBe(true);
   app.unmount();
+  favicon.setAttribute('href', '/favicon.svg');
   render(<App />);
+  expect(favicon.getAttribute('href')).toBe('/hm-light.svg');
   await user.click(screen.getByRole('button', { name: '控制中心' }));
   expect(
     (within(controls()).getByRole('radio', { name: '浅色' }) as HTMLInputElement).checked,
@@ -66,6 +85,18 @@ it('shares control center preferences with desktop settings in both directions a
     (within(controls()).getByRole('checkbox', { name: '启用界面动效' }) as HTMLInputElement)
       .checked,
   ).toBe(false);
+  act(() => {
+    colorQuery.matches = true;
+    colorQuery.dispatchEvent(new Event('change'));
+  });
+  expect(favicon.getAttribute('href')).toBe('/hm-light.svg');
+  await user.click(within(controls()).getByRole('radio', { name: '跟随系统' }));
+  expect(favicon.getAttribute('href')).toBe('/hm-dark.svg');
+  act(() => {
+    colorQuery.matches = false;
+    colorQuery.dispatchEvent(new Event('change'));
+  });
+  expect(favicon.getAttribute('href')).toBe('/hm-light.svg');
 });
 
 it('keeps current choices working and explains when the browser cannot save preferences', async () => {

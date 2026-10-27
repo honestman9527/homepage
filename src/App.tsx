@@ -182,6 +182,10 @@ export function App() {
 function DesktopAppearance({ mode, children }: { mode: string; children: ReactNode }) {
   const preferences = usePreferenceValues();
   const reducedMotion = useReducedMotion();
+  useEffect(() => {
+    const favicon = document.querySelector<HTMLLinkElement>('#site-favicon');
+    if (favicon) favicon.href = `/hm-${preferences.appearance}.svg`;
+  }, [preferences.appearance]);
   return (
     <div
       className="honestos"
