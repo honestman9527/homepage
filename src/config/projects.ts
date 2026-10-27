@@ -13,6 +13,7 @@ export const projectsConfig: readonly Project[] = [
     id: 'navigation',
     name: '导航站',
     summary: '一个为有缘人准备的导航站。',
+    articleUrl: 'https://blog.honestman.me/blog/cf-workers-navigation',
     status: 'live',
     year: '2026',
     url: 'https://nav.7s.nz',
