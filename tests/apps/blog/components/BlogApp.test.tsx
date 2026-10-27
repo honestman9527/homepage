@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { siteConfig } from '../../../../src/config/index.ts';
+import type { Blog } from '../../../../src/config/index.ts';
 import { BlogApp } from '../../../../src/apps/blog/components/BlogApp.tsx';
+
+const blog: Blog = {
+  title: '测试随笔',
+  description: '组件测试使用独立配置。',
+  url: 'https://blog.honestman.me',
+  rssUrl: 'https://blog.honestman.me/rss.xml',
+};
 
 const rss = (title = '真实文章') => `<rss version="2.0"><channel><item>
   <title>${title}</title><link>https://blog.honestman.me/notes</link>
@@ -24,12 +31,10 @@ afterEach(() => {
 });
 
 it('does not request an unconfigured or invalid RSS address and preserves the blog entry', () => {
-  const { rerender } = render(
-    <BlogApp blog={{ ...siteConfig.blog, url: undefined, rssUrl: undefined }} />,
-  );
+  const { rerender } = render(<BlogApp blog={{ ...blog, url: undefined, rssUrl: undefined }} />);
   expect(screen.getByText('独立博客筹备中')).toBeDefined();
   expect(screen.queryByRole('link')).toBeNull();
-  rerender(<BlogApp blog={{ ...siteConfig.blog, rssUrl: 'javascript:alert(1)' }} />);
+  rerender(<BlogApp blog={{ ...blog, rssUrl: 'javascript:alert(1)' }} />);
   expect(screen.getByText('暂未配置文章订阅，可以先去博客逛逛。')).toBeDefined();
   expect(screen.getAllByRole('link')).toHaveLength(1);
   expect(fetchMock).not.toHaveBeenCalled();
@@ -42,7 +47,7 @@ it('loads configured RSS in the client and shows article metadata and external n
       resolve = done;
     }),
   );
-  render(<BlogApp blog={siteConfig.blog} />);
+  render(<BlogApp blog={blog} />);
   expect(screen.getByRole('status').textContent).toBe('正在加载文章…');
   expect(fetchMock).toHaveBeenCalledWith(
     'https://blog.honestman.me/rss.xml',
@@ -68,7 +73,7 @@ it('loads configured RSS in the client and shows article metadata and external n
 
 it('shows the empty feed state without hiding the independent blog entry', async () => {
   fetchMock.mockResolvedValue(response('<rss><channel /></rss>'));
-  render(<BlogApp blog={siteConfig.blog} />);
+  render(<BlogApp blog={blog} />);
   expect(await screen.findByText('暂时没有文章，可以先去博客逛逛。')).toBeDefined();
   expect(screen.getByRole('link', { name: /打开独立博客/ })).toBeDefined();
 });
@@ -82,7 +87,7 @@ it.each(['network', 'http', 'xml'])(
         failure === 'http' ? new Response('', { status: 503 }) : response('<html>not RSS</html>'),
       );
     fetchMock.mockResolvedValueOnce(response(rss()));
-    render(<BlogApp blog={siteConfig.blog} />);
+    render(<BlogApp blog={blog} />);
     expect(await screen.findByRole('alert')).toBeDefined();
     expect(screen.getByRole('link', { name: /打开独立博客/ })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: '重新加载文章' }));
@@ -102,7 +107,7 @@ it('aborts a slow request and offers a retry after the timeout', async () => {
         );
       }),
   );
-  render(<BlogApp blog={siteConfig.blog} />);
+  render(<BlogApp blog={blog} />);
   await act(async () => vi.advanceTimersByTimeAsync(15_000));
   expect(screen.getByRole('alert')).toBeDefined();
   expect(screen.getByRole('button', { name: '重新加载文章' })).toBeDefined();
@@ -117,11 +122,9 @@ it('aborts on source change and ignores late responses from the previous source'
     }),
   );
   fetchMock.mockResolvedValueOnce(response(rss('新来源文章')));
-  const { rerender, unmount } = render(<BlogApp blog={siteConfig.blog} />);
+  const { rerender, unmount } = render(<BlogApp blog={blog} />);
   const oldSignal = fetchMock.mock.calls[0]?.[1]?.signal;
-  rerender(
-    <BlogApp blog={{ ...siteConfig.blog, rssUrl: 'https://blog.honestman.me/new-rss.xml' }} />,
-  );
+  rerender(<BlogApp blog={{ ...blog, rssUrl: 'https://blog.honestman.me/new-rss.xml' }} />);
   expect(oldSignal?.aborted).toBe(true);
   expect(await screen.findByRole('heading', { name: '新来源文章' })).toBeDefined();
   await act(async () => resolveOld(response(rss('旧来源文章'))));
@@ -133,11 +136,9 @@ it('aborts on source change and ignores late responses from the previous source'
 it('clears the previous article list when the configured source changes', async () => {
   fetchMock.mockResolvedValueOnce(response(rss()));
   fetchMock.mockReturnValueOnce(new Promise(() => {}));
-  const { rerender } = render(<BlogApp blog={siteConfig.blog} />);
+  const { rerender } = render(<BlogApp blog={blog} />);
   await screen.findByRole('heading', { name: '真实文章' });
-  rerender(
-    <BlogApp blog={{ ...siteConfig.blog, rssUrl: 'https://blog.honestman.me/other.xml' }} />,
-  );
+  rerender(<BlogApp blog={{ ...blog, rssUrl: 'https://blog.honestman.me/other.xml' }} />);
   expect(screen.getByRole('status')).toBeDefined();
   expect(screen.queryByRole('heading', { name: '真实文章' })).toBeNull();
 });
