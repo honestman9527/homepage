@@ -12,9 +12,15 @@ const desktop = {
   availableArea: { x: 0, y: 48, width: 1366, height: 616 },
 };
 
+function runningDesktop() {
+  let state = createDesktopState(desktop);
+  state = desktopReducer(state, { type: 'open', appId: 'about' });
+  return desktopReducer(state, { type: 'open', appId: 'terminal' });
+}
+
 describe('desktop application sessions', () => {
   it('opens one session across navigation entries and preserves it through minimize and restore', () => {
-    let state = createDesktopState(desktop);
+    let state = runningDesktop();
     expect(getActiveApp(state)).toBe('terminal');
     expect(getWindowPresentation(state, 'about').visible).toBe(true);
     state = desktopReducer(state, { type: 'open', appId: 'projects' });
@@ -39,7 +45,7 @@ describe('desktop application sessions', () => {
 
 describe('foreground succession', () => {
   it('keeps the active application when closing a background application and excludes minimized applications', () => {
-    let state = createDesktopState(desktop);
+    let state = runningDesktop();
     state = desktopReducer(state, { type: 'open', appId: 'projects' });
     state = desktopReducer(state, { type: 'open', appId: 'blog' });
     state = desktopReducer(state, { type: 'close', appId: 'about' });
@@ -53,27 +59,35 @@ describe('foreground succession', () => {
     expect(state.windows.about.status).toBe('closed');
   });
 
-  it('arranges running desktop sessions without reviving non-default closed applications', () => {
-    let state = createDesktopState(desktop);
+  it('arranges only visible windows while retaining sizes, sessions and foreground order', () => {
+    let state = runningDesktop();
     state = desktopReducer(state, { type: 'open', appId: 'projects' });
-    const projectSession = state.windows.projects.sessionId;
-    const terminalSession = state.windows.terminal.sessionId;
+    state = desktopReducer(state, { type: 'minimize', appId: 'terminal' });
     state = desktopReducer(state, { type: 'close', appId: 'about' });
-    state = desktopReducer(state, { type: 'arrange' });
-    expect(getActiveApp(state)).toBe('terminal');
-    expect(state.windows.projects).toMatchObject({
-      status: 'minimized',
-      sessionId: projectSession,
+    state = desktopReducer(state, {
+      type: 'commitGeometry',
+      appId: 'projects',
+      geometry: { x: 0, y: 48, width: 700, height: 400 },
     });
-    expect(state.windows.terminal.sessionId).toBe(terminalSession);
-    expect(state.windows.about.status).toBe('open');
+    const before = state;
+    state = desktopReducer(state, { type: 'arrange' });
+    expect(state.openOrder).toEqual(before.openOrder);
+    expect(getActiveApp(state)).toBe('projects');
+    expect(state.windows.projects).toMatchObject({
+      status: 'open',
+      sessionId: before.windows.projects.sessionId,
+      normalGeometry: { width: 700, height: 400 },
+    });
+    expect(state.windows.projects.normalGeometry.x).toBe((1366 - 700) / 2);
+    expect(state.windows.terminal).toEqual(before.windows.terminal);
+    expect(state.windows.about.status).toBe('closed');
     expect(state.windows.blog.status).toBe('closed');
   });
 });
 
 describe('responsive window geometry', () => {
   it('constrains geometry, preserves normal bounds while maximized, and bounds stacking', () => {
-    let state = createDesktopState(desktop);
+    let state = runningDesktop();
     state = desktopReducer(state, {
       type: 'commitGeometry',
       appId: 'about',
@@ -103,7 +117,7 @@ describe('responsive window geometry', () => {
 });
 
 it('retains sessions and desktop normal geometry across small layouts and single-window arrange', () => {
-  let state = createDesktopState(desktop);
+  let state = runningDesktop();
   state = desktopReducer(state, { type: 'open', appId: 'projects' });
   state = desktopReducer(state, {
     type: 'commitGeometry',
@@ -125,27 +139,34 @@ it('retains sessions and desktop normal geometry across small layouts and single
     geometry: { x: 0, y: 0, width: 390, height: 844 },
   });
   state = desktopReducer(state, { type: 'arrange' });
-  expect(getActiveApp(state)).toBe('about');
+  expect(getActiveApp(state)).toBe('projects');
   expect(state.windows.projects).toEqual(project);
   state = desktopReducer(state, { type: 'updateViewport', viewport: desktop });
   expect(state.windows.projects).toEqual(project);
   expect(getWindowPresentation(state, 'projects').visible).toBe(true);
 });
 
-it('starts only About on small screens or when minimum content windows cannot fit', () => {
+it('starts with no sessions on desktop, small screens or short viewports', () => {
   for (const viewport of [
+    desktop,
     { width: 768, height: 1024, availableArea: { x: 8, y: 48, width: 752, height: 872 } },
     { width: 1200, height: 400, availableArea: { x: 0, y: 48, width: 1200, height: 248 } },
   ]) {
     const state = createDesktopState(viewport);
-    expect(state.mode).toBe('single');
-    expect(state.openOrder).toEqual(['about']);
-    expect(state.windows.terminal.sessionId).toBeNull();
+    expect(state.openOrder).toEqual([]);
+    expect(getActiveApp(state)).toBeNull();
+    expect(
+      Object.values(state.windows).every(
+        (window) => window.sessionId === null && window.status === 'closed',
+      ),
+    ).toBe(true);
+    expect(desktopReducer(state, { type: 'arrange' })).toBe(state);
+    expect(desktopReducer(state, { type: 'toggleDesktop' })).toBe(state);
   }
 });
 
 it('constrains maximized restore after shrinking the desktop without changing the session', () => {
-  let state = createDesktopState(desktop);
+  let state = runningDesktop();
   state = desktopReducer(state, {
     type: 'commitGeometry',
     appId: 'terminal',
@@ -175,4 +196,66 @@ it('constrains maximized restore after shrinking the desktop without changing th
     height: 290,
   });
   expect(state.windows.terminal.sessionId).toBe(session);
+});
+
+it('centers the first window above the midpoint and cascades later windows within the available area', () => {
+  let state = createDesktopState(desktop);
+  state = desktopReducer(state, { type: 'open', appId: 'about' });
+  expect(state.windows.about.normalGeometry).toEqual({ x: 403, y: 104, width: 560, height: 440 });
+  state = desktopReducer(state, { type: 'open', appId: 'terminal' });
+  expect(state.windows.terminal.normalGeometry).toEqual({
+    x: 452,
+    y: 178,
+    width: 510,
+    height: 340,
+  });
+});
+
+it('shows the desktop and returns only the captured windows in their original order and sessions', () => {
+  let state = runningDesktop();
+  state = desktopReducer(state, { type: 'open', appId: 'projects' });
+  state = desktopReducer(state, { type: 'minimize', appId: 'projects' });
+  state = desktopReducer(state, { type: 'toggleMaximize', appId: 'terminal' });
+  const before = state;
+  state = desktopReducer(state, { type: 'toggleDesktop' });
+  expect(state.openOrder).toEqual([]);
+  expect(getActiveApp(state)).toBeNull();
+  expect(state.desktopReturnOrder).toEqual(before.openOrder);
+  for (const id of ['about', 'terminal'] as const) {
+    expect(getWindowPresentation(state, id)).toMatchObject({ visible: false, running: true });
+    expect(state.windows[id].sessionId).toBe(before.windows[id].sessionId);
+  }
+  expect(desktopReducer(state, { type: 'arrange' })).toBe(state);
+  state = desktopReducer(state, { type: 'toggleDesktop' });
+  expect(state).toEqual(before);
+  expect(state.windows.projects.status).toBe('minimized');
+});
+
+it('cancels the pending desktop return when an application is explicitly opened or closed', () => {
+  for (const action of [
+    { type: 'open', appId: 'terminal' },
+    { type: 'open', appId: 'projects' },
+    { type: 'close', appId: 'about' },
+  ] as const) {
+    let state = desktopReducer(runningDesktop(), { type: 'toggleDesktop' });
+    state = desktopReducer(state, action);
+    expect(state.desktopReturnOrder).toBeNull();
+    state = desktopReducer(state, { type: 'toggleDesktop' });
+    expect(state.windows.about.status).not.toBe('open');
+  }
+});
+
+it('returns to the captured foreground after changing to single-window mode', () => {
+  let state = runningDesktop();
+  const sessions = Object.values(state.windows).map((window) => window.sessionId);
+  state = desktopReducer(state, { type: 'toggleDesktop' });
+  state = desktopReducer(state, {
+    type: 'updateViewport',
+    viewport: { width: 390, height: 844, availableArea: { x: 8, y: 48, width: 374, height: 692 } },
+  });
+  state = desktopReducer(state, { type: 'toggleDesktop' });
+  expect(getActiveApp(state)).toBe('terminal');
+  expect(getWindowPresentation(state, 'about').visible).toBe(false);
+  expect(getWindowPresentation(state, 'terminal').visible).toBe(true);
+  expect(Object.values(state.windows).map((window) => window.sessionId)).toEqual(sessions);
 });

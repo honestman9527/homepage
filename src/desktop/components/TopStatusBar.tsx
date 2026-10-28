@@ -10,14 +10,17 @@ export function TopStatusBar({
   onAbout,
   onArrange,
   onSearch,
+  onToggleDesktop,
   children,
 }: {
   onAbout(): void;
   onArrange(): void;
   onSearch(trigger: HTMLElement): void;
+  onToggleDesktop(): void;
   children?: ReactNode;
 }) {
-  const { activeApp } = useDesktop();
+  const { activeApp, state } = useDesktop();
+  const returning = state.desktopReturnOrder !== null;
   return (
     <nav className="status-bar" aria-label="顶部状态栏">
       <GlassMaterial />
@@ -53,6 +56,19 @@ export function TopStatusBar({
       </DesktopPopover>
       <span className="status-active-app">{activeApp ? appById[activeApp].name : 'HonestOS'}</span>
       <div className="status-actions">
+        <button
+          className="status-button"
+          aria-label={returning ? '返回窗口' : '显示桌面'}
+          title={returning ? '返回窗口' : '显示桌面'}
+          aria-pressed={returning}
+          disabled={!returning && state.openOrder.length === 0}
+          onClick={(event) => {
+            event.currentTarget.focus({ preventScroll: true });
+            onToggleDesktop();
+          }}
+        >
+          <Icon name="desktop" />
+        </button>
         <button
           className="status-button status-search"
           aria-label="搜索应用"

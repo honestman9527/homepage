@@ -26,6 +26,11 @@ function dock(name: string) {
   });
 }
 
+function openWindows() {
+  fireEvent.click(dock('关于我'));
+  fireEvent.click(dock('终端'));
+}
+
 function pointer(target: Element, type: string, y: number) {
   const event = new MouseEvent(type, { bubbles: true, button: 0, clientX: 150, clientY: y });
   Object.defineProperty(event, 'pointerId', { value: 1 });
@@ -35,6 +40,7 @@ function pointer(target: Element, type: string, y: number) {
 it('shows the active application and returns to HonestOS when the desktop has no foreground application', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   expect(within(bar()).getByText('终端')).toBeTruthy();
   await user.click(dock('关于我'));
   expect(within(bar()).getByText('关于我')).toBeTruthy();
@@ -49,6 +55,7 @@ it('shows the active application and returns to HonestOS when the desktop has no
 it('opens the HM menu with keyboard navigation, dismisses it, and hands About to the existing application session', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const about = screen.getByRole('region', { name: '关于我' });
   const trigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
   expect(trigger.getAttribute('aria-expanded')).toBe('false');
@@ -74,6 +81,7 @@ it('opens the HM menu with keyboard navigation, dismisses it, and hands About to
 it('arranges from HM without ending sessions and reuses search with focus restoration and modal isolation', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const input = screen
     .getByRole('region', { name: '终端' })
     .querySelector<HTMLInputElement>('input')!;
@@ -84,9 +92,9 @@ it('arranges from HM without ending sessions and reuses search with focus restor
   });
   await user.click(within(bar()).getByRole('button', { name: 'HM 菜单' }));
   await user.click(screen.getByRole('menuitem', { name: '整理桌面' }));
-  expect(document.activeElement).toBe(screen.getByRole('region', { name: '终端' }));
+  expect(document.activeElement).toBe(screen.getByRole('region', { name: '我的项目' }));
   expect(input.value).toBe('preserved draft');
-  expect(screen.queryByRole('region', { name: '我的项目' })).toBeNull();
+  expect(screen.getByRole('region', { name: '我的项目' })).toBeTruthy();
   expect(dock('我的项目').getAttribute('aria-label')).toContain('运行中');
   const trigger = within(bar()).getByRole('button', { name: '搜索应用' });
   await user.click(trigger);
@@ -103,6 +111,7 @@ it('arranges from HM without ending sessions and reuses search with focus restor
 
 it('keeps maximized and dragged windows within the area below the top status bar, then restores their normal geometry', () => {
   render(<App />);
+  openWindows();
   const about = screen.getByRole('region', { name: '关于我' });
   const normal = { top: about.style.top, height: about.style.height };
   fireEvent.click(screen.getByRole('button', { name: '最大化关于我' }));
@@ -120,6 +129,7 @@ it('keeps maximized and dragged windows within the area below the top status bar
 it('dismisses the HM menu when focus leaves or the visitor clicks outside, and handles Escape on its trigger', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const trigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
   await user.click(trigger);
   await user.tab({ shift: true });
@@ -135,12 +145,13 @@ it('dismisses the HM menu when focus leaves or the visitor clicks outside, and h
   await user.keyboard('{End}');
   await user.tab();
   expect(screen.queryByRole('menu')).toBeNull();
-  expect(document.activeElement).toBe(within(bar()).getByRole('button', { name: '搜索应用' }));
+  expect(document.activeElement).toBe(within(bar()).getByRole('button', { name: '显示桌面' }));
 });
 
 it('keeps HM actions and Dock search usable in a small layout without ending the terminal session during rotation', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const input = screen
     .getByRole('region', { name: '终端' })
     .querySelector<HTMLInputElement>('input')!;
@@ -152,7 +163,7 @@ it('keeps HM actions and Dock search usable in a small layout without ending the
   });
   await user.click(within(bar()).getByRole('button', { name: 'HM 菜单' }));
   await user.click(screen.getByRole('menuitem', { name: '整理桌面' }));
-  expect(document.activeElement).toBe(screen.getByRole('region', { name: '关于我' }));
+  expect(document.activeElement).toBe(screen.getByRole('region', { name: '终端' }));
   const search = within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole(
     'button',
     { name: '搜索应用' },
@@ -167,6 +178,7 @@ it('keeps HM actions and Dock search usable in a small layout without ending the
 it('reserves the safe area above the status bar when maximizing and recalculating the desktop area', () => {
   document.documentElement.style.setProperty('--safe-area-top', '24px');
   render(<App />);
+  openWindows();
   fireEvent.click(screen.getByRole('button', { name: '最大化关于我' }));
   const about = screen.getByRole('region', { name: '关于我' });
   expect(about.style.top).toBe('72px');
@@ -181,6 +193,7 @@ it('reserves the safe area above the status bar when maximizing and recalculatin
 
 it('removes closing menu controls immediately and preserves reopened focus while old feedback finishes', () => {
   render(<App />);
+  openWindows();
   const trigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
   fireEvent.click(trigger);
   const menu = screen.getByRole('menu');
@@ -212,6 +225,7 @@ it('preserves the closing menu layout and calendar today highlight while hiding 
   document.head.append(styles);
   try {
     render(<App />);
+    openWindows();
     const menuTrigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
     fireEvent.click(menuTrigger);
     const menu = screen.getByRole('menu');
@@ -281,6 +295,7 @@ it.each(['window resize', 'visual viewport resize', 'visual viewport scroll', 'p
         : measure.call(this);
     });
     render(<App />);
+    openWindows();
     const trigger = within(bar()).getByRole('button', { name: 'HM 菜单' });
     fireEvent.click(trigger);
     const menu = screen.getByRole('menu');

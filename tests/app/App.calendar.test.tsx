@@ -86,6 +86,7 @@ it('keeps a browsed month at the year boundary and returns to the new local toda
 
 it('refreshes the local clock after returning to a suspended page and coordinates desktop popovers', () => {
   render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: /打开终端/ }));
   fireEvent.click(clock());
   const initial = screen.getByRole('region', { name: '终端' });
   vi.setSystemTime(new Date(2024, 2, 1, 8, 7));

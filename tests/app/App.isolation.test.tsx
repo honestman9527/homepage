@@ -44,6 +44,12 @@ it('updates appearance and saving feedback without executing unrelated windows, 
   render(<App />);
   fireEvent.click(
     within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
+      name: /打开终端/,
+    }),
+  );
+  expect(counts.terminal).toBeGreaterThan(0);
+  fireEvent.click(
+    within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
       name: /打开桌面设置/,
     }),
   );
@@ -59,6 +65,12 @@ it('updates local clock minutes without executing application content, window fr
   vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
   vi.setSystemTime(new Date(2024, 1, 28, 23, 59, 30));
   render(<App />);
+  fireEvent.click(
+    within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole('button', {
+      name: /打开终端/,
+    }),
+  );
+  expect(counts.terminal).toBeGreaterThan(0);
   await act(async () => {});
   const before = { ...counts };
   act(() => vi.advanceTimersByTime(30_000));

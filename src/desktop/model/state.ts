@@ -21,6 +21,7 @@ export interface AppWindow {
 export interface DesktopState {
   windows: Record<AppId, AppWindow>;
   openOrder: AppId[];
+  desktopReturnOrder: AppId[] | null;
   nextSessionId: number;
   viewport: DesktopViewport;
   mode: DesktopMode;
@@ -34,7 +35,7 @@ export type DesktopAction =
     }['open' | 'focus' | 'minimize' | 'close' | 'toggleMaximize']
   | { type: 'commitGeometry'; appId: AppId; geometry: Geometry }
   | { type: 'updateViewport'; viewport: DesktopViewport }
-  | { type: 'arrange' };
+  | { type: 'arrange' | 'toggleDesktop' };
 
 export function getActiveApp(state: DesktopState): AppId | null {
   return state.openOrder.at(-1) ?? null;
@@ -64,24 +65,21 @@ export function constrainWindowGeometry(id: AppId, value: Geometry, area: Geomet
   };
 }
 
-function defaultGeometry(id: AppId, viewport: DesktopViewport): Geometry {
+function defaultGeometry(
+  id: AppId,
+  viewport: DesktopViewport,
+  index = 0,
+  size = appById[id].defaultSize,
+): Geometry {
   const area = viewport.availableArea;
-  const center = Math.max(0, (area.width - 1366) / 2);
-  const aboutY = Math.max(24, (area.height - appById.about.defaultSize.height) / 2 - 50);
-  const positions: Record<AppId, [number, number]> = {
-    about: [area.width >= 1200 ? 96 + center : 24, aboutY],
-    terminal: [Math.min(area.width - 534, area.width >= 1200 ? 744 + center : 510), aboutY + 120],
-    projects: [Math.max(24, (area.width - 820) / 2), 24],
-    blog: [Math.max(24, (area.width - 820) / 2 + 24), 40],
-    settings: [
-      Math.max(24, (area.width - 720) / 2),
-      Math.max(24, (area.height - appById.settings.defaultSize.height) / 2),
-    ],
-  };
-  const [x, y] = positions[id];
   return constrainWindowGeometry(
     id,
-    { x: area.x + x, y: area.y + y, ...appById[id].defaultSize },
+    {
+      x: area.x + (area.width - size.width) / 2 + index * 24,
+      y: area.y + (area.height - size.height) / 2 - 32 + index * 24,
+      width: size.width,
+      height: size.height,
+    },
     area,
   );
 }
@@ -99,9 +97,7 @@ export function createDesktopState(viewport: DesktopViewport): DesktopState {
       },
     ]),
   ) as Record<AppId, AppWindow>;
-  let state: DesktopState = { windows, openOrder: [], nextSessionId: 1, viewport, mode };
-  state = desktopReducer(state, { type: 'open', appId: 'about' });
-  return mode === 'desktop' ? desktopReducer(state, { type: 'open', appId: 'terminal' }) : state;
+  return { windows, openOrder: [], desktopReturnOrder: null, nextSessionId: 1, viewport, mode };
 }
 
 export function desktopReducer(state: DesktopState, action: DesktopAction): DesktopState {
@@ -111,6 +107,7 @@ export function desktopReducer(state: DesktopState, action: DesktopAction): Desk
     const fresh = current.status === 'closed';
     return {
       ...state,
+      desktopReturnOrder: null,
       nextSessionId: state.nextSessionId + (fresh ? 1 : 0),
       windows: {
         ...state.windows,
@@ -119,7 +116,14 @@ export function desktopReducer(state: DesktopState, action: DesktopAction): Desk
           status: 'open',
           sessionId: fresh ? state.nextSessionId : current.sessionId,
           ...(fresh
-            ? { normalGeometry: defaultGeometry(action.appId, state.viewport), maximized: false }
+            ? {
+                normalGeometry: defaultGeometry(
+                  action.appId,
+                  state.viewport,
+                  state.openOrder.length,
+                ),
+                maximized: false,
+              }
             : {}),
         },
       },
@@ -131,6 +135,7 @@ export function desktopReducer(state: DesktopState, action: DesktopAction): Desk
     if (current.status === 'closed') return state;
     return {
       ...state,
+      desktopReturnOrder: null,
       windows: {
         ...state.windows,
         [action.appId]: {
@@ -189,32 +194,31 @@ export function desktopReducer(state: DesktopState, action: DesktopAction): Desk
     return { ...state, viewport: action.viewport, mode, windows };
   }
   if (action.type === 'arrange') {
-    let next = state;
-    if (state.mode === 'desktop') {
-      for (const id of appIds) {
-        if (id !== 'about' && id !== 'terminal' && next.windows[id].status === 'open') {
-          next = desktopReducer(next, { type: 'minimize', appId: id });
-        }
-      }
+    if (state.mode !== 'desktop' || state.openOrder.length === 0) return state;
+    const windows = { ...state.windows };
+    state.openOrder.forEach((id, index) => {
+      windows[id] = {
+        ...windows[id],
+        maximized: false,
+        normalGeometry: defaultGeometry(id, state.viewport, index, windows[id].normalGeometry),
+      };
+    });
+    return { ...state, windows };
+  }
+  if (action.type === 'toggleDesktop') {
+    const restore = state.desktopReturnOrder !== null;
+    const order = state.desktopReturnOrder ?? state.openOrder;
+    if (order.length === 0) return state;
+    const windows = { ...state.windows };
+    for (const id of order) {
+      windows[id] = { ...windows[id], status: restore ? 'open' : 'minimized' };
     }
-    for (const id of state.mode === 'desktop'
-      ? (['about', 'terminal'] as const)
-      : (['about'] as const)) {
-      next = desktopReducer(next, { type: 'open', appId: id });
-      if (state.mode === 'desktop')
-        next = {
-          ...next,
-          windows: {
-            ...next.windows,
-            [id]: {
-              ...next.windows[id],
-              maximized: false,
-              normalGeometry: defaultGeometry(id, state.viewport),
-            },
-          },
-        };
-    }
-    return next;
+    return {
+      ...state,
+      windows,
+      openOrder: restore ? order : [],
+      desktopReturnOrder: restore ? null : order,
+    };
   }
   return state;
 }

@@ -28,8 +28,12 @@
   white-space: nowrap;
 }
 .status-button:hover,
-.status-button[aria-expanded='true'] {
+.status-button[aria-expanded='true'],
+.status-button[aria-pressed='true'] {
   background: var(--line);
+}
+.status-button:disabled:hover {
+  background: transparent;
 }
 .status-button svg {
   width: 17px;

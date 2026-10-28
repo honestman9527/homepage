@@ -1,21 +1,27 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
-import { DesktopProvider } from '../../../src/desktop/index.ts';
+import { DesktopProvider, useDesktop } from '../../../src/desktop/index.ts';
 import { PreferencesProvider } from '../../../src/preferences/index.ts';
 import { WindowFrame } from '../../../src/desktop/components/WindowFrame.tsx';
 
 afterEach(cleanup);
+function OpenAbout() {
+  const desktop = useDesktop();
+  return <button onClick={() => desktop.open('about')}>Open About</button>;
+}
 it('uses a nonmodal window with named controls and retains input focus on content pointerdown', () => {
   render(
     <PreferencesProvider storage={null} motionQuery={null}>
       <DesktopProvider>
+        <OpenAbout />
         <WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}>
           <input aria-label="editor" />
         </WindowFrame>
       </DesktopProvider>
     </PreferencesProvider>,
   );
+  fireEvent.click(screen.getByRole('button', { name: 'Open About' }));
   expect(screen.getByRole('region', { name: '关于我' }).getAttribute('aria-modal')).toBeNull();
   const editor = screen.getByLabelText('editor');
   act(() => editor.focus());
@@ -35,12 +41,14 @@ it('commits title drag and resize, cancels partial gestures and restores maximiz
   render(
     <PreferencesProvider storage={null} motionQuery={null}>
       <DesktopProvider>
+        <OpenAbout />
         <WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}>
           <p>content</p>
         </WindowFrame>
       </DesktopProvider>
     </PreferencesProvider>,
   );
+  fireEvent.click(screen.getByRole('button', { name: 'Open About' }));
   const frame = screen.getByRole('region', { name: '关于我' });
   const title = frame.querySelector('header')!;
   const before = frame.style.left;
@@ -72,12 +80,14 @@ it('keeps a maximized window unchanged on title clicks and toggles once on a tit
   render(
     <PreferencesProvider storage={null} motionQuery={null}>
       <DesktopProvider>
+        <OpenAbout />
         <WindowFrame appId="about" onClose={() => {}} onMinimize={() => {}}>
           <p>content</p>
         </WindowFrame>
       </DesktopProvider>
     </PreferencesProvider>,
   );
+  fireEvent.click(screen.getByRole('button', { name: 'Open About' }));
   const frame = screen.getByRole('region', { name: '关于我' });
   const title = frame.querySelector('header')!;
   fireEvent.click(screen.getByRole('button', { name: '最大化关于我' }));

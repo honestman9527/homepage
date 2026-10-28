@@ -25,8 +25,29 @@ html[data-keyboard='true'] .terminal-frame {
   );
 }
 @media (max-width: 1023px) {
+  .desktop-surface[data-empty='true'] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--status-bar-height) + var(--safe-area-top) + 24px) 16px
+      calc(var(--dock-height) + env(safe-area-inset-bottom) + 24px);
+  }
+  .desktop-welcome {
+    position: static;
+    width: min(380px, 100%);
+  }
   .desktop-shortcuts {
-    display: none;
+    position: static;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: min(380px, 100%);
+    margin-top: 24px;
+  }
+  .desktop-shortcuts button {
+    width: 100%;
+    min-width: 0;
+    font-size: 14px;
   }
   .honestos {
     --icon-size: 40px !important;
@@ -91,7 +112,16 @@ html[data-compact-viewport='true'] .desktop-system {
   overscroll-behavior: contain;
 }
 html[data-compact-viewport='true'] .desktop-shortcuts {
-  display: none;
+  position: static;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px auto;
+  width: min(380px, 100%);
+}
+html[data-compact-viewport='true'] .desktop-welcome {
+  position: static;
+  margin: 8px auto;
+  width: min(380px, 100%);
 }
 html[data-compact-viewport='true'] .desktop-surface {
   grid-row: 2;

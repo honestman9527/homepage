@@ -20,6 +20,7 @@ interface DesktopContextValue {
   commitGeometry(appId: AppId, geometry: Geometry): void;
   updateViewport(viewport: DesktopViewport): void;
   arrange(): void;
+  toggleDesktop(): void;
 }
 const DesktopContext = createContext<DesktopContextValue | null>(null);
 
@@ -74,6 +75,7 @@ export function DesktopProvider({
       commitGeometry: (appId, geometry) => dispatch({ type: 'commitGeometry', appId, geometry }),
       updateViewport: (viewport) => dispatch({ type: 'updateViewport', viewport }),
       arrange: () => dispatch({ type: 'arrange' }),
+      toggleDesktop: () => dispatch({ type: 'toggleDesktop' }),
     }),
     [],
   );

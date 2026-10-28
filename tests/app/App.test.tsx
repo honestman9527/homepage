@@ -34,9 +34,15 @@ function resize(width: number, height = 768) {
   });
 }
 
+function openWindows() {
+  fireEvent.click(dock('关于我'));
+  fireEvent.click(dock('终端'));
+}
+
 it('shares single application sessions across Dock, About and desktop shortcuts and focuses terminal only for its explicit CTA', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   expect(document.activeElement).not.toBe(terminalInput());
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
@@ -57,6 +63,7 @@ it('shares single application sessions across Dock, About and desktop shortcuts 
 it('retains terminal output, draft, history and reading position through minimize, arrange and layout changes, then resets on close', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const input = terminalInput();
   fireEvent.change(input, { target: { value: 'echo remembered' } });
   fireEvent.keyDown(input, { key: 'Enter' });
@@ -70,7 +77,8 @@ it('retains terminal output, draft, history and reading position through minimiz
   await user.click(dock('桌面设置'));
   await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
-  expect(document.activeElement).toBe(frame('终端'));
+  expect(document.activeElement).toBe(frame('桌面设置'));
+  await user.click(dock('终端'));
   const normal = {
     left: frame('终端').style.left,
     top: frame('终端').style.top,
@@ -103,6 +111,7 @@ it('retains terminal output, draft, history and reading position through minimiz
 it('preserves focus when closing an inactive window and chooses an open MRU successor without reviving minimized sessions', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   await user.click(terminalInput());
   const input = terminalInput();
   await user.click(screen.getByRole('button', { name: '关闭关于我' }));
@@ -120,12 +129,13 @@ it('preserves focus when closing an inactive window and chooses an open MRU succ
   expect(screen.queryByRole('region', { name: '关于我' })).toBeNull();
   expect(dock('我的项目').getAttribute('aria-label')).toContain('运行中');
   expect(document.activeElement).toBe(dock('关于我'));
-  expect(screen.getByText(/桌面静下来了/)).toBeTruthy();
+  expect(screen.getByRole('region', { name: '个人简介' })).toBeTruthy();
 });
 
 it('preserves project list scroll across minimize/arrange/modes and resets a closed session', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   const content = within(frame('我的项目')).getByRole('region', { name: '项目内容' });
@@ -140,7 +150,7 @@ it('preserves project list scroll across minimize/arrange/modes and resets a clo
   await user.click(dock('桌面设置'));
   await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
-  expect(screen.queryByRole('region', { name: '我的项目' })).toBeNull();
+  expect(screen.getByRole('region', { name: '我的项目' })).toBeTruthy();
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
   expect(within(content).getByRole('heading', { name: 'HonestOS' })).toBeTruthy();
@@ -162,6 +172,7 @@ it('preserves project list scroll across minimize/arrange/modes and resets a clo
 it('shares search entries, excludes the background, traps focus, restores cancellation and hands selection to the application', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const searchButton = within(screen.getByRole('navigation', { name: '应用程序坞' })).getByRole(
     'button',
     { name: '搜索应用' },
@@ -195,7 +206,7 @@ it('shares search entries, excludes the background, traps focus, restores cancel
   expect(document.activeElement).toBe(frame('我的项目'));
 });
 
-it('starts only About on a small layout and arranges it without ending a background project session', async () => {
+it('starts empty on a small layout and arranges visible windows without ending a background project session', async () => {
   const user = userEvent.setup();
   resize(390, 844);
   render(<App />);
@@ -210,7 +221,8 @@ it('starts only About on a small layout and arranges it without ending a backgro
   await user.click(dock('桌面设置'));
   await within(frame('桌面设置')).findByRole('button', { name: '整理桌面' });
   await user.click(within(frame('桌面设置')).getByRole('button', { name: '整理桌面' }));
-  expect(document.activeElement).toBe(frame('关于我'));
+  expect(document.activeElement).toBe(frame('桌面设置'));
+  expect(screen.queryByRole('region', { name: '关于我' })).toBeNull();
   expect(screen.queryByRole('region', { name: '终端' })).toBeNull();
   await user.click(dock('我的项目'));
   await within(frame('我的项目')).findByRole('region', { name: '项目内容' });
@@ -221,6 +233,7 @@ it('starts only About on a small layout and arranges it without ending a backgro
 it('restores cancelled search to the Dock when its original window trigger becomes hidden', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   act(() => screen.getByRole('button', { name: '关闭关于我' }).focus());
   fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
   resize(390, 844);
@@ -238,6 +251,7 @@ it('keeps the focused command and navigation usable in compact visual viewports 
   const viewport = Object.assign(new EventTarget(), { height: 768, offsetTop: 0 });
   Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
   render(<App />);
+  openWindows();
   const input = terminalInput();
   const keepVisible = vi.fn();
   input.scrollIntoView = keepVisible;
@@ -296,6 +310,7 @@ it('keeps the focused command and navigation usable in compact visual viewports 
 it('returns cancelled search to visible navigation if presentation CSS hides its window trigger', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const about = frame('关于我');
   act(() => within(about).getByRole('button', { name: '关闭关于我' }).focus());
   fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
@@ -314,6 +329,7 @@ it('reveals the focused compact terminal input when unread output and completion
   const viewport = Object.assign(new EventTarget(), { height: 768, offsetTop: 0 });
   Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
   render(<App />);
+  openWindows();
   const input = terminalInput();
   const output = screen.getByLabelText('终端记录与输入');
   Object.defineProperties(output, {
@@ -352,6 +368,7 @@ it('reveals the focused compact terminal input when unread output and completion
 it('closes immediately and never steals focus from an application selected during outgoing feedback', async () => {
   const user = userEvent.setup();
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   Object.defineProperty(terminal, 'getBoundingClientRect', {
     value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
@@ -374,6 +391,7 @@ it('finishes window actions immediately when motion is disabled, even if the win
     JSON.stringify({ schemaVersion: 1, wallpaper: 'dusk', motionEnabled: false }),
   );
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   Object.defineProperty(terminal, 'getBoundingClientRect', {
     value: () => ({ width: 510, height: 340 }),
@@ -385,6 +403,7 @@ it('finishes window actions immediately when motion is disabled, even if the win
 
 it('keeps a closed session ended when the user switches motion off during outgoing feedback', async () => {
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   Object.defineProperty(terminal, 'getBoundingClientRect', {
     value: () => ({ x: 756, y: 294, width: 510, height: 340 }),
@@ -400,6 +419,7 @@ it('keeps a closed session ended when the user switches motion off during outgoi
 
 it('ends a closed session immediately and ignores its outgoing completion after reopening', () => {
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   const input = terminalInput();
   fireEvent.change(input, { target: { value: 'old draft' } });
@@ -423,6 +443,7 @@ it('ends a closed session immediately and ignores its outgoing completion after 
 
 it('preserves the same minimized session when restored before outgoing feedback finishes', () => {
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   const input = terminalInput();
   fireEvent.change(input, { target: { value: 'draft survives' } });
@@ -445,6 +466,7 @@ it('preserves the same minimized session when restored before outgoing feedback 
 
 it('settles a restoring window when the viewport changes without losing its session', () => {
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   const input = terminalInput();
   fireEvent.change(input, { target: { value: 'across viewports' } });
@@ -466,6 +488,7 @@ it('settles a restoring window when the viewport changes without losing its sess
 
 it('reverses a pending maximize and settles authoritative normal geometry when motion is disabled', async () => {
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   const input = terminalInput();
   fireEvent.change(input, { target: { value: 'keep through maximize' } });
@@ -511,6 +534,7 @@ it('settles pending feedback when system reduced motion overrides the enabled si
     query.includes('reduced-motion') ? media : Object.assign(new EventTarget(), { matches: false }),
   );
   render(<App />);
+  openWindows();
   const terminal = frame('终端');
   const input = terminalInput();
   fireEvent.change(input, { target: { value: 'system reduction draft' } });

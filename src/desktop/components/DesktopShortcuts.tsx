@@ -1,10 +1,16 @@
 import { appById, siteConfig, type AppId } from '../../config/index.ts';
 import { Icon } from '../../shared/components/Icon.tsx';
 
-export function DesktopShortcuts({ onOpen }: { onOpen: (id: AppId) => void }) {
+export function DesktopShortcuts({
+  onOpen,
+  hidden = false,
+}: {
+  onOpen: (id: AppId) => void;
+  hidden?: boolean;
+}) {
   const { shortcuts } = siteConfig.system;
   return (
-    <nav className="desktop-shortcuts" aria-label="桌面快捷入口">
+    <nav className="desktop-shortcuts" aria-label="桌面快捷入口" hidden={hidden}>
       {shortcuts.map(({ appId: id, label, glyph }) => {
         const displayName = label ?? appById[id].name;
         return (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AppContent, retryAppLoad } from '../../apps/components/AppContent.tsx';
-import { appRegistry, type AppId } from '../../config/index.ts';
+import { appRegistry, siteConfig, type AppId } from '../../config/index.ts';
 import { useDesktop } from '../../desktop/index.ts';
 import { useReducedMotion } from '../../preferences/index.ts';
 import { AppBoundary } from '../../shared/components/AppBoundary.tsx';
@@ -75,8 +75,14 @@ function DesktopContents() {
   const arrange = useCallback(() => {
     dismissPopover();
     desktop.arrange();
-    setFocusRequest({ appId: desktop.state.mode === 'desktop' ? 'terminal' : 'about' });
-  }, [desktop.arrange, desktop.state.mode, dismissPopover]);
+    setFocusRequest({ appId: desktop.activeApp });
+  }, [desktop.arrange, desktop.activeApp, dismissPopover]);
+  function toggleDesktop() {
+    dismissPopover();
+    const returningTo = desktop.state.desktopReturnOrder?.at(-1);
+    desktop.toggleDesktop();
+    if (returningTo) setFocusRequest({ appId: returningTo });
+  }
   function startSearch(trigger?: HTMLElement) {
     const source =
       trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
@@ -133,12 +139,34 @@ function DesktopContents() {
       <CustomCursor />
       <div className="desktop-system" ref={shellRoot} inert={search}>
         <Wallpaper />
-        <TopStatusBar onAbout={() => open('about')} onArrange={arrange} onSearch={startSearch}>
+        <TopStatusBar
+          onAbout={() => open('about')}
+          onArrange={arrange}
+          onSearch={startSearch}
+          onToggleDesktop={toggleDesktop}
+        >
           <ControlCenter onSettings={() => open('settings')} />
           <StatusCalendar />
         </TopStatusBar>
-        <main className="desktop-surface" aria-label="HonestOS 桌面" tabIndex={0}>
-          <DesktopShortcuts onOpen={open} />
+        <main
+          className="desktop-surface"
+          data-empty={desktop.state.openOrder.length === 0}
+          aria-label="HonestOS 桌面"
+          tabIndex={0}
+        >
+          {desktop.state.openOrder.length === 0 && (
+            <section className="desktop-welcome" aria-label="个人简介">
+              <img src={siteConfig.profile.avatar ?? '/avatar.webp'} alt="" draggable={false} />
+              <div>
+                <h1>{siteConfig.profile.name}</h1>
+                <p>{siteConfig.profile.description}</p>
+              </div>
+            </section>
+          )}
+          <DesktopShortcuts
+            onOpen={open}
+            hidden={desktop.state.openOrder.length > 0 && desktop.state.mode === 'single'}
+          />
           {appRegistry.map((app) => {
             const record = desktop.state.windows[app.id];
             if (record.sessionId === null) return null;
@@ -155,9 +183,6 @@ function DesktopContents() {
               </WindowFrame>
             );
           })}
-          {desktop.state.openOrder.length === 0 && (
-            <p className="desktop-empty">桌面静下来了。点点 Dock，继续探索。</p>
-          )}
         </main>
         <Dock onOpen={open} onSearch={startSearch} />
       </div>

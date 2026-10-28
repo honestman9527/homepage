@@ -7,6 +7,7 @@
   --raised: #fff;
   --blue: #0071e3;
   --selected: #007aff14;
+  --desktop-caption-ground: #252831;
   --icon-size: 44px;
   --dock-height: 76px;
   color: var(--text);

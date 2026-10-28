@@ -58,6 +58,7 @@ it('keeps mounted session content while hidden and resets immediate batched clos
       <DesktopProbe />
     </DesktopProvider>,
   );
+  fireEvent.click(screen.getByText('restore'));
   fireEvent.change(screen.getByLabelText('draft'), { target: { value: 'my saved command' } });
   fireEvent.click(screen.getByText('hide'));
   fireEvent.click(screen.getByText('restore'));
@@ -76,6 +77,7 @@ it('ignores visual viewport keyboard changes while preserving desktop sessions a
       <DesktopProbe />
     </DesktopProvider>,
   );
+  fireEvent.click(screen.getByText('restore'));
   const before = screen.getByTestId('desktop-state').textContent;
   fireEvent.change(screen.getByLabelText('draft'), { target: { value: 'keyboard draft' } });
   act(() => {

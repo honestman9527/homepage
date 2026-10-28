@@ -1,6 +1,6 @@
 import type { IconName } from '../../config/index.ts';
 
-export function Icon({ name }: { name: IconName | 'search' | 'resize' }) {
+export function Icon({ name }: { name: IconName | 'search' | 'resize' | 'desktop' }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -35,6 +35,12 @@ export function Icon({ name }: { name: IconName | 'search' | 'resize' }) {
         </>
       )}
       {name === 'resize' && <path d="m9 19 10-10m-4 10 4-4" />}
+      {name === 'desktop' && (
+        <>
+          <rect x="3" y="4" width="18" height="13" rx="2" />
+          <path d="M8 21h8m-4-4v4M3 8h18" />
+        </>
+      )}
     </svg>
   );
 }
